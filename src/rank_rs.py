@@ -235,6 +235,32 @@ def fetch_info_batch(tickers: Iterable[str]) -> dict[str, dict]:
     return out
 
 
+def fill_info_for_high_pct(df: pd.DataFrame, pct_min: float) -> pd.DataFrame:
+    """Fill Sector/Industry/MarketCap via yfinance for rows with Percentile >= pct_min.
+
+    Full-universe .info is too slow; post-rank top-percentile fill keeps Actions under
+    timeout while enabling RS≥90 & MarketCap>3B overlap vs Fred.
+    """
+    if pct_min <= 0 or df.empty:
+        return df
+    mask = df["Percentile"].astype(float) >= pct_min
+    tickers = df.loc[mask, "Ticker"].tolist()
+    if not tickers:
+        return df
+    print(f"fetching info for {len(tickers)} tickers with Percentile>={pct_min:g} …", flush=True)
+    info = fetch_info_batch(tickers)
+    out = df.copy()
+    for i, row in out.loc[mask].iterrows():
+        meta = info.get(row["Ticker"], {})
+        if meta.get("Sector"):
+            out.at[i, "Sector"] = meta["Sector"]
+        if meta.get("Industry"):
+            out.at[i, "Industry"] = meta["Industry"]
+        if meta.get("MarketCap") is not None:
+            out.at[i, "MarketCap"] = meta["MarketCap"]
+    return out
+
+
 def run_rank(
     universe: pd.DataFrame,
     *,
@@ -347,6 +373,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0,
         help="optional cap on universe size after listing download (0=all)",
     )
+    p.add_argument(
+        "--fetch-info-pct",
+        type=float,
+        default=0.0,
+        help="after ranking, fetch Sector/Industry/MarketCap for Percentile>=N (0=off)",
+    )
     return p.parse_args(argv)
 
 
@@ -368,6 +400,8 @@ def main(argv: list[str] | None = None) -> int:
         normalize_spy=not args.no_normalize_spy,
         fetch_info=args.fetch_info,
     )
+    if args.fetch_info_pct and args.fetch_info_pct > 0:
+        df = fill_info_for_high_pct(df, args.fetch_info_pct)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.out, index=False)
     print(f"wrote {len(df)} rows → {args.out}", flush=True)

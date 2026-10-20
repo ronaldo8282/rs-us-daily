@@ -50,6 +50,23 @@ def load_csv(path_or_url: str | Path) -> pd.DataFrame:
     return pd.read_csv(io.StringIO(r.text))
 
 
+
+def filter_rs90_pct_only(df: pd.DataFrame) -> pd.DataFrame:
+    """Percentile >= 90 only (MarketCap may be blank — useful before mcap fill)."""
+    rows = []
+    for _, row in df.iterrows():
+        pct = _num(row.get("Percentile"))
+        if pct is None or pct < PCT_MIN:
+            continue
+        t = str(row.get("Ticker") or "").strip().upper()
+        if not t:
+            continue
+        rows.append({"Ticker": t, "Percentile": pct, "MarketCap": _num(row.get("MarketCap"))})
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    return out.drop_duplicates(subset=["Ticker"]).reset_index(drop=True)
+
 def filter_rs90(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for _, row in df.iterrows():
@@ -95,9 +112,13 @@ def main(argv: list[str] | None = None) -> int:
     fred_raw = load_csv(args.fred)
     ours = filter_rs90(ours_raw)
     fred = filter_rs90(fred_raw)
+    ours_pct = filter_rs90_pct_only(ours_raw)
+    fred_pct = filter_rs90_pct_only(fred_raw)
 
     ours_set = set(ours["Ticker"]) if len(ours) else set()
     fred_set = set(fred["Ticker"]) if len(fred) else set()
+    ours_pct_set = set(ours_pct["Ticker"]) if len(ours_pct) else set()
+    fred_pct_set = set(fred_pct["Ticker"]) if len(fred_pct) else set()
     both = sorted(ours_set & fred_set)
     only_ours = sorted(ours_set - fred_set)
     only_fred = sorted(fred_set - ours_set)
@@ -130,6 +151,9 @@ def main(argv: list[str] | None = None) -> int:
         f"| Overlap | {len(both)} |",
         f"| Only ours | {len(only_ours)} |",
         f"| Only Fred | {len(only_fred)} |",
+        f"| Ours RS≥90 (any mcap) | {len(ours_pct_set)} |",
+        f"| Fred RS≥90 (any mcap) | {len(fred_pct_set)} |",
+        f"| Overlap RS≥90 only | {len(ours_pct_set & fred_pct_set)} |",
         "",
     ]
     if ours_set or fred_set:

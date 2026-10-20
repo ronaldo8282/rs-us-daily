@@ -32,9 +32,8 @@ jobs:
       - name: Rank full universe
         run: |
           mkdir -p output reports
-          # No --fetch-info: yfinance .info is too slow for full universe in Actions.
-          # Ranking still works; MarketCap/Sector/Industry blank until a bulk feed is added.
-          python src/rank_rs.py --out output/rs_stocks.csv
+          # Full .info is too slow; fill MarketCap only for Percentile>=90 (overlap needs it).
+          python src/rank_rs.py --out output/rs_stocks.csv --fetch-info-pct 90
 
       - name: Overlap vs Fred (best-effort)
         continue-on-error: true

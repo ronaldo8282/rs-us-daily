@@ -88,10 +88,9 @@ Cron in `.github/workflows/daily.yml`:
 ```
 
 Plus `workflow_dispatch` for manual runs. The workflow uploads an artifact and
-commits the CSV when `contents:write` is available. **Do not push from this box
-until the GitHub repo exists and auth is configured.**
+commits the CSV when `contents:write` is available.
 
-Suggested remote: `ronaldo8282/rs-us-daily` (or another Leung-owned repo).
+Repo: https://github.com/ronaldo8282/rs-us-daily
 
 ## Parallel validation
 

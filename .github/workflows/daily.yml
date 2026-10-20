@@ -1,0 +1,64 @@
+# Daily IBD-style US RS ranker.
+# Goal: CSV ready before Daily scan ~07:56 Asia/Hong_Kong.
+# US cash equity close ~20:00 UTC → run 21:30 UTC (05:30 HKT next morning).
+name: daily-rs-us
+
+on:
+  schedule:
+    # Mon–Fri 21:30 UTC ≈ 05:30 HKT next calendar day
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Rank full universe
+        run: |
+          mkdir -p output reports
+          # No --fetch-info: yfinance .info is too slow for full universe in Actions.
+          # Ranking still works; MarketCap/Sector/Industry blank until a bulk feed is added.
+          python src/rank_rs.py --out output/rs_stocks.csv
+
+      - name: Overlap vs Fred (best-effort)
+        continue-on-error: true
+        run: python src/overlap_vs_fred.py --ours output/rs_stocks.csv
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-stocks
+          path: |
+            output/rs_stocks.csv
+            reports/
+          if-no-files-found: warn
+
+      # Commit only when a token with contents:write is available (default GITHUB_TOKEN).
+      # Scaffold only — do not push from this box until the repo exists and auth is set.
+      - name: Commit CSV (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output/rs_stocks.csv reports/ || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: daily RS ranks $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi

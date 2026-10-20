@@ -1,0 +1,51 @@
+Rank,Ticker,Sector,Industry,Exchange,Relative Strength,Percentile,Price,MarketCap,asof_date
+1,AMD,Technology,Semiconductors,NASDAQ,155.4,99,540.95,883136266240.0,2026-10-20
+2,MRK,Healthcare,Drug Manufacturers - General,NYSE,124.84,97,147.88,364795985920.0,2026-10-20
+3,NOW,Technology,Software - Application,NYSE,121.41,95,149.66,154712293376.0,2026-10-20
+4,ACN,Technology,Information Technology Services,NYSE,121.08,93,239.26,146419384320.0,2026-10-20
+5,LLY,Healthcare,Drug Manufacturers - General,NYSE,119.45,91,1295.49,1155242000384.0,2026-10-20
+6,XOM,Energy,Oil & Gas Integrated,NYSE,118.97,89,176.88,727273832448.0,2026-10-20
+7,ABBV,Healthcare,Drug Manufacturers - General,NYSE,117.13,87,289.8,512110559232.0,2026-10-20
+8,CRM,Technology,Software - Application,NYSE,116.89,85,242.72,199758561280.0,2026-10-20
+9,TMO,Healthcare,Diagnostics & Research,NYSE,115.44,83,687.93,254360256512.0,2026-10-20
+10,KO,Consumer Defensive,Beverages - Non-Alcoholic,NYSE,113.91,81,92.815,399362588672.0,2026-10-20
+11,MSFT,Technology,Software - Infrastructure,NASDAQ,113.74,79,533.6,3961899712512.0,2026-10-20
+12,TXN,Technology,Semiconductors,NASDAQ,113.68,77,278.8,254613438464.0,2026-10-20
+13,AAPL,Technology,Consumer Electronics,NASDAQ,111.76,75,341.12,4977928962048.0,2026-10-20
+14,CSCO,Technology,Communication Equipment,NASDAQ,111.6,73,106.4,419274391552.0,2026-10-20
+15,V,Financial Services,Credit Services,NYSE,111.12,71,407.36,764712517632.0,2026-10-20
+16,PM,Consumer Defensive,Tobacco,NYSE,108.7,69,200.48,312470798336.0,2026-10-20
+17,MA,Financial Services,Credit Services,NYSE,106.82,67,621.83,544729268224.0,2026-10-20
+18,JNJ,Healthcare,Drug Manufacturers - General,NYSE,105.28,65,258.8875,623910649856.0,2026-10-20
+19,DHR,Healthcare,Diagnostics & Research,NYSE,104.46,63,224.81,158101553152.0,2026-10-20
+20,UNH,Healthcare,Healthcare Plans,NYSE,103.62,61,421.075,377954762752.0,2026-10-20
+21,AMAT,Technology,Semiconductor Equipment & Materials,NASDAQ,101.93,59,405.28,321597407232.0,2026-10-20
+22,AMZN,Consumer Cyclical,Internet Retail,NASDAQ,101.83,57,263.25,2839388880896.0,2026-10-20
+23,QCOM,Technology,Semiconductors,NASDAQ,101.7,55,175.59,187501936640.0,2026-10-20
+24,NVDA,Technology,Semiconductors,NASDAQ,101.31,53,217.18,5243641790464.0,2026-10-20
+25,BRK-B,Financial Services,Insurance - Diversified,NYSE,101.28,51,538.07,1151915917312.0,2026-10-20
+26,PG,Consumer Defensive,Household & Personal Products,NYSE,99.48,50,158.45,367969370112.0,2026-10-20
+27,DIS,Communication Services,Entertainment,NYSE,99.46,48,111.61,192732790784.0,2026-10-20
+28,GOOGL,Communication Services,Internet Content & Information,NASDAQ,99.3,46,341.4303,4175299870720.0,2026-10-20
+29,ISRG,Healthcare,Medical Instruments & Supplies,NASDAQ,98.08,44,439.6,155302805504.0,2026-10-20
+30,META,Communication Services,Internet Content & Information,NASDAQ,97.86,42,691.91,1762543140864.0,2026-10-20
+31,JPM,Financial Services,Banks - Diversified,NYSE,96.57,40,335.385,890635157504.0,2026-10-20
+32,LIN,Basic Materials,Specialty Chemicals,NYSE,96.06,38,498.47,229817057280.0,2026-10-20
+33,COST,Consumer Defensive,Discount Stores,NASDAQ,95.61,36,993.33,439985340416.0,2026-10-20
+34,WMT,Consumer Defensive,Discount Stores,NYSE,94.83,34,118.275,941281574912.0,2026-10-20
+35,CAT,Industrials,Farm & Heavy Construction Machinery,NYSE,92.86,32,725.68,333542391808.0,2026-10-20
+36,IBM,Technology,Information Technology Services,NYSE,91.64,30,240.145,226248867840.0,2026-10-20
+37,ADBE,Technology,Software - Application,NASDAQ,91.59,28,255.37,99388063744.0,2026-10-20
+38,ABT,Healthcare,Medical Devices,NYSE,88.8,26,102.79,177900535808.0,2026-10-20
+39,GE,Industrials,Aerospace & Defense,NYSE,87.17,24,299.755,310983426048.0,2026-10-20
+40,PEP,Consumer Defensive,Beverages - Non-Alcoholic,NYSE,86.28,22,134.13,182743597056.0,2026-10-20
+41,TSLA,Consumer Cyclical,Auto Manufacturers,NASDAQ,86.18,20,374.815,1480250884096.0,2026-10-20
+42,AXP,Financial Services,Credit Services,NYSE,85.07,18,319.55,215893180416.0,2026-10-20
+43,BAC,Financial Services,Banks - Diversified,NYSE,84.52,16,50.92,356070752256.0,2026-10-20
+44,HD,Consumer Cyclical,Home Improvement Retail,NYSE,82.76,14,315.35,314651344896.0,2026-10-20
+45,AVGO,Technology,Semiconductors,NASDAQ,82.27,12,335.06,1599309217792.0,2026-10-20
+46,INTU,Technology,Software - Application,NASDAQ,79.88,10,336.56,89940951040.0,2026-10-20
+47,MCD,Consumer Cyclical,Restaurants,NYSE,79.39,8,245.765,173913522176.0,2026-10-20
+48,BKNG,Consumer Cyclical,Travel Services,NASDAQ,79.33,6,163.87,123136237568.0,2026-10-20
+49,NFLX,Communication Services,Entertainment,NASDAQ,75.57,4,69.255,288373637120.0,2026-10-20
+50,ORCL,Technology,Software - Infrastructure,NASDAQ,73.86,2,132.21,400794779648.0,2026-10-20

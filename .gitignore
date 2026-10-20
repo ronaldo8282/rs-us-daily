@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+output/rs_stocks_smoke.csv
+*.log
+.DS_Store

@@ -16,7 +16,7 @@ sessionStr = sessOpen + "-" + sessClose
 
 // ── Price / single-pin ────────────────────────────────────────────────
 grpP = "Price / single-pin profile"
-pointsPerLevel    = input.float(0.0, "Points per TPO level (0 = auto)", minval = 0.0, step = 0.01, group = grpP, tooltip = "Manual bin size in price points. Example: 0.25, 1.0, 5.0. Set 0 to use mintick × Auto mult.")
+pointsPerLevel    = input.float(5.0, "Points per TPO level (0 = auto)", minval = 0.0, step = 0.01, group = grpP, tooltip = "Manual bin size in price points. Example: 0.25, 1.0, 5.0. Set 0 to use mintick × Auto mult.")
 autoStepMult      = input.int(1, "Auto step × mintick (when points=0)", minval = 1, maxval = 100, group = grpP)
 maxLevels         = input.int(80, "Max price levels drawn", minval = 20, maxval = 200, group = grpP)
 profileWidthBars  = input.int(40, "Pin width (bars)", minval = 10, maxval = 120, group = grpP)

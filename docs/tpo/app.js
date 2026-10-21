@@ -238,6 +238,19 @@
     return printCountOf(row);
   }
 
+  /**
+   * Density silhouette width in px.
+   * No percentage floor: on wide day-merge columns a 12% floor made every
+   * low-density spike/extreme bin the same fat bar → solid red blocks.
+   * Absolute 2px min keeps single prints visible.
+   */
+  function densityBarWidthPx(n, maxPrints, innerW) {
+    const maxP = Math.max(1, maxPrints || 1);
+    const frac = Math.min(1, Math.max(0, n) / maxP);
+    const w = Math.max(2, Math.round(frac * Math.max(2, innerW || 2)));
+    return w;
+  }
+
   // Bar/overview: keep ≥1.5px per print so HG bell never collapses to a stick
   const BAR_PX_PER_PRINT = 1.5;
   const COL_MIN_BAR = 10;
@@ -556,7 +569,7 @@
       const r = rows[i];
       if (r.key < grid.minKey || r.key > grid.maxKey) continue;
       const top = (grid.maxKey - r.key) * rh;
-      const n = printCountOf(r);
+      const n = barMode ? densityCountOf(r) : printCountOf(r);
       if (barMode && n <= 0) continue;
       const classes = ["tpo-cell"];
       if (barMode) classes.push("bar-only");
@@ -574,10 +587,9 @@
       let style = `top:${top}px;height:${cellH}px;line-height:${cellH}px;font-size:${fp}px`;
       let text = "";
       if (barMode) {
-        // Density bar width ∝ TPO prints → bell / hourglass silhouette (never lose shape)
-        const frac = Math.max(0.12, Math.min(1, n / maxPrints));
-        const barW = Math.max(3, Math.round(frac * innerW));
-        style += `;width:${barW}px;min-width:3px;left:0`;
+        // Density ∝ TPO prints across full price range (incl. spike extremes)
+        const barW = densityBarWidthPx(n, maxPrints, innerW);
+        style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
       } else {
         text = escapeHtml(r.letters || "");
         if (zoom < 0.65 && n > 0) {
@@ -1228,7 +1240,8 @@
       const r = rows[i];
       if (r.key < grid.minKey || r.key > grid.maxKey) continue;
       const top = (grid.maxKey - r.key) * rh;
-      const n = barMode ? densityCountOf(r) : printCountOf(r);
+      const nLettersRow = printCountOf(r);
+      const n = barMode ? densityCountOf(r) : nLettersRow;
       if (barMode && n <= 0) continue;
       const classes = ["tpo-cell"];
       if (barMode) classes.push("bar-only");
@@ -1242,15 +1255,17 @@
       let style = `top:${top}px;height:${cellH}px;line-height:${cellH}px;font-size:${fp}px`;
       let text = "";
       if (barMode) {
-        const frac = Math.max(0.12, Math.min(1, n / maxPrints));
-        const barW = Math.max(3, Math.round(frac * innerW));
-        style += `;width:${barW}px;min-width:3px;left:0`;
+        // Full-range density silhouette (spike/extremes included — no % width floor)
+        const barW = densityBarWidthPx(n, maxPrints, innerW);
+        style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
       } else {
         text = escapeHtml(r.letters || "");
-        if (zoom < 0.65 && n > 0) {
-          const minBlock = Math.max(2, Math.round((n / maxPrints) * innerW * 0.85));
-          style += `;min-width:${minBlock}px`;
-        }
+        // Wide merge overlays: size by density so extremes stay jagged, not full-width color slabs
+        const dn = densityCountOf(r);
+        const densW = densityBarWidthPx(dn, maxPrints, innerW);
+        const letterW = Math.max(2, Math.round((nLettersRow || 1) * Math.max(4, fp * 0.62)));
+        const barW = Math.max(densW, letterW);
+        style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
       }
       const titleBits = [group.label, fmtPrice(r.price, step) + " pts"];
       if (r.letters) titleBits.push(r.letters);

@@ -1107,31 +1107,17 @@
 
     const overlaps = (g) => g.endIdx >= viewFirst && g.startIdx <= viewLast;
 
-    // Stack bottom→top: week (may fade under month), then month, then range
-    if (weekHgOn && !rangeSel) {
-      const weeks = buildWeekGroups();
-      for (const g of weeks) {
-        if (!overlaps(g)) continue;
-        const { left, width } = spanLeftWidth(geo, g.startIdx, g.endIdx);
-        parts.push(
-          renderCompositeColumnHtml(g, grid, left, width, rh, fp, hh, {
-            faded: !!monthHgOn, // week fades under month
-          })
-        );
-      }
-    }
-    if (monthHgOn && !rangeSel) {
-      const months = buildMonthGroups();
-      for (const g of months) {
-        if (!overlaps(g)) continue;
-        const { left, width } = spanLeftWidth(geo, g.startIdx, g.endIdx);
-        parts.push(renderCompositeColumnHtml(g, grid, left, width, rh, fp, hh, { faded: false }));
-      }
+    // Week/month use primary (in-flow) columns — skip full-span overlays here.
+    // Only hand-picked range still uses a capped overlay on the day wall.
+    if (compositePrimaryKind()) {
+      /* overlays handled by virtualRenderGroupPrimary */
     }
     if (rangeSel && rangeSel.endIdx > rangeSel.startIdx) {
       const g = buildRangeGroup();
       if (g && overlaps(g)) {
-        const { left, width } = spanLeftWidth(geo, g.startIdx, g.endIdx);
+        const span = spanLeftWidth(geo, g.startIdx, g.endIdx);
+        const width = Math.min(span.width, compositeColW(g.profile, "range"));
+        const left = span.left;
         parts.push(renderCompositeColumnHtml(g, grid, left, width, rh, fp, hh, { faded: false }));
       }
     }
@@ -1205,11 +1191,11 @@
       } else if (rangeAnchorIdx != null) {
         hint.textContent = "已選 " + (sessionIds[rangeAnchorIdx] || "") + " · 再撳另一日完成範圍";
       } else if (monthHgOn && weekHgOn) {
-        hint.textContent = "月 HG 面 · 週淡底 · 日更淡";
+        hint.textContent = "月欄（窄密度 HG）· 週按鈕讓路畀月";
       } else if (monthHgOn) {
-        hint.textContent = "月 HG 面 · 日淡底";
+        hint.textContent = "每月一欄密度 HG · 可橫掃幾個月";
       } else if (weekHgOn) {
-        hint.textContent = "週 HG 面 · 日淡底";
+        hint.textContent = "每週一欄密度 HG · 可橫掃幾週";
       } else {
         hint.textContent = "撳日期頭可合併連續日";
       }
@@ -1359,7 +1345,127 @@
     updateStats(null);
   }
 
+
+  function virtualRenderGroupPrimary(tRender0) {
+    const sc = $("profilesScroll");
+    const grid = globalGrid;
+    const rh = rowH();
+    const fp = fontPx();
+    const hh = headH();
+    const bodyH = grid.nBins * rh;
+    const groups = buildPrimaryGroups().filter(Boolean);
+    if (!groups.length) {
+      // fallback to day wall
+      virtualRenderAlignedDays(tRender0);
+      return;
+    }
+    const geo = buildGroupGeometry(groups);
+    const { widths, offsets, contentW, gap } = geo;
+    const edgePad = RIGHT_EDGE_PAD;
+    const kind = geo.groupMode;
+
+    const scrollLeft = sc.scrollLeft;
+    const viewW = sc.clientWidth || 800;
+    const avgW = groups.length ? contentW / groups.length : 80;
+    const os = Math.max(2, overscanCols(avgW));
+
+    let first = findColAtX(offsets, scrollLeft) - os;
+    let last = findColAtX(offsets, scrollLeft + viewW) + os;
+    first = Math.max(0, first);
+    last = Math.min(groups.length - 1, last);
+
+    const MAX_DOM = 60;
+    if (last - first + 1 > MAX_DOM) {
+      const mid = Math.floor((first + last) / 2);
+      first = Math.max(0, mid - Math.floor(MAX_DOM / 2));
+      last = Math.min(groups.length - 1, first + MAX_DOM - 1);
+    }
+
+    const spacerH = hh + bodyH;
+    const parts = [];
+    const leftPad = offsets[first];
+    if (leftPad > 0) {
+      parts.push(
+        `<div class="virt-spacer" style="flex:0 0 ${leftPad}px;width:${leftPad}px;height:${spacerH}px"></div>`
+      );
+    }
+    for (let i = first; i <= last; i++) {
+      parts.push(
+        renderCompositeColumnHtml(groups[i], grid, 0, widths[i], rh, fp, hh, {
+          flow: true,
+          faded: false,
+        })
+      );
+    }
+    const virtRight = Math.max(0, contentW - offsets[last + 1]);
+    const rightPad = virtRight + edgePad;
+    if (rightPad > 0) {
+      parts.push(
+        `<div class="virt-spacer" style="flex:0 0 ${rightPad}px;width:${rightPad}px;height:${spacerH}px"></div>`
+      );
+    }
+
+    const keep = sc.scrollLeft;
+    const keepTop = sc.scrollTop;
+    singlePinSegments = [];
+    const axisHtml = renderPriceAxis(grid, rh, fp, hh);
+    sc.innerHTML =
+      `<div class="profiles-aligned">` +
+      axisHtml +
+      `<div class="profiles-row" id="profilesRow" style="gap:${gap}px;position:relative">` +
+      `${parts.join("")}</div>` +
+      `</div>`;
+    sc.scrollLeft = keep;
+    sc.scrollTop = keepTop;
+
+    // Map group columns into lastGeo so timeline / trend / hit-test work
+    const labelIds = groups.map((g) => {
+      if (g.sids && g.sids.length) return g.sids[g.sids.length - 1];
+      return g.label;
+    });
+    lastGeo = {
+      widths,
+      offsets,
+      totalW: contentW + edgePad,
+      contentW,
+      rightEdgePad: edgePad,
+      gap,
+      axisW: AXIS_W,
+      rh,
+      hh,
+      bodyH,
+      align: true,
+      barMode: true,
+      groupMode: kind,
+      groups,
+      // parallel arrays for timeline/trend (one entry per group column)
+      groupLabels: groups.map((g) => g.label),
+      groupSids: labelIds,
+      sessionIdsOverride: labelIds,
+    };
+    updateTimeline();
+    updateTrendChart();
+    hideCrosshair();
+    hideSinglePinTip();
+    syncCompositeButtons();
+    updateStats(null);
+    const ms = (performance.now() - tRender0).toFixed(0);
+    const st = $("stats");
+    if (st) {
+      const extra = st.innerHTML ? " · " + st.innerHTML : "";
+      st.innerHTML = `${groups.length} ${kind === "month" ? "月" : "週"} HG · Render ${ms}ms${extra}`;
+    }
+  }
+
   function virtualRenderAligned(tRender0) {
+    if (compositePrimaryKind()) {
+      virtualRenderGroupPrimary(tRender0);
+      return;
+    }
+    virtualRenderAlignedDays(tRender0);
+  }
+
+  function virtualRenderAlignedDays(tRender0) {
     const sc = $("profilesScroll");
     const grid = globalGrid;
     const rh = rowH();
@@ -1903,28 +2009,36 @@
     const fullW = axisW + totalW + pad;
     inner.style.width = fullW + "px";
 
+    const idList =
+      lastGeo.groupMode && lastGeo.groupLabels && lastGeo.groupLabels.length
+        ? lastGeo.groupLabels
+        : sessionIds;
     const ticks = [];
     let lastX = -999;
-    const avgW = sessionIds.length ? totalW / sessionIds.length : 40;
+    const avgW = idList.length ? totalW / idList.length : 40;
     const stepN = Math.max(1, Math.ceil(42 / Math.max(8, avgW)));
-    for (let i = 0; i < sessionIds.length; i += stepN) {
+    for (let i = 0; i < idList.length; i += stepN) {
       const x = axisW + offsets[i];
       if (x - lastX < 36 && i !== 0) continue;
       lastX = x;
-      let label = sessionIds[i];
+      let label = idList[i];
       if (/^\d{4}-\d{2}-\d{2}/.test(label)) label = label.slice(5);
-      const w = Math.max(widths[i], 24);
+      else if (typeof label === "string" && label.indexOf("月 ") === 0) label = label.slice(2);
+      else if (typeof label === "string" && label.indexOf("週 ") === 0) label = label.slice(2);
+      const w = Math.max(widths[i] || 24, 24);
       ticks.push(
         `<div class="tl-tick" data-idx="${i}" style="left:${x}px;width:${w}px">${escapeHtml(label)}</div>`
       );
     }
-    const last = sessionIds.length - 1;
+    const last = idList.length - 1;
     if (last > 0 && last % stepN !== 0) {
       const x = axisW + offsets[last];
-      let label = sessionIds[last];
+      let label = idList[last];
       if (/^\d{4}-\d{2}-\d{2}/.test(label)) label = label.slice(5);
+      else if (typeof label === "string" && label.indexOf("月 ") === 0) label = label.slice(2);
+      else if (typeof label === "string" && label.indexOf("週 ") === 0) label = label.slice(2);
       ticks.push(
-        `<div class="tl-tick" data-idx="${last}" style="left:${x}px;width:${Math.max(widths[last], 24)}px">${escapeHtml(label)}</div>`
+        `<div class="tl-tick" data-idx="${last}" style="left:${x}px;width:${Math.max(widths[last] || 24, 24)}px">${escapeHtml(label)}</div>`
       );
     }
     inner.innerHTML = ticks.join("");
@@ -1969,16 +2083,25 @@
     const cw = contentW != null ? contentW : lastGeo.totalW - (lastGeo.rightEdgePad || 0);
     if (!widths || !offsets) return;
 
-    // Collect mid prices
+    // Collect mid prices (group columns use merged profile mid)
     const pts = [];
     let yMin = Infinity;
     let yMax = -Infinity;
-    for (let i = 0; i < sessionIds.length; i++) {
-      const p = profileById.get(sessionIds[i]);
-      const price = p ? sessionTrendPrice(p) : null;
+    const nCols = widths.length;
+    for (let i = 0; i < nCols; i++) {
+      let price = null;
+      let sid = sessionIds[i];
+      if (lastGeo.groupMode && lastGeo.groups && lastGeo.groups[i]) {
+        const g = lastGeo.groups[i];
+        price = g.profile ? sessionTrendPrice(g.profile) : null;
+        sid = (g.sids && g.sids.length && g.sids[g.sids.length - 1]) || g.label;
+      } else {
+        const p = profileById.get(sessionIds[i]);
+        price = p ? sessionTrendPrice(p) : null;
+      }
       if (price == null) continue;
       const xCenter = axisW + offsets[i] + widths[i] / 2 - sc.scrollLeft;
-      pts.push({ i, sid: sessionIds[i], price, xCenter, w: widths[i] });
+      pts.push({ i, sid, price, xCenter, w: widths[i] });
       if (price < yMin) yMin = price;
       if (price > yMax) yMax = price;
     }
@@ -2127,9 +2250,15 @@
     let colIdx = 0;
     let sid = null;
     if (xInRow >= 0 && lastGeo.offsets) {
+      const nCols = lastGeo.widths ? lastGeo.widths.length : sessionIds.length;
       colIdx = findColAtX(lastGeo.offsets, xInRow);
-      colIdx = Math.max(0, Math.min(sessionIds.length - 1, colIdx));
-      sid = sessionIds[colIdx];
+      colIdx = Math.max(0, Math.min(nCols - 1, colIdx));
+      if (lastGeo.groupMode && lastGeo.groups && lastGeo.groups[colIdx]) {
+        const g = lastGeo.groups[colIdx];
+        sid = (g.sids && g.sids.length && g.sids[g.sids.length - 1]) || g.label;
+      } else {
+        sid = sessionIds[colIdx];
+      }
     }
 
     const yInBody = yContent - lastGeo.hh;

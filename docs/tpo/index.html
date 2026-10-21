@@ -677,6 +677,21 @@
     .composite-col.composite-month .composite-head { background: #2a1f0eee; }
     .composite-col.composite-week .composite-head { background: #0e1a24ee; }
     .composite-col.composite-range .composite-head { background: #1a1028ee; }
+    .composite-col.composite-flow {
+      position: relative;
+      flex: 0 0 auto;
+      display: block;
+      background: #0c121af0;
+      pointer-events: auto;
+    }
+    .composite-col.composite-flow .day-body {
+      background: transparent;
+    }
+    /* Keep merged HG silhouette readable — softer VA fill */
+    .composite-col .tpo-cell.bar-only.row-va { background: #22c55eaa; }
+    .composite-col .tpo-cell.bar-only.row-spike { background: #ef4444bb; }
+    .composite-col .tpo-cell.bar-only.row-poc { background: #f59e0bff; }
+    .composite-col .tpo-cell.bar-only { background: #6b8fc4cc; }
     .day-col.day-faded {
       opacity: 0.3;
       filter: saturate(0.65);
@@ -1100,6 +1115,6 @@
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
   <script>window.TPO_STATIC=true;</script>
-  <script src="app.js?v=sticky-date-1"></script>
+  <script src="app.js?v=month-narrow-1"></script>
 </body>
 </html>

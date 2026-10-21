@@ -5,3 +5,5 @@ __pycache__/
 output/rs_stocks_smoke.csv
 *.log
 .DS_Store
+
+output/.cache_closes.pkl

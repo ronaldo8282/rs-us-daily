@@ -233,8 +233,11 @@
       </div>
       <p class="note">
         Blank MarketCap / Sector / Industry means fundamentals not yet filled
-        (<code>output/fundamentals_latest.csv</code>). Range filters Friday columns by lookback from the latest date.
-        Seed / history grows as daily Actions append Fridays and backfill runs.
+        (<code>output/fundamentals_latest.csv</code>).
+        <strong>Range</strong> filters the Week dropdown (Fridays within lookback from the latest column)
+        and recomputes XL <strong>ΔRS vs range</strong> (vs first Friday on/after as-of − Range).
+        Rank/Percentile in the main table change only when you change <strong>Week</strong> (same Week ⇒ same ranks).
+        If Friday history is shorter than Range, Week list and Δ baseline stay at the earliest available column.
       </p>
     </div>
   </div>
@@ -505,9 +508,18 @@
   }
 
   function xlPeriodStart(week) {
-    const range = datesInRange(ranksWide ? ranksWide.dates : xlDates, years);
-    const eligible = range.filter(d => d <= week && xlByDate.has(d));
+    // Anchor lookback to the selected as-of week (not only file latest),
+    // so changing Range always recomputes ΔRS vs range when history allows.
+    if (!week || !xlDates.length) return null;
+    const weekMs = Date.parse(week + "T00:00:00Z");
+    if (isNaN(weekMs)) return null;
+    const cut = weekMs - years * 365.25 * 24 * 3600 * 1000;
+    const eligible = xlDates.filter(d => {
+      const t = Date.parse(d + "T00:00:00Z");
+      return !isNaN(t) && t >= cut && d <= week;
+    });
     if (eligible.length) return eligible[0];
+    // History shorter than Range: fall back to earliest XL Friday on/before week
     let start = null;
     for (const d of xlDates) {
       if (d <= week) { start = d; break; }
@@ -550,8 +562,8 @@
       const per = startLookup && startLookup.has(r.Ticker) ? r.RelativeStrength - startLookup.get(r.Ticker) : null;
       const rv = ranksWide && ranksWide.map.get(r.Ticker);
       const pv = pctsWide && pctsWide.map.get(r.Ticker);
-      const univRank = rv && rv[selectedWeek] != null && !isNaN(rv[selectedWeek]) ? Number(rv[selectedWeek]) : null;
-      const univPct = pv && pv[selectedWeek] != null && !isNaN(pv[selectedWeek]) ? Number(pv[selectedWeek]) : null;
+      const univRank = rv && rv[week] != null && !isNaN(rv[week]) ? Number(rv[week]) : null;
+      const univPct = pv && pv[week] != null && !isNaN(pv[week]) ? Number(pv[week]) : null;
       return Object.assign({}, r, { wow: wow, per: per, univRank: univRank, univPct: univPct });
     });
 
@@ -582,10 +594,16 @@
     tbodyXl.innerHTML = "";
     tbodyXl.appendChild(frag);
     if (hint) {
+      const weekMs = Date.parse(week + "T00:00:00Z");
+      const cutMs = weekMs - years * 365.25 * 24 * 3600 * 1000;
+      const cutIso = new Date(cutMs).toISOString().slice(0, 10);
+      const capped = pStart && Date.parse(pStart + "T00:00:00Z") > cutMs + 86400000;
       hint.textContent =
         "asof " + week +
         (prior ? " · WoW vs " + prior : " · no prior week") +
-        (pStart ? " · range start " + pStart : "") +
+        (pStart ? " · Δ vs range start " + pStart : "") +
+        " · range " + years + "y (cut " + cutIso + ")" +
+        (capped ? " · history shorter than range" : "") +
         " · " + xlDates.length + " XL Fridays";
     }
   }
@@ -594,6 +612,7 @@
   function refreshWeekOptions() {
     if (!ranksWide) return;
     const dates = datesInRange(ranksWide.dates, years).slice().reverse();
+    const prevWeek = selectedWeek;
     weekEl.innerHTML = "";
     for (const d of dates) {
       const opt = document.createElement("option");
@@ -606,9 +625,19 @@
       renderRanks();
       return;
     }
+    // Keep week if still in range; else snap to latest in range
     if (!selectedWeek || !dates.includes(selectedWeek)) selectedWeek = dates[0];
     weekEl.value = selectedWeek;
+    // Always re-render ranks + XL so ΔRS vs range picks up new `years`
+    // even when the Week list / selected week did not change (short history).
     renderRanks();
+    if (prevWeek === selectedWeek && dates.length === ranksWide.dates.length) {
+      // Visible cue when Range is wider than available Friday history
+      const hint = document.getElementById("xl-hint");
+      if (hint && !hint.textContent.includes("history shorter")) {
+        hint.textContent = hint.textContent + " · history shorter than range";
+      }
+    }
   }
 
   function renderRanks() {

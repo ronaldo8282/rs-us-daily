@@ -77,31 +77,56 @@ def seed_from_rs(fund: pd.DataFrame, rs_path: Path) -> pd.DataFrame:
         if c in rs.columns:
             keep.append(c)
     rs = rs[keep].drop_duplicates("Ticker", keep="first")
+    for c in ("Sector", "Industry"):
+        if c in rs.columns:
+            rs[c] = rs[c].where(rs[c].notna(), "").astype(str).replace({"nan": "", "None": ""})
+    if "MarketCap" in rs.columns:
+        rs["MarketCap"] = pd.to_numeric(rs["MarketCap"], errors="coerce")
+
     if fund.empty:
         out = rs.copy()
-        out["Sector"] = out.get("Sector", "")
-        out["Industry"] = out.get("Industry", "")
+        if "Sector" not in out.columns:
+            out["Sector"] = ""
+        if "Industry" not in out.columns:
+            out["Industry"] = ""
         if "MarketCap" not in out.columns:
-            out["MarketCap"] = None
+            out["MarketCap"] = pd.NA
         out["updated_at"] = _now_iso()
         return out[COLS]
+
+    # Avoid pandas StringDtype setitem vs float NaN from RS blanks
+    for c in ("Sector", "Industry", "updated_at"):
+        if c in fund.columns:
+            fund[c] = fund[c].astype(object).where(fund[c].notna(), "").map(
+                lambda x: "" if str(x) in ("nan", "None") else str(x)
+            )
+    fund["MarketCap"] = pd.to_numeric(fund.get("MarketCap"), errors="coerce")
 
     merged = fund.merge(rs, on="Ticker", how="outer", suffixes=("", "_rs"))
     for c in ("Sector", "Industry"):
         rs_c = f"{c}_rs"
-        if rs_c in merged.columns:
-            blank = merged[c].isna() | (merged[c].astype(str).str.strip() == "") | (
-                merged[c].astype(str) == "nan"
-            )
-            merged.loc[blank, c] = merged.loc[blank, rs_c]
-            merged.drop(columns=[rs_c], inplace=True)
+        if rs_c not in merged.columns:
+            continue
+        merged[c] = merged[c].astype(object)
+        merged[rs_c] = merged[rs_c].astype(object).where(merged[rs_c].notna(), "").map(
+            lambda x: "" if str(x) in ("nan", "None") else str(x)
+        )
+        blank = merged[c].isna() | (merged[c].astype(str).str.strip() == "") | (
+            merged[c].astype(str) == "nan"
+        )
+        merged.loc[blank, c] = merged.loc[blank, rs_c].values
+        merged.drop(columns=[rs_c], inplace=True)
     if "MarketCap_rs" in merged.columns:
-        need = merged["MarketCap"].isna() | (merged["MarketCap"] == "")
-        merged.loc[need, "MarketCap"] = merged.loc[need, "MarketCap_rs"]
+        need = merged["MarketCap"].isna()
+        merged.loc[need, "MarketCap"] = merged.loc[need, "MarketCap_rs"].values
         merged.drop(columns=["MarketCap_rs"], inplace=True)
     if "updated_at" not in merged.columns:
         merged["updated_at"] = ""
-    merged["updated_at"] = merged["updated_at"].fillna("")
+    merged["updated_at"] = merged["updated_at"].fillna("").astype(object)
+    for c in ("Sector", "Industry", "updated_at"):
+        merged[c] = merged[c].astype(object).where(merged[c].notna(), "").map(
+            lambda x: "" if str(x) in ("nan", "None") else str(x)
+        )
     return merged[COLS]
 
 
@@ -167,8 +192,9 @@ def main(argv: list[str] | None = None) -> int:
 
     fund = fund.drop_duplicates("Ticker", keep="last").reset_index(drop=True)
     for c in ("Sector", "Industry", "updated_at"):
-        fund[c] = fund[c].fillna("").astype(str).replace({"nan": "", "None": ""})
-    fund["MarketCap"] = pd.to_numeric(fund["MarketCap"], errors="coerce")
+        fund[c] = fund[c].fillna("").astype(object)
+        fund[c] = fund[c].map(lambda x: "" if x is None or (isinstance(x, float) and pd.isna(x)) or str(x) in ("nan", "None") else str(x))
+    fund["MarketCap"] = pd.to_numeric(fund["MarketCap"], errors="coerce").astype(object)
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
     if args.seed_only:
@@ -192,24 +218,37 @@ def main(argv: list[str] | None = None) -> int:
 
     now = _now_iso()
     filled_n = 0
+    # Use positional updates on object columns to avoid dtype setitem traps
+    ticker_to_pos = {t: i for i, t in enumerate(fund["Ticker"].tolist())}
+    sectors = fund["Sector"].tolist()
+    industries = fund["Industry"].tolist()
+    mcaps = fund["MarketCap"].tolist()
+    updated = fund["updated_at"].tolist()
     for i, t in enumerate(pending, 1):
         meta = fetch_one(t)
-        idx = fund.index[fund["Ticker"] == t]
-        if len(idx) == 0:
+        pos = ticker_to_pos.get(t)
+        if pos is None:
             continue
-        j = idx[0]
         if meta["Sector"]:
-            fund.loc[j, "Sector"] = str(meta["Sector"])
+            sectors[pos] = str(meta["Sector"])
         if meta["Industry"]:
-            fund.loc[j, "Industry"] = str(meta["Industry"])
+            industries[pos] = str(meta["Industry"])
         if meta["MarketCap"] is not None:
-            fund.loc[j, "MarketCap"] = float(meta["MarketCap"])
+            mcaps[pos] = float(meta["MarketCap"])
             filled_n += 1
-        fund.loc[j, "updated_at"] = now
+        updated[pos] = str(now)
         if i % 50 == 0 or i == len(pending):
+            fund["Sector"] = sectors
+            fund["Industry"] = industries
+            fund["MarketCap"] = mcaps
+            fund["updated_at"] = updated
             fund.to_csv(args.out, index=False)
             print(f"  [{i}/{len(pending)}] checkpoint filled_this_run={filled_n}", flush=True)
         time.sleep(args.pause)
+    fund["Sector"] = sectors
+    fund["Industry"] = industries
+    fund["MarketCap"] = mcaps
+    fund["updated_at"] = updated
 
     fund.to_csv(args.out, index=False)
     total_filled = int(fund.apply(_is_filled, axis=1).sum())

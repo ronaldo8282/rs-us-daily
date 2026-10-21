@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RS Friday Rank History</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9bb4;
+      --accent: #3b82f6;
+      --accent2: #22c55e;
+      --border: #2a3548;
+      --row-alt: #151c28;
+      --danger: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.45;
+    }
+    header {
+      padding: 1.25rem 1.5rem 0.75rem; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #152033 0%, var(--bg) 100%);
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.35rem; font-weight: 650; }
+    .sub { color: var(--muted); font-size: 0.9rem; }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: center;
+      padding: 1rem 1.5rem; background: var(--panel); border-bottom: 1px solid var(--border);
+    }
+    .group { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    .group label { color: var(--muted); font-size: 0.8rem; margin-right: 0.25rem; }
+    button.range, button.sortbtn {
+      background: #243044; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
+    }
+    button.range.active, button.sortbtn.active {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    button.range:hover, button.sortbtn:hover { filter: brightness(1.1); }
+    select, input[type="search"] {
+      background: #0f1622; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.9rem;
+    }
+    input[type="search"] { min-width: 10rem; }
+    .status { padding: 0.5rem 1.5rem; color: var(--muted); font-size: 0.85rem; }
+    .status.error { color: var(--danger); }
+    .wrap { padding: 0 1.5rem 2rem; }
+    .table-scroll {
+      max-height: calc(100vh - 220px); overflow: auto; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--panel);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th {
+      position: sticky; top: 0; background: #243044; z-index: 1;
+      text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    thead th:hover { color: var(--accent2); }
+    tbody td { padding: 0.4rem 0.7rem; border-bottom: 1px solid var(--border); }
+    tbody tr:nth-child(even) { background: var(--row-alt); }
+    tbody tr:hover { background: #1e2a3d; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .note { color: var(--muted); font-size: 0.8rem; padding: 0.75rem 0; }
+    code { background: #243044; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>RS Friday Rank History</h1>
+    <div class="sub">IBD-style Relative Strength — full universe by Friday asof · data from <code>docs/data/</code></div>
+  </header>
+
+  <div class="controls">
+    <div class="group">
+      <label>Range</label>
+      <button class="range active" data-years="0.5">6M</button>
+      <button class="range" data-years="1">1Y</button>
+      <button class="range" data-years="2">2Y</button>
+      <button class="range" data-years="3">3Y</button>
+      <button class="range" data-years="5">5Y</button>
+    </div>
+    <div class="group">
+      <label for="week">Week</label>
+      <select id="week"></select>
+    </div>
+    <div class="group">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="rank-asc" selected>Rank ↑</option>
+        <option value="rank-desc">Rank ↓</option>
+        <option value="pct-desc">Percentile ↓</option>
+        <option value="pct-asc">Percentile ↑</option>
+        <option value="ticker">Ticker</option>
+        <option value="mcap-desc">MarketCap ↓</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="search">Ticker</label>
+      <input type="search" id="search" placeholder="e.g. NVDA" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="status" id="status">Loading…</div>
+
+  <div class="wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="rank-asc">Rank</th>
+            <th data-sort="ticker">Ticker</th>
+            <th data-sort="pct-desc">Percentile</th>
+            <th data-sort="mcap-desc">MarketCap</th>
+            <th>Sector</th>
+            <th>Industry</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="note">
+      Blank MarketCap / Sector / Industry means fundamentals not yet filled
+      (<code>output/fundamentals_latest.csv</code>). Range filters Friday columns by lookback from the latest date.
+      Seed / history grows as daily Actions append Fridays and backfill runs.
+    </p>
+  </div>
+
+  <script>
+(function () {
+  const DATA = {
+    ranks: "./data/rs_friday_ranks.csv",
+    pcts: "./data/rs_friday_percentiles.csv",
+    fund: "./data/fundamentals_latest.csv",
+  };
+
+  let ranksWide = null;   // { tickers: string[], dates: string[], map: Map ticker -> {date: rank} }
+  let pctsWide = null;
+  let fundMap = new Map(); // ticker -> {Sector, Industry, MarketCap}
+  let years = 0.5;
+  let selectedWeek = null;
+
+  const statusEl = document.getElementById("status");
+  const weekEl = document.getElementById("week");
+  const sortEl = document.getElementById("sort");
+  const searchEl = document.getElementById("search");
+  const tbody = document.getElementById("tbody");
+
+  function setStatus(msg, isErr) {
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("error", !!isErr);
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let i = 0, field = "", row = [], inQ = false;
+    while (i < text.length) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQ = false; i++; continue;
+        }
+        field += c; i++; continue;
+      }
+      if (c === '"') { inQ = true; i++; continue; }
+      if (c === ",") { row.push(field); field = ""; i++; continue; }
+      if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); field = "";
+        if (row.length > 1 || row[0] !== "") rows.push(row);
+        row = []; i++; continue;
+      }
+      field += c; i++;
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    if (!rows.length) return { headers: [], records: [] };
+    const headers = rows[0].map(h => h.trim());
+    const records = [];
+    for (let r = 1; r < rows.length; r++) {
+      const obj = {};
+      for (let c = 0; c < headers.length; c++) obj[headers[c]] = rows[r][c] != null ? rows[r][c] : "";
+      records.push(obj);
+    }
+    return { headers, records };
+  }
+
+  function wideFromRecords(records, headers) {
+    const dates = headers.filter(h => h !== "Ticker").sort();
+    const map = new Map();
+    const tickers = [];
+    for (const rec of records) {
+      const t = String(rec.Ticker || "").trim().toUpperCase();
+      if (!t) continue;
+      tickers.push(t);
+      const vals = {};
+      for (const d of dates) {
+        const v = rec[d];
+        if (v !== "" && v != null) vals[d] = Number(v);
+      }
+      map.set(t, vals);
+    }
+    return { tickers, dates, map };
+  }
+
+  function formatMcap(n) {
+    if (n == null || n === "" || isNaN(n)) return "";
+    const x = Number(n);
+    if (x >= 1e12) return (x / 1e12).toFixed(2) + "T";
+    if (x >= 1e9) return (x / 1e9).toFixed(2) + "B";
+    if (x >= 1e6) return (x / 1e6).toFixed(2) + "M";
+    if (x >= 1e3) return (x / 1e3).toFixed(1) + "K";
+    return String(Math.round(x));
+  }
+
+  function datesInRange(allDates, y) {
+    if (!allDates.length) return [];
+    const latest = allDates[allDates.length - 1];
+    const latestMs = Date.parse(latest + "T00:00:00Z");
+    const cut = latestMs - y * 365.25 * 24 * 3600 * 1000;
+    return allDates.filter(d => Date.parse(d + "T00:00:00Z") >= cut);
+  }
+
+  function refreshWeekOptions() {
+    if (!ranksWide) return;
+    const dates = datesInRange(ranksWide.dates, years).slice().reverse(); // newest first
+    weekEl.innerHTML = "";
+    for (const d of dates) {
+      const opt = document.createElement("option");
+      opt.value = d; opt.textContent = d;
+      weekEl.appendChild(opt);
+    }
+    if (!dates.length) {
+      selectedWeek = null;
+      setStatus("No Friday columns in selected range yet.");
+      render();
+      return;
+    }
+    if (!selectedWeek || !dates.includes(selectedWeek)) selectedWeek = dates[0];
+    weekEl.value = selectedWeek;
+    render();
+  }
+
+  function render() {
+    if (!ranksWide || !selectedWeek) {
+      tbody.innerHTML = "";
+      return;
+    }
+    const q = (searchEl.value || "").trim().toUpperCase();
+    const week = selectedWeek;
+    const rows = [];
+    let missingFund = 0;
+    for (const t of ranksWide.tickers) {
+      const rv = ranksWide.map.get(t);
+      if (!rv || rv[week] == null || isNaN(rv[week])) continue;
+      if (q && !t.includes(q)) continue;
+      const pv = pctsWide && pctsWide.map.get(t);
+      const pct = pv && pv[week] != null ? pv[week] : NaN;
+      const f = fundMap.get(t) || {};
+      if (f.MarketCap == null || f.MarketCap === "") missingFund++;
+      rows.push({
+        ticker: t,
+        rank: Number(rv[week]),
+        pct: isNaN(pct) ? null : Number(pct),
+        mcap: f.MarketCap != null && f.MarketCap !== "" ? Number(f.MarketCap) : null,
+        sector: f.Sector || "",
+        industry: f.Industry || "",
+      });
+    }
+
+    const mode = sortEl.value;
+    rows.sort((a, b) => {
+      if (mode === "ticker") return a.ticker.localeCompare(b.ticker);
+      if (mode === "rank-desc") return b.rank - a.rank || a.ticker.localeCompare(b.ticker);
+      if (mode === "pct-desc") return (b.pct ?? -1) - (a.pct ?? -1) || a.rank - b.rank;
+      if (mode === "pct-asc") return (a.pct ?? 999) - (b.pct ?? 999) || a.rank - b.rank;
+      if (mode === "mcap-desc") return (b.mcap ?? -1) - (a.mcap ?? -1) || a.rank - b.rank;
+      return a.rank - b.rank || a.ticker.localeCompare(b.ticker); // rank-asc
+    });
+
+    const frag = document.createDocumentFragment();
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<td class="num">${r.rank}</td>` +
+        `<td>${r.ticker}</td>` +
+        `<td class="num">${r.pct != null ? r.pct : ""}</td>` +
+        `<td class="num">${formatMcap(r.mcap)}</td>` +
+        `<td>${escapeHtml(r.sector)}</td>` +
+        `<td>${escapeHtml(r.industry)}</td>`;
+      frag.appendChild(tr);
+    }
+    tbody.innerHTML = "";
+    tbody.appendChild(frag);
+
+    const fundNote = missingFund
+      ? ` · ${missingFund} rows missing MarketCap`
+      : " · fundamentals joined";
+    setStatus(
+      `Week ${week} · showing ${rows.length.toLocaleString()} tickers` +
+      ` · ${ranksWide.dates.length} Friday column(s) in file` +
+      ` · range ${years}y` + fundNote
+    );
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[c]);
+  }
+
+  async function loadAll() {
+    setStatus("Loading CSVs…");
+    try {
+      const [rText, pText, fText] = await Promise.all([
+        fetch(DATA.ranks).then(r => { if (!r.ok) throw new Error(DATA.ranks + " " + r.status); return r.text(); }),
+        fetch(DATA.pcts).then(r => { if (!r.ok) throw new Error(DATA.pcts + " " + r.status); return r.text(); }),
+        fetch(DATA.fund).then(r => r.ok ? r.text() : "").catch(() => ""),
+      ]);
+      const rParsed = parseCSV(rText);
+      const pParsed = parseCSV(pText);
+      ranksWide = wideFromRecords(rParsed.records, rParsed.headers);
+      pctsWide = wideFromRecords(pParsed.records, pParsed.headers);
+      fundMap = new Map();
+      if (fText) {
+        const fParsed = parseCSV(fText);
+        for (const rec of fParsed.records) {
+          const t = String(rec.Ticker || "").trim().toUpperCase();
+          if (!t) continue;
+          fundMap.set(t, {
+            Sector: rec.Sector || "",
+            Industry: rec.Industry || "",
+            MarketCap: rec.MarketCap,
+          });
+        }
+      }
+      refreshWeekOptions();
+    } catch (e) {
+      setStatus("Failed to load data: " + e.message, true);
+    }
+  }
+
+  document.querySelectorAll("button.range").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("button.range").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      years = parseFloat(btn.dataset.years);
+      refreshWeekOptions();
+    });
+  });
+  weekEl.addEventListener("change", () => { selectedWeek = weekEl.value; render(); });
+  sortEl.addEventListener("change", render);
+  searchEl.addEventListener("input", render);
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      sortEl.value = th.getAttribute("data-sort");
+      render();
+    });
+  });
+
+  loadAll();
+})();
+  </script>
+</body>
+</html>

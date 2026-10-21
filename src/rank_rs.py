@@ -16,8 +16,8 @@ Universe (default): NASDAQ + NYSE / NYSE American common stocks from the
 free Nasdaq Trader Symbol Directory
   https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt
   https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt
-ETF/test issues and names with insufficient history (<252 bars) are dropped
-from ranking.
+ETF/test issues (except force-included XL sector SPDRs) and names with
+insufficient history (<252 bars) are dropped from ranking.
 """
 from __future__ import annotations
 
@@ -41,6 +41,35 @@ DEFAULT_OUT = ROOT / "output" / "rs_stocks.csv"
 
 NASDAQ_LISTED = "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt"
 OTHER_LISTED = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
+
+# Select Sector SPDR ETFs force-included even though Nasdaq Trader marks ETF=Y.
+# Kept out of the general ETF drop so Friday ranks can carry full-universe Percentile later.
+XL_SECTOR_ETFS = (
+    "XLC",   # Communication Services
+    "XLY",   # Consumer Discretionary
+    "XLP",   # Consumer Staples
+    "XLE",   # Energy
+    "XLF",   # Financials
+    "XLV",   # Health Care
+    "XLI",   # Industrials
+    "XLB",   # Materials
+    "XLRE",  # Real Estate
+    "XLK",   # Technology
+    "XLU",   # Utilities
+)
+XL_SECTOR_LABELS = {
+    "XLC": "Communication",
+    "XLY": "Consumer Disc",
+    "XLP": "Consumer Staples",
+    "XLE": "Energy",
+    "XLF": "Financials",
+    "XLV": "Health Care",
+    "XLI": "Industrials",
+    "XLB": "Materials",
+    "XLRE": "Real Estate",
+    "XLK": "Technology",
+    "XLU": "Utilities",
+}
 
 # Trading-day lookbacks for the four IBD-style windows
 WINDOWS = (63, 126, 189, 252)
@@ -69,7 +98,7 @@ def fetch_nasdaq_trader_universe() -> pd.DataFrame:
     """Download NASDAQ + NYSE/NYSE American common-stock listings.
 
     Source: Nasdaq Trader Symbol Directory (free, public text files).
-    Filters: exclude ETF, test issues, and non-common stock categories.
+    Filters: exclude ETF (except XL_SECTOR_ETFS), test issues, and non-common stock categories.
     """
     rows: list[dict] = []
 
@@ -114,6 +143,15 @@ def fetch_nasdaq_trader_universe() -> pd.DataFrame:
         rows.append({"Ticker": sym, "Exchange": exch_map[code]})
 
     uni = pd.DataFrame(rows).drop_duplicates(subset=["Ticker"], keep="first")
+    # Force-include XL sector SPDRs (normally dropped by ETF=Y filter).
+    have = set(uni["Ticker"].astype(str).str.upper())
+    extra = [
+        {"Ticker": t, "Exchange": "NYSE ARCA"}
+        for t in XL_SECTOR_ETFS
+        if t not in have
+    ]
+    if extra:
+        uni = pd.concat([uni, pd.DataFrame(extra)], ignore_index=True)
     return uni.reset_index(drop=True)
 
 
@@ -144,21 +182,45 @@ def download_closes(
     tickers: list[str],
     period: str = "2y",
     batch_size: int = 50,
-    pause_s: float = 0.4,
+    pause_s: float = 3.0,
 ) -> pd.DataFrame:
     """Download adjusted closes via yfinance; columns = tickers."""
     frames: list[pd.DataFrame] = []
     for i in range(0, len(tickers), batch_size):
         batch = tickers[i : i + batch_size]
-        data = yf.download(
-            batch,
-            period=period,
-            group_by="column",
-            auto_adjust=True,
-            threads=True,
-            progress=False,
-        )
-        if data.empty:
+        data = pd.DataFrame()
+        for attempt in range(4):
+            data = yf.download(
+                batch,
+                period=period,
+                group_by="column",
+                auto_adjust=True,
+                threads=False,
+                progress=False,
+            )
+            # Treat all-NaN / zero-close batches as failures (YF rate-limit often returns empty cols)
+            usable = False
+            if not data.empty:
+                try:
+                    if isinstance(data.columns, pd.MultiIndex):
+                        if "Close" in data.columns.get_level_values(0):
+                            chk = data["Close"]
+                        elif "Close" in data.columns.get_level_values(1):
+                            chk = data.xs("Close", axis=1, level=1)
+                        else:
+                            chk = data
+                    else:
+                        chk = data[["Close"]] if "Close" in data.columns else data
+                    usable = bool(chk.notna().any().any())
+                except Exception:
+                    usable = not data.empty
+            if usable:
+                break
+            wait = pause_s * (3 + attempt * 3)
+            print(f"  rate/empty batch @ {i}/{len(tickers)} attempt {attempt+1}/4; sleep {wait:.0f}s", flush=True)
+            time.sleep(wait)
+        if data.empty or not usable:
+            print(f"  skip failed batch @ {i}/{len(tickers)}: {batch[:3]}…", flush=True)
             continue
         if isinstance(data.columns, pd.MultiIndex):
             # Multi-ticker: ('Close', 'AAPL') or ('AAPL', 'Close') depending on version

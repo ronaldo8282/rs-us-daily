@@ -44,6 +44,14 @@ jobs:
         continue-on-error: true
         run: python src/append_friday_wide.py --src output/rs_stocks.csv --out-dir output/friday
 
+      - name: XL sector ETF Friday RS sidecar
+        continue-on-error: true
+        run: |
+          mkdir -p output/xl docs/data
+          # Rebuild from Friday date columns (fast: 12 tickers). Upserts latest when
+          # --asof is passed; full rebuild keeps history aligned with friday wide.
+          python src/xl_etf_friday.py --period 3y
+
       - name: Update fundamentals (best-effort batch)
         continue-on-error: true
         run: |
@@ -60,6 +68,9 @@ jobs:
             cp -f output/fundamentals_latest.csv docs/data/fundamentals_latest.csv
           else
             echo 'Ticker,Sector,Industry,MarketCap,updated_at' > docs/data/fundamentals_latest.csv
+          fi
+          if [ -f output/xl/xl_sector_etf_weekly.csv ]; then
+            cp -f output/xl/xl_sector_etf_weekly.csv docs/data/xl_sector_etf_weekly.csv
           fi
 
 
@@ -81,6 +92,7 @@ jobs:
             output/rs_stocks.csv
             output/history/
             output/friday/
+            output/xl/
             output/mm/
             output/fundamentals_latest.csv
             docs/data/
@@ -91,7 +103,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add output/rs_stocks.csv output/history/ output/friday/ output/mm/ output/fundamentals_latest.csv docs/ reports/ || true
+          git add output/rs_stocks.csv output/history/ output/friday/ output/xl/ output/mm/ output/fundamentals_latest.csv docs/ reports/ || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

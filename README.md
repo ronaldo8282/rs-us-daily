@@ -36,7 +36,7 @@ Default source: **Nasdaq Trader Symbol Directory** (free public text files)
 - https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt
 - https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt
 
-Keeps NASDAQ, NYSE, and NYSE American common stocks; drops ETF / test issues.
+Keeps NASDAQ, NYSE, and NYSE American common stocks; drops ETF / test issues (except the 11 XL sector SPDRs force-included for sector tracking).
 Prices and (optional) fundamentals via **yfinance** (Yahoo Finance). MarketCap /
 Sector / Industry are best-effort — blank is allowed; ranking still runs on RS.
 
@@ -162,7 +162,8 @@ rs-us-daily/
   src/backfill_friday_ranks.py
   src/update_fundamentals.py
   src/overlap_vs_fred.py
-  output/          # rs_stocks.csv, friday/, history/, mm/, fundamentals_latest.csv
+  src/xl_etf_friday.py
+  output/          # rs_stocks.csv, friday/, xl/, history/, mm/, fundamentals_latest.csv
   docs/            # GitHub Pages (index.html + data/)
   reports/         # overlap_YYYYMMDD.md
   .github/workflows/daily.yml
@@ -179,6 +180,24 @@ Leung’s continuous Friday full-universe rank table (GitHub, not Sheets):
 Appended automatically by Actions when the daily asof date is a **Friday**
 (`src/append_friday_wide.py`). Bootstrap / non-Friday seed: `--force`.
 
+
+## XL sector ETF Friday sidecar
+
+Select Sector SPDR ETFs (`XLC XLY XLP XLE XLF XLV XLI XLB XLRE XLK XLU`) are
+**force-included** in `fetch_nasdaq_trader_universe()` so future daily ranks can
+carry full-universe Percentile. Historical Friday wide files still omit them
+(ETF filter), so `src/xl_etf_friday.py` builds a long sidecar without re-ranking
+~6k stocks:
+
+```bash
+python src/xl_etf_friday.py --period 3y
+# optional single-date upsert:
+python src/xl_etf_friday.py --asof 2026-10-20
+```
+
+Writes `output/xl/xl_sector_etf_weekly.csv` and copies to `docs/data/`. Actions
+runs this after the Friday append step.
+
 ## GitHub Pages MVP
 
 Interactive Friday browser (no build step) with two tabs:
@@ -189,10 +208,13 @@ Interactive Friday browser (no build step) with two tabs:
   - `rs_friday_ranks.csv` — wide Ticker × Friday Rank
   - `rs_friday_percentiles.csv` — wide Ticker × Friday Percentile
   - `fundamentals_latest.csv` — Ticker, Sector, Industry, MarketCap, updated_at
+  - `xl_sector_etf_weekly.csv` — XL sector ETF Relative Strength + XlRank by Friday
 
 ### Tab: Ranks
 
 Range buttons (6M/1Y/2Y/3Y/5Y), week dropdown, sort by Rank/Percentile/Ticker/MarketCap, ticker search, join latest fundamentals.
+
+**XL Sector ETFs** panel (same week / range): XLC–XLU Relative Strength (SPY-normalized, same formula as stocks), rank among the 11 (`XlRank`), ΔRS vs prior Friday and vs range start. Full-universe Rank/Percentile shown when the ticker later appears in Friday wide files (otherwise —).
 
 ### Tab: RS90–99
 

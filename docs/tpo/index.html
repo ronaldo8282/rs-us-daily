@@ -194,6 +194,8 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 0.5rem;
+      /* pan only — pinch handled in JS so iOS page-zoom doesn't steal it */
+      touch-action: pan-x pan-y;
     }
     .profiles-row {
       display: flex;
@@ -442,6 +444,19 @@
       background: #f59e0b88;
       pointer-events: none;
       z-index: 1;
+    }
+
+    .day-col.day-jump-flash {
+      box-shadow: 0 0 0 2px #38bdf8, 0 0 14px #38bdf866;
+      transition: box-shadow 0.2s ease;
+    }
+    .day-col.day-jump-flash .day-head {
+      background: #1e3a5f !important;
+      color: #e0f2fe;
+    }
+    .zoom-bar button.btn-latest-day {
+      border-color: #38bdf888;
+      color: #7dd3fc;
     }
     .zoom-bar {
       display: flex;
@@ -1138,11 +1153,12 @@
         <button type="button" id="btnView30" title="Fit ~30 day columns in view">30d</button>
         <button type="button" id="btnView60" title="Fit ~60 day columns in view">60d</button>
         <button type="button" id="btnZoom100" title="Reset zoom">100%</button>
+        <button type="button" id="btnLatestDay" class="btn-latest-day" title="跳到最近一個交易日（日 HG）">最近日</button>
         <button type="button" id="btnWeekHg" class="comp-btn" aria-pressed="false" title="週 TPO：合併當週交易日，日 HG 淡底">週 HG</button>
         <button type="button" id="btnMonthHg" class="comp-btn" aria-pressed="false" title="月 TPO：合併當月全日，週淡底／日更淡">月 HG</button>
         <button type="button" id="btnClearMerge" class="comp-btn-clear" hidden disabled title="清除週／月／手選合併">清除合併</button>
         <span class="composite-hint" id="compositeHint">撳日期頭可合併連續日</span>
-        <span class="hint-inline">Ctrl+wheel · 30d/60d</span>
+        <span class="hint-inline">Ctrl+wheel · 雙指縮放 · 30d/60d</span>
       </div>
       </div>
       <div class="chart-stage" id="chartStage">
@@ -1174,6 +1190,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=fix-week-merge-1"></script>
+  <script src="app.js?v=ux-default-week-1"></script>
 </body>
 </html>

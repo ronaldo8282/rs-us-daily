@@ -1864,8 +1864,49 @@
     return sum;
   }
 
-  // Fit ~nDays columns; bar-mode floor keeps HG silhouette readable (may need H-scroll)
-  function zoomFitDays(nDays) {
+  /** Indices of the latest trading week (Mon-start) among loaded day sessions. */
+  function latestWeekDayRange() {
+    if (!sessionIds.length) return null;
+    const toIdx = sessionIds.length - 1;
+    const wk = weekStartKey(sessionIds[toIdx]);
+    let fromIdx = toIdx;
+    while (fromIdx > 0 && weekStartKey(sessionIds[fromIdx - 1]) === wk) fromIdx--;
+    return { fromIdx: fromIdx, toIdx: toIdx, weekKey: wk };
+  }
+
+  function midKeyForDayRange(fromIdx, toIdx) {
+    let sum = 0;
+    let n = 0;
+    for (let i = fromIdx; i <= toIdx; i++) {
+      const p = profileById.get(sessionIds[i]);
+      if (!p) continue;
+      if (p.poc && p.poc.key != null) {
+        sum += p.poc.key;
+        n++;
+        continue;
+      }
+      if (p.rows && p.rows.length) {
+        let hi = -Infinity;
+        let lo = Infinity;
+        for (let j = 0; j < p.rows.length; j++) {
+          const k = p.rows[j].key;
+          if (k > hi) hi = k;
+          if (k < lo) lo = k;
+        }
+        if (isFinite(hi) && isFinite(lo)) {
+          sum += (hi + lo) / 2;
+          n++;
+        }
+      }
+    }
+    if (n) return sum / n;
+    if (globalGrid) return (globalGrid.minKey + globalGrid.maxKey) / 2;
+    return null;
+  }
+
+  // Fit day columns [fromIdx..toIdx] into the viewport (day HG geometry).
+  function zoomFitDayRange(fromIdx, toIdx, opts) {
+    opts = opts || {};
     if (!wantAlign()) {
       $("alignPrices").checked = true;
     }
@@ -1875,35 +1916,102 @@
       scheduleRender();
       return;
     }
-    const n = Math.min(Math.max(1, nDays), sessionIds.length);
-    const toIdx = sessionIds.length - 1;
-    const fromIdx = toIdx - n + 1;
+    fromIdx = Math.max(0, Math.min(fromIdx, sessionIds.length - 1));
+    toIdx = Math.max(fromIdx, Math.min(toIdx, sessionIds.length - 1));
     // Reserve right-edge breathing room so newest columns aren't flush
     const viewW = Math.max(160, sc.clientWidth - AXIS_W - 8 - RIGHT_EDGE_PAD);
 
-    // Binary search largest zoom whose real (bar-aware) width still fits
+    const zMin = opts.minZoom != null ? opts.minZoom : ZOOM_MIN;
+    const zMax = opts.maxZoom != null ? opts.maxZoom : Math.min(ZOOM_MAX, 1.2);
     let lo = ZOOM_MIN;
-    let hi = Math.min(ZOOM_MAX, 1.2);
+    let hi = Math.max(lo, zMax);
     for (let i = 0; i < 18; i++) {
       const mid = (lo + hi) / 2;
       if (sliceWidthAtZoom(mid, fromIdx, toIdx) <= viewW) lo = mid;
       else hi = mid;
     }
-    // Prefer fitting; if even ZOOM_MIN (with bar floors) is wider, stay at min — silhouette > crush
-    zoom = lo;
+    // Prefer fitting; optional floor so a single day stays letter-readable
+    zoom = Math.max(zMin, Math.min(zMax, lo));
+    // If even ZOOM_MIN is wider than view, stay at searched lo (may H-scroll)
+    if (lo < zMin && sliceWidthAtZoom(zMin, fromIdx, toIdx) > viewW * 1.35) {
+      zoom = lo;
+    }
     updateZoomLabel();
     scheduleRender();
     requestAnimationFrame(() => {
-      sc.scrollLeft = Math.max(0, sc.scrollWidth - sc.clientWidth);
+      // Align so the range's right edge (latest) sits near the right of the view
+      const geo = buildColGeometry();
+      const right = geo.offsets[toIdx + 1] || geo.contentW;
+      const targetLeft = Math.max(0, right + (geo.rightEdgePad || RIGHT_EDGE_PAD) * 0.15 - sc.clientWidth + AXIS_W);
+      // Fallback: full right scroll when geometry still settling
+      sc.scrollLeft = Math.max(targetLeft, Math.max(0, sc.scrollWidth - sc.clientWidth));
       if (globalGrid) {
         const rh = rowH();
         const hh = headH();
-        const midKey = (globalGrid.minKey + globalGrid.maxKey) / 2;
+        let midKey = midKeyForDayRange(fromIdx, toIdx);
+        if (midKey == null) midKey = (globalGrid.minKey + globalGrid.maxKey) / 2;
         const top = (globalGrid.maxKey - midKey) * rh - sc.clientHeight / 2 + hh;
         sc.scrollTop = Math.max(0, top);
       }
       scheduleRender();
+      if (opts.flashSid) {
+        requestAnimationFrame(() => flashDayColumn(opts.flashSid));
+      }
     });
+  }
+
+  function flashDayColumn(sid) {
+    const sc = $("profilesScroll");
+    if (!sc || !sid) return;
+    const el = sc.querySelector('.day-col[data-sid="' + sid + '"]');
+    if (!el) return;
+    el.classList.add("day-jump-flash");
+    setTimeout(() => {
+      try { el.classList.remove("day-jump-flash"); } catch (_) {}
+    }, 1400);
+  }
+
+  // Fit ~nDays trailing columns; bar-mode floor keeps HG silhouette readable (may need H-scroll)
+  function zoomFitDays(nDays) {
+    const n = Math.min(Math.max(1, nDays), sessionIds.length || 1);
+    const toIdx = sessionIds.length - 1;
+    const fromIdx = Math.max(0, toIdx - n + 1);
+    zoomFitDayRange(fromIdx, toIdx);
+  }
+
+  /** Default load: day HG for the latest trading week (not Fit-all / not 60d). */
+  function zoomFitRecentWeek() {
+    const range = latestWeekDayRange();
+    if (!range) {
+      scrollToNewest();
+      return;
+    }
+    // Ensure day walls (not week/month merge) for the default view
+    if (weekHgOn || monthHgOn) {
+      weekHgOn = false;
+      monthHgOn = false;
+      clearRangeSelection();
+      syncCompositeButtons();
+    }
+    zoomFitDayRange(range.fromIdx, range.toIdx);
+  }
+
+  /** One-tap: exit merge if needed, fit latest session day, scroll + flash. */
+  function jumpToLatestTradingDay() {
+    if (!sessionIds.length) return;
+    if (weekHgOn || monthHgOn) {
+      weekHgOn = false;
+      monthHgOn = false;
+      clearRangeSelection();
+      syncCompositeButtons();
+    } else if (rangeSel || rangeAnchorIdx != null) {
+      clearRangeSelection();
+      syncCompositeButtons();
+    }
+    const toIdx = sessionIds.length - 1;
+    const sid = sessionIds[toIdx];
+    // Prefer letter-readable zoom for a single day column
+    zoomFitDayRange(toIdx, toIdx, { minZoom: 0.55, maxZoom: 1.05, flashSid: sid });
   }
 
   function zoomReset() {
@@ -2079,14 +2187,8 @@
           .join(" · ")
       );
       scheduleRender();
-      // After first paint: 60d overview for long ranges, else newest
-      if (wantAlign() && currentRange().sessions >= 60) {
-        requestAnimationFrame(() => zoomFitDays(60));
-      } else if (wantAlign() && currentRange().sessions >= 22) {
-        requestAnimationFrame(() => zoomFitDays(Math.min(30, currentRange().sessions)));
-      } else {
-        scrollToNewest();
-      }
+      // After first paint: day HG of the latest trading week (not Fit-all)
+      requestAnimationFrame(() => zoomFitRecentWeek());
 
       if (profileById.size < sessionIds.length) {
         setTimeout(fillOlder, 30);
@@ -2519,6 +2621,8 @@
   const btn60 = $("btnView60");
   if (btn30) btn30.addEventListener("click", () => zoomFitDays(30));
   if (btn60) btn60.addEventListener("click", () => zoomFitDays(60));
+  const btnLatest = $("btnLatestDay");
+  if (btnLatest) btnLatest.addEventListener("click", () => jumpToLatestTradingDay());
 
   // Ctrl/Cmd + wheel zoom
   $("profilesScroll").addEventListener(
@@ -2531,6 +2635,72 @@
     },
     { passive: false }
   );
+
+  // Mobile pinch-zoom (2-finger) — syncs with zoom%; single-finger scroll untouched
+  (function bindPinchZoom() {
+    const sc = $("profilesScroll");
+    if (!sc) return;
+    let pinch = null; // { dist0, zoom0 }
+    function distOf(t0, t1) {
+      const dx = t0.clientX - t1.clientX;
+      const dy = t0.clientY - t1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    sc.addEventListener(
+      "touchstart",
+      (ev) => {
+        if (ev.touches.length === 2) {
+          pinch = { dist0: distOf(ev.touches[0], ev.touches[1]), zoom0: zoom };
+        } else if (ev.touches.length < 2) {
+          pinch = null;
+        }
+      },
+      { passive: true }
+    );
+    sc.addEventListener(
+      "touchmove",
+      (ev) => {
+        if (!pinch || ev.touches.length !== 2) return;
+        const d0 = pinch.dist0;
+        if (!(d0 > 8)) return;
+        ev.preventDefault();
+        const d1 = distOf(ev.touches[0], ev.touches[1]);
+        setZoom(pinch.zoom0 * (d1 / d0));
+      },
+      { passive: false }
+    );
+    const endPinch = (ev) => {
+      if (!ev.touches || ev.touches.length < 2) pinch = null;
+    };
+    sc.addEventListener("touchend", endPinch, { passive: true });
+    sc.addEventListener("touchcancel", endPinch, { passive: true });
+    // Older iOS Safari gesture events (best-effort; prevent page zoom on chart)
+    sc.addEventListener(
+      "gesturestart",
+      (ev) => {
+        try { ev.preventDefault(); } catch (_) {}
+        pinch = { dist0: 1, zoom0: zoom, gesture: true };
+      },
+      { passive: false }
+    );
+    sc.addEventListener(
+      "gesturechange",
+      (ev) => {
+        if (!pinch || !pinch.gesture) return;
+        try { ev.preventDefault(); } catch (_) {}
+        const s = ev.scale;
+        if (s && isFinite(s)) setZoom(pinch.zoom0 * s);
+      },
+      { passive: false }
+    );
+    sc.addEventListener(
+      "gestureend",
+      () => {
+        pinch = null;
+      },
+      { passive: true }
+    );
+  })();
 
   $("fileInput").addEventListener("change", async (ev) => {
     const f = ev.target.files && ev.target.files[0];

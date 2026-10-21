@@ -206,9 +206,30 @@ def main(argv: list[str] | None = None) -> int:
     # Pending: no MarketCap yet
     pending_mask = ~fund.apply(_is_filled, axis=1)
     pending = fund.loc[pending_mask, "Ticker"].tolist()
-    # Prefer friday order
+    # Prefer friday order, but fill blank-Sector stubs first (prior 429 touches),
+    # ordered by latest friday RS rank so commons/liquid names beat preferreds.
     order = {t: i for i, t in enumerate(tickers)}
-    pending.sort(key=lambda t: order.get(t, 10**9))
+    sector_map = {t: (s or "").strip() for t, s in zip(fund["Ticker"], fund["Sector"])}
+    rank_map: dict[str, float] = {}
+    if FRIDAY_RANKS.exists():
+        try:
+            fr = pd.read_csv(FRIDAY_RANKS)
+            date_cols = [c for c in fr.columns if c != "Ticker"]
+            if date_cols:
+                latest = date_cols[-1]
+                fr["Ticker"] = _norm_ticker(fr["Ticker"])
+                for t, r in zip(fr["Ticker"], pd.to_numeric(fr[latest], errors="coerce")):
+                    if pd.notna(r):
+                        rank_map[t] = float(r)
+        except Exception:
+            rank_map = {}
+
+    def _pend_key(t: str):
+        blank_sec = 0 if not sector_map.get(t) else 1
+        rk = rank_map.get(t, 10**9)
+        return (blank_sec, rk, order.get(t, 10**9))
+
+    pending.sort(key=_pend_key)
 
     if args.resume:
         print(f"resume: {pending_mask.sum()} pending of {len(fund)}", flush=True)
@@ -233,10 +254,15 @@ def main(argv: list[str] | None = None) -> int:
             sectors[pos] = str(meta["Sector"])
         if meta["Industry"]:
             industries[pos] = str(meta["Industry"])
+        got = False
         if meta["MarketCap"] is not None:
             mcaps[pos] = float(meta["MarketCap"])
             filled_n += 1
-        updated[pos] = str(now)
+            got = True
+        if meta["Sector"] or meta["Industry"]:
+            got = True
+        if got:
+            updated[pos] = str(now)
         if i % 50 == 0 or i == len(pending):
             fund["Sector"] = sectors
             fund["Industry"] = industries

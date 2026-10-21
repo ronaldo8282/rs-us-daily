@@ -40,6 +40,10 @@ jobs:
             cp output/rs_stocks.csv "output/history/rs_stocks_${ASOF}.csv"
           fi
 
+      - name: Append Friday wide ranks (Fridays only)
+        continue-on-error: true
+        run: python src/append_friday_wide.py --src output/rs_stocks.csv --out-dir output/friday
+
       - name: Overlap vs Fred (best-effort)
         continue-on-error: true
         run: python src/overlap_vs_fred.py --ours output/rs_stocks.csv
@@ -51,6 +55,7 @@ jobs:
           path: |
             output/rs_stocks.csv
             output/history/
+            output/friday/
             reports/
           if-no-files-found: warn
 
@@ -58,7 +63,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add output/rs_stocks.csv output/history/ reports/ || true
+          git add output/rs_stocks.csv output/history/ output/friday/ reports/ || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

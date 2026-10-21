@@ -262,6 +262,36 @@
     return profile && profile.poc ? profile.poc.price : null;
   }
 
+  /** Actual session/composite high & low from price rows (for trend Y scale). */
+  function profileHiLo(profile) {
+    if (!profile) return null;
+    if (profile.rows && profile.rows.length) {
+      let hi = -Infinity;
+      let lo = Infinity;
+      for (const r of profile.rows) {
+        if (r.price > hi) hi = r.price;
+        if (r.price < lo) lo = r.price;
+      }
+      if (isFinite(hi) && isFinite(lo)) return { hi, lo };
+    }
+    const mid = sessionTrendPrice(profile);
+    if (mid == null) return null;
+    return { hi: mid, lo: mid };
+  }
+
+  /** Week/month trend point: last trading-day mid (close proxy) so amplitude is real. */
+  function groupTrendPrice(group) {
+    if (!group) return null;
+    if (group.sids && group.sids.length) {
+      for (let i = group.sids.length - 1; i >= 0; i--) {
+        const p = profileById.get(group.sids[i]);
+        const mid = p ? sessionTrendPrice(p) : null;
+        if (mid != null) return mid;
+      }
+    }
+    return group.profile ? sessionTrendPrice(group.profile) : null;
+  }
+
   function dayColWFromPrints(prints) {
     if (isBarMode()) {
       const unit = Math.max(BAR_PX_PER_PRINT, CHAR_W0 * zoom);
@@ -2364,43 +2394,87 @@
     const cw = contentW != null ? contentW : lastGeo.totalW - (lastGeo.rightEdgePad || 0);
     if (!widths || !offsets) return;
 
-    // Collect mid prices (group columns use merged profile mid)
+    const groupMode = !!(lastGeo.groupMode && lastGeo.groups && lastGeo.groups.length);
+    const plotL = axisW;
+    const plotR = cssW;
+    const plotT = 16;
+    const plotB = cssH - 6;
+    const plotH = Math.max(1, plotB - plotT);
+
+    // Collect points; week/month also keep each column's actual H/L for Y scale
     const pts = [];
-    let yMin = Infinity;
-    let yMax = -Infinity;
     const nCols = widths.length;
     for (let i = 0; i < nCols; i++) {
       let price = null;
       let sid = sessionIds[i];
-      if (lastGeo.groupMode && lastGeo.groups && lastGeo.groups[i]) {
+      let hi = null;
+      let lo = null;
+      if (groupMode && lastGeo.groups[i]) {
         const g = lastGeo.groups[i];
-        price = g.profile ? sessionTrendPrice(g.profile) : null;
+        price = groupTrendPrice(g);
         sid = (g.sids && g.sids.length && g.sids[g.sids.length - 1]) || g.label;
+        const hl = profileHiLo(g.profile);
+        if (hl) {
+          hi = hl.hi;
+          lo = hl.lo;
+        }
       } else {
         const p = profileById.get(sessionIds[i]);
         price = p ? sessionTrendPrice(p) : null;
+        const hl = profileHiLo(p);
+        if (hl) {
+          hi = hl.hi;
+          lo = hl.lo;
+        }
       }
       if (price == null) continue;
+      if (hi == null) hi = price;
+      if (lo == null) lo = price;
       const xCenter = axisW + offsets[i] + widths[i] / 2 - sc.scrollLeft;
-      pts.push({ i, sid, price, xCenter, w: widths[i] });
-      if (price < yMin) yMin = price;
-      if (price > yMax) yMax = price;
+      pts.push({ i, sid, price, hi, lo, xCenter, w: widths[i] });
     }
-    if (!pts.length || !isFinite(yMin)) return;
+    if (!pts.length) return;
 
-    const padY = Math.max((yMax - yMin) * 0.12, (lastGeo.align && globalGrid ? globalGrid.step : 5) * 2);
+    // Visible columns (with small x pad for edge continuity)
+    let visible = pts.filter((p) => p.xCenter >= plotL - 40 && p.xCenter <= plotR + 40);
+    if (!visible.length) visible = pts.slice(); // fallback if scroll lands in pad
+
+    // Y scale:
+    // - Week/month HG: actual high-low of *visible* composites (often 1000+ pts) —
+    //   never reuse a narrow day-mid span that clips/squashes the line.
+    // - Day wall: mid-to-mid of visible days (unchanged feel).
+    let yMin = Infinity;
+    let yMax = -Infinity;
+    if (groupMode) {
+      for (const p of visible) {
+        if (p.lo < yMin) yMin = p.lo;
+        if (p.hi > yMax) yMax = p.hi;
+      }
+    } else {
+      for (const p of visible) {
+        if (p.price < yMin) yMin = p.price;
+        if (p.price > yMax) yMax = p.price;
+      }
+    }
+    if (!isFinite(yMin) || !isFinite(yMax)) return;
+
+    const step = globalGrid ? globalGrid.step : 5;
+    // Week/month: keep modest pad but never shrink below a readable band
+    const minSpan = groupMode ? Math.max(200, step * 40) : step * 2;
+    let span = yMax - yMin;
+    if (span < minSpan) {
+      const mid = (yMin + yMax) / 2;
+      yMin = mid - minSpan / 2;
+      yMax = mid + minSpan / 2;
+      span = minSpan;
+    }
+    const padY = Math.max(span * (groupMode ? 0.06 : 0.12), step * 2);
     yMin -= padY;
     yMax += padY;
     if (yMax <= yMin) {
       yMin -= 10;
       yMax += 10;
     }
-
-    const plotL = axisW;
-    const plotR = cssW;
-    const plotT = 16;
-    const plotB = cssH - 6;
-    const plotH = Math.max(1, plotB - plotT);
 
     function yOf(price) {
       return plotT + ((yMax - price) / (yMax - yMin)) * plotH;
@@ -2415,7 +2489,6 @@
       ctx.moveTo(axisW + 0.5, 0);
       ctx.lineTo(axisW + 0.5, cssH);
       ctx.stroke();
-      const step = globalGrid ? globalGrid.step : 5;
       ctx.fillStyle = "#8b9bb4";
       ctx.font = "10px ui-monospace, Menlo, Consolas, monospace";
       ctx.textAlign = "right";
@@ -2443,8 +2516,7 @@
       ctx.stroke();
     }
 
-    // line + fill
-    const visible = pts.filter((p) => p.xCenter >= plotL - 40 && p.xCenter <= plotR + 40);
+    // line + fill (visible columns)
     if (visible.length) {
       ctx.beginPath();
       ctx.moveTo(visible[0].xCenter, yOf(visible[0].price));
@@ -2463,8 +2535,8 @@
       ctx.fillStyle = "#38bdf822";
       ctx.fill();
 
-      // dots when columns are wide enough
-      const avgW = sessionIds.length ? cw / sessionIds.length : 20;
+      // dots when columns are wide enough (use column count, not day count)
+      const avgW = nCols ? cw / nCols : 20;
       if (avgW >= 10) {
         for (const p of visible) {
           ctx.beginPath();
@@ -2475,13 +2547,18 @@
       }
     }
 
-    // crosshair day marker
+    // crosshair marker (group-aware)
     if (crosshair.visible && crosshair.colIdx != null && crosshair.colIdx >= 0) {
       const i = crosshair.colIdx;
-      if (i < sessionIds.length) {
+      if (i < nCols && widths[i] != null) {
         const x = axisW + offsets[i] + widths[i] / 2 - sc.scrollLeft;
-        const p = profileById.get(sessionIds[i]);
-        const price = p ? sessionTrendPrice(p) : null;
+        let price = null;
+        if (groupMode && lastGeo.groups[i]) {
+          price = groupTrendPrice(lastGeo.groups[i]);
+        } else {
+          const p = profileById.get(sessionIds[i]);
+          price = p ? sessionTrendPrice(p) : null;
+        }
         ctx.strokeStyle = "#93c5fd99";
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -2504,9 +2581,11 @@
 
     if (badge && pts.length) {
       const last = pts[pts.length - 1];
-      const step = globalGrid ? globalGrid.step : 5;
+      const spanPts = Math.round(yMax - yMin);
+      const modeTag = groupMode ? (lastGeo.groupMode === "month" ? "月" : "週") + " H–L" : "mid";
       badge.innerHTML =
-        `Trend · <b>mid</b> (H+L)/2 · last ${escapeHtml(fmtPrice(last.price, step))}`;
+        `Trend · <b>${modeTag}</b> · last ${escapeHtml(fmtPrice(last.price, step))}` +
+        (groupMode ? ` · scale ${escapeHtml(String(spanPts))}pts` : "");
     }
   }
 

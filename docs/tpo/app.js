@@ -1792,6 +1792,15 @@
       const rh0 = Math.max(2, BASE_ROW_H * prevZoom);
       const centerY = sc.scrollTop + sc.clientHeight / 2 - HEAD_H;
       const keyAtCenter = globalGrid.maxKey - centerY / rh0;
+      updateZoomLabel();
+      if (opts.immediate) {
+        // Pinch path: sync scrollTop now so the next paint is already anchored (less lag)
+        const rh1 = Math.max(2, BASE_ROW_H * zoom);
+        const newTop = (globalGrid.maxKey - keyAtCenter) * rh1 - sc.clientHeight / 2 + HEAD_H;
+        sc.scrollTop = Math.max(0, newTop);
+        scheduleRender();
+        return;
+      }
       scheduleRender();
       requestAnimationFrame(() => {
         const rh1 = rowH();
@@ -1799,7 +1808,6 @@
         sc.scrollTop = Math.max(0, newTop);
         scheduleRender();
       });
-      updateZoomLabel();
       return;
     }
     updateZoomLabel();
@@ -1996,7 +2004,7 @@
     zoomFitDayRange(range.fromIdx, range.toIdx);
   }
 
-  /** One-tap: exit merge if needed, fit latest session day, scroll + flash. */
+  /** One-tap: exit merge if needed, keep zoom, scroll to latest day + flash. */
   function jumpToLatestTradingDay() {
     if (!sessionIds.length) return;
     if (weekHgOn || monthHgOn) {
@@ -2010,8 +2018,29 @@
     }
     const toIdx = sessionIds.length - 1;
     const sid = sessionIds[toIdx];
-    // Prefer letter-readable zoom for a single day column
-    zoomFitDayRange(toIdx, toIdx, { minZoom: 0.55, maxZoom: 1.05, flashSid: sid });
+    // Do NOT change zoom / display ratio — only align + flash
+    scheduleRender();
+    requestAnimationFrame(() => {
+      const sc = $("profilesScroll");
+      if (!sc) return;
+      const geo = buildColGeometry();
+      const right = geo.offsets[toIdx + 1] || geo.contentW;
+      const targetLeft = Math.max(
+        0,
+        right + (geo.rightEdgePad || RIGHT_EDGE_PAD) * 0.15 - sc.clientWidth + AXIS_W
+      );
+      sc.scrollLeft = Math.max(targetLeft, Math.max(0, sc.scrollWidth - sc.clientWidth));
+      if (globalGrid) {
+        const rh = rowH();
+        const hh = headH();
+        let midKey = midKeyForDayRange(toIdx, toIdx);
+        if (midKey == null) midKey = (globalGrid.minKey + globalGrid.maxKey) / 2;
+        const top = (globalGrid.maxKey - midKey) * rh - sc.clientHeight / 2 + hh;
+        sc.scrollTop = Math.max(0, top);
+      }
+      scheduleRender();
+      requestAnimationFrame(() => flashDayColumn(sid));
+    });
   }
 
   function zoomReset() {
@@ -2640,17 +2669,29 @@
   (function bindPinchZoom() {
     const sc = $("profilesScroll");
     if (!sc) return;
-    let pinch = null; // { dist0, zoom0 }
+    const PINCH_SENS = 1.85; // >1 ⇒ same finger travel = larger zoom change
+    let pinch = null; // { dist0, zoom0, gesture? }
+    let lastApplied = 0;
     function distOf(t0, t1) {
       const dx = t0.clientX - t1.clientX;
       const dy = t0.clientY - t1.clientY;
       return Math.sqrt(dx * dx + dy * dy);
+    }
+    function applyPinchScale(rawRatio) {
+      if (!(rawRatio > 0) || !isFinite(rawRatio)) return;
+      const boosted = Math.pow(rawRatio, PINCH_SENS);
+      const next = pinch.zoom0 * boosted;
+      // Skip tiny no-ops to cut wasted renders, but stay responsive (~every frame)
+      if (Math.abs(next - zoom) / Math.max(zoom, 1e-6) < 0.004) return;
+      lastApplied = next;
+      setZoom(next, { immediate: true });
     }
     sc.addEventListener(
       "touchstart",
       (ev) => {
         if (ev.touches.length === 2) {
           pinch = { dist0: distOf(ev.touches[0], ev.touches[1]), zoom0: zoom };
+          lastApplied = zoom;
         } else if (ev.touches.length < 2) {
           pinch = null;
         }
@@ -2660,12 +2701,12 @@
     sc.addEventListener(
       "touchmove",
       (ev) => {
-        if (!pinch || ev.touches.length !== 2) return;
+        if (!pinch || pinch.gesture || ev.touches.length !== 2) return;
         const d0 = pinch.dist0;
         if (!(d0 > 8)) return;
         ev.preventDefault();
         const d1 = distOf(ev.touches[0], ev.touches[1]);
-        setZoom(pinch.zoom0 * (d1 / d0));
+        applyPinchScale(d1 / d0);
       },
       { passive: false }
     );
@@ -2680,6 +2721,7 @@
       (ev) => {
         try { ev.preventDefault(); } catch (_) {}
         pinch = { dist0: 1, zoom0: zoom, gesture: true };
+        lastApplied = zoom;
       },
       { passive: false }
     );
@@ -2689,7 +2731,7 @@
         if (!pinch || !pinch.gesture) return;
         try { ev.preventDefault(); } catch (_) {}
         const s = ev.scale;
-        if (s && isFinite(s)) setZoom(pinch.zoom0 * s);
+        if (s && isFinite(s)) applyPinchScale(s);
       },
       { passive: false }
     );

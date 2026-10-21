@@ -44,6 +44,31 @@ jobs:
         continue-on-error: true
         run: python src/append_friday_wide.py --src output/rs_stocks.csv --out-dir output/friday
 
+      - name: Update fundamentals (best-effort batch)
+        continue-on-error: true
+        run: |
+          # Resume fill; cap per day so the job still finishes under timeout.
+          python src/update_fundamentals.py --resume --limit 400 --prioritize-friday
+
+      - name: Sync Pages data copies
+        continue-on-error: true
+        run: |
+          mkdir -p docs/data
+          cp -f output/friday/rs_friday_ranks.csv docs/data/rs_friday_ranks.csv
+          cp -f output/friday/rs_friday_percentiles.csv docs/data/rs_friday_percentiles.csv
+          if [ -f output/fundamentals_latest.csv ]; then
+            cp -f output/fundamentals_latest.csv docs/data/fundamentals_latest.csv
+          else
+            echo 'Ticker,Sector,Industry,MarketCap,updated_at' > docs/data/fundamentals_latest.csv
+          fi
+
+
+      - name: Market breadth MM (Stockbee-inspired MVP)
+        continue-on-error: true
+        run: |
+          mkdir -p output/mm
+          python src/mm_breadth.py --out output/mm/mm_breadth_daily.csv --rewrite-days 15
+
       - name: Overlap vs Fred (best-effort)
         continue-on-error: true
         run: python src/overlap_vs_fred.py --ours output/rs_stocks.csv
@@ -56,14 +81,17 @@ jobs:
             output/rs_stocks.csv
             output/history/
             output/friday/
+            output/mm/
+            output/fundamentals_latest.csv
+            docs/data/
             reports/
           if-no-files-found: warn
 
-      - name: Commit latest + history (if changed)
+      - name: Commit latest + history + docs (if changed)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add output/rs_stocks.csv output/history/ output/friday/ reports/ || true
+          git add output/rs_stocks.csv output/history/ output/friday/ output/mm/ output/fundamentals_latest.csv docs/ reports/ || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

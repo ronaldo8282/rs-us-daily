@@ -104,6 +104,52 @@ Repo: https://github.com/ronaldo8282/rs-us-daily
 3. After ≥5 trading days of stable overlap, Klaus/Leung decide cutover
    (`filter_rs90.py --csv` pointing at our file).
 
+
+
+## Market breadth (Stockbee MM–inspired MVP)
+
+Daily US market-breadth series inspired by the **publicly described** Stockbee
+Market Monitor columns (Pradeep / [stockbee.blogspot.com/p/mm.html](https://stockbee.blogspot.com/p/mm.html)).
+**Not a copy** of Stockbee Teechart tables — Yahoo/yfinance closes approximate
+the same definitions.
+
+### Columns (`output/mm/mm_breadth_daily.csv`)
+
+One row per trading session:
+
+| Column | Definition |
+| --- | --- |
+| `date` | Session date (ISO) |
+| `universe_n` | Stocks with enough history that day (see filters) |
+| `up_4pct` / `down_4pct` | Count with day return ≥+4% / ≤−4% |
+| `ratio_5d` | Σ up_4pct over last 5 sessions ÷ Σ down_4pct over last 5 |
+| `ratio_10d` | Same over 10 sessions |
+| `up_25pct_month` / `up_50pct_month` | Count with return vs **~21** trading days ago ≥+25% / ≥+50% |
+| `up_25pct_quarter` / `down_25pct_quarter` | vs **~63** trading days ago ≥+25% / ≤−25% |
+| `pct_above_40dma` | % of universe with close > SMA(40) (T2108-style approx) |
+
+If the 5d/10d down-sum is **0**, the ratio is left blank (null) — not a sentinel.
+
+### Filters (MVP)
+
+- Universe = Nasdaq Trader common stocks (same as RS ranker); `--smoke` / `--limit` for tests
+- Drop tickers with non-positive closes or insufficient bars for month/quarter/SMA40 on that day
+- **No** volume / V>V1 filter yet (future enhancement)
+
+### Cron
+
+Runs in the same Actions job as daily RS (`21:30 UTC` Mon–Fri / ~05:30 HKT),
+**after** the rank step (`python src/mm_breadth.py`). Re-downloads closes for MVP
+(no shared cache yet). Upserts the last 15 sessions so ratios stay consistent.
+
+```bash
+python src/mm_breadth.py --out output/mm/mm_breadth_daily.csv
+python src/mm_breadth.py --smoke   # ~50 tickers
+python src/mm_breadth.py --limit 200 --rewrite-days 15
+```
+
+Historical multi-year backfill and a Pages table are **out of scope** for this MVP.
+
 ## Layout
 
 ```
@@ -111,8 +157,13 @@ rs-us-daily/
   README.md
   requirements.txt
   src/rank_rs.py
+  src/mm_breadth.py
+  src/append_friday_wide.py
+  src/backfill_friday_ranks.py
+  src/update_fundamentals.py
   src/overlap_vs_fred.py
-  output/          # rs_stocks.csv (gitignored smoke file ok)
+  output/          # rs_stocks.csv, friday/, history/, mm/, fundamentals_latest.csv
+  docs/            # GitHub Pages (index.html + data/)
   reports/         # overlap_YYYYMMDD.md
   .github/workflows/daily.yml
 ```
@@ -127,3 +178,44 @@ Leung’s continuous Friday full-universe rank table (GitHub, not Sheets):
 
 Appended automatically by Actions when the daily asof date is a **Friday**
 (`src/append_friday_wide.py`). Bootstrap / non-Friday seed: `--force`.
+
+## GitHub Pages MVP
+
+Interactive Friday rank browser (no build step):
+
+- Site root: `docs/index.html` (enable Pages: Settings → Pages → Deploy from branch `main` / folder `/docs`)
+- Suggested URL: https://ronaldo8282.github.io/rs-us-daily/
+- Same-origin data under `docs/data/`:
+  - `rs_friday_ranks.csv` — wide Ticker × Friday Rank
+  - `rs_friday_percentiles.csv` — wide Ticker × Friday Percentile
+  - `fundamentals_latest.csv` — Ticker, Sector, Industry, MarketCap, updated_at
+
+UI: range buttons (6M/1Y/2Y/3Y/5Y), week dropdown, sort by Rank/Percentile/Ticker/MarketCap, ticker search, join latest fundamentals.
+
+Daily Actions copies the three CSVs into `docs/data/` and commits `docs/` with the rank outputs.
+
+### Fundamentals fill
+
+```bash
+python src/update_fundamentals.py --resume --limit 400 --prioritize-friday
+```
+
+Merges any Sector/Industry/MarketCap already on `output/rs_stocks.csv`, then yfinance `.info` for gaps. Actions runs a best-effort `--limit 400` each day (`continue-on-error`). Full ~6k universe takes many runs; blank cells are OK in the UI.
+
+### Friday history backfill
+
+```bash
+# Ensure ≥26 Friday columns (downloads ~3y closes once, caches to output/.cache_closes.pkl)
+python src/backfill_friday_ranks.py --weeks 26 --period 3y
+# Longer history when rate limits allow:
+python src/backfill_friday_ranks.py --weeks 104 --period 5y
+```
+
+Skips columns already present; writes after each Friday. Then refresh Pages copies:
+
+```bash
+mkdir -p docs/data
+cp -f output/friday/rs_friday_ranks.csv docs/data/
+cp -f output/friday/rs_friday_percentiles.csv docs/data/
+cp -f output/fundamentals_latest.csv docs/data/
+```

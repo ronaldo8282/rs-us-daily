@@ -56,7 +56,12 @@ Aligned for `filter_rs90.py` consumption:
 | MarketCap | USD, blank if unknown |
 | asof_date | last close date (ISO) |
 
-File: `output/rs_stocks.csv`
+Files:
+
+- `output/rs_stocks.csv` — latest full-universe ranks (overwritten daily)
+- `output/history/rs_stocks_YYYYMMDD.csv` — dated keep-record copy (`YYYYMMDD` = asof close date)
+
+Retention: every trading day is committed to git under `output/history/` (no auto-prune; ~260KB/day). Prune policy can be added later if the repo grows too large.
 
 ## Local run
 
@@ -70,7 +75,7 @@ pip install -r requirements.txt
 python src/rank_rs.py --smoke --out output/rs_stocks_smoke.csv
 
 # Full listings (slow; add --limit N while testing; --fetch-info for mcap)
-python src/rank_rs.py --out output/rs_stocks.csv
+python src/rank_rs.py --out output/rs_stocks.csv --history-dir output/history
 
 # Overlap vs Fred public CSV (needs ours CSV + network)
 python src/overlap_vs_fred.py --ours output/rs_stocks.csv

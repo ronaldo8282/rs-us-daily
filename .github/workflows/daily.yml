@@ -1,5 +1,5 @@
 # Daily IBD-style US RS ranker.
-# Goal: CSV ready before Daily scan ~07:56 Asia/Hong_Kong.
+# Goal: full-universe CSV + dated history before Daily scan ~07:56 Asia/Hong_Kong.
 # US cash equity close ~20:00 UTC → run 21:30 UTC (05:30 HKT next morning).
 name: daily-rs-us
 
@@ -29,11 +29,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Rank full universe
+      - name: Rank full universe + history archive
         run: |
-          mkdir -p output reports
+          mkdir -p output/history reports
           # Full .info is too slow; fill MarketCap only for Percentile>=90 (overlap needs it).
-          python src/rank_rs.py --out output/rs_stocks.csv --fetch-info-pct 90
+          python src/rank_rs.py --out output/rs_stocks.csv --fetch-info-pct 90 --history-dir output/history
+          # Fallback archive by asof_date if script did not write one
+          if ! ls output/history/rs_stocks_*.csv >/dev/null 2>&1; then
+            ASOF=$(python -c "import pandas as pd; print(str(pd.read_csv('output/rs_stocks.csv')['asof_date'].iloc[0]).replace('-',''))")
+            cp output/rs_stocks.csv "output/history/rs_stocks_${ASOF}.csv"
+          fi
 
       - name: Overlap vs Fred (best-effort)
         continue-on-error: true
@@ -45,19 +50,19 @@ jobs:
           name: rs-stocks
           path: |
             output/rs_stocks.csv
+            output/history/
             reports/
           if-no-files-found: warn
 
-      # Commit only when a token with contents:write is available (default GITHUB_TOKEN).
-      # Scaffold only — do not push from this box until the repo exists and auth is set.
-      - name: Commit CSV (if changed)
+      - name: Commit latest + history (if changed)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add output/rs_stocks.csv reports/ || true
+          git add output/rs_stocks.csv output/history/ reports/ || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "chore: daily RS ranks $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase origin main || git pull --rebase --autostash origin main
             git push
           fi

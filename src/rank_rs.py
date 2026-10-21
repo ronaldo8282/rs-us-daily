@@ -379,6 +379,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0.0,
         help="after ranking, fetch Sector/Industry/MarketCap for Percentile>=N (0=off)",
     )
+    p.add_argument(
+        "--history-dir",
+        type=Path,
+        default=None,
+        help="also write output/history/rs_stocks_YYYYMMDD.csv from asof_date (keep record)",
+    )
     return p.parse_args(argv)
 
 
@@ -405,6 +411,12 @@ def main(argv: list[str] | None = None) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.out, index=False)
     print(f"wrote {len(df)} rows → {args.out}", flush=True)
+    if args.history_dir is not None:
+        args.history_dir.mkdir(parents=True, exist_ok=True)
+        asof = str(df["asof_date"].iloc[0]).replace("-", "")
+        hist = args.history_dir / f"rs_stocks_{asof}.csv"
+        df.to_csv(hist, index=False)
+        print(f"history → {hist}", flush=True)
     print("top 10:", flush=True)
     print(df.head(10).to_string(index=False), flush=True)
     return 0

@@ -631,6 +631,20 @@
     </div>`;
   }
 
+  function latestLivePrice() {
+    // Newest loaded session mid (H+L)/2; fall back to its POC.
+    if (!sessionIds.length) return null;
+    for (let i = sessionIds.length - 1; i >= 0; i--) {
+      const p = profileById.get(sessionIds[i]);
+      if (!p) continue;
+      const price = sessionTrendPrice(p);
+      if (price != null && isFinite(price)) {
+        return { price, sid: sessionIds[i], step: p.step || (globalGrid && globalGrid.step) || 5 };
+      }
+    }
+    return null;
+  }
+
   function renderPriceAxis(grid, rh, fp, hh) {
     const bodyH = grid.nBins * rh;
     const step = grid.step;
@@ -665,9 +679,25 @@
       );
     }
 
+    // Live / latest index mark on left axis (mid of newest session)
+    let liveHtml = "";
+    const live = latestLivePrice();
+    if (live && live.price != null && step > 0) {
+      const liveKey = live.price / step;
+      if (liveKey >= grid.minKey - 0.5 && liveKey <= grid.maxKey + 0.5) {
+        const top = (grid.maxKey - liveKey) * rh;
+        const liveStr = fmtPrice(live.price, step);
+        liveHtml =
+          `<div class="axis-live" style="top:${top}px" title="最新市價（${escapeHtml(live.sid || "")} mid）">` +
+          `<span class="axis-live-line" aria-hidden="true"></span>` +
+          `<span class="axis-live-tag">${liveStr}</span>` +
+          `</div>`;
+      }
+    }
+
     return `<div class="price-axis" style="width:${AXIS_W}px">
       <div class="day-head axis-head" style="height:${hh}px"><b>Price</b><div class="day-meta">Pts ${step}</div></div>
-      <div class="day-body axis-body" style="height:${bodyH}px;position:relative">${labels.join("")}</div>
+      <div class="day-body axis-body" style="height:${bodyH}px;position:relative">${labels.join("")}${liveHtml}</div>
     </div>`;
   }
 
@@ -989,7 +1019,7 @@
       if (p && p.rows && p.rows.length) loaded.push({ sid: sids[i], profile: p, letter: alphabet[i % alphabet.length] });
     }
     if (!loaded.length) {
-      compositeCache.set(cacheKey, null);
+      // Do not cache null — profiles may still be filling in.
       return null;
     }
 
@@ -1031,7 +1061,6 @@
       };
     });
     if (!rows.length) {
-      compositeCache.set(cacheKey, null);
       return null;
     }
 
@@ -1392,7 +1421,9 @@
   }
 
   function toggleMergePanel() {
-    setMergePanelOpen(!isMergePanelOpen());
+    const next = !isMergePanelOpen();
+    setMergePanelOpen(next);
+    if (next) syncMergeGroupList();
   }
 
   function startAddMergeGroup() {
@@ -1441,6 +1472,34 @@
     scheduleRender();
   }
 
+  function rangeGroupStats(g, colorIdx) {
+    /** Build TPO / VA / POC strings for one day-merge group. Never throws. */
+    const empty = { tpo: "—", va: "—", poc: "—", ok: false };
+    try {
+      const built = buildOneRangeGroup(g, colorIdx);
+      const p = built && built.profile;
+      if (!p) return empty;
+      const step = p.step || 5;
+      let tpoShow = 0;
+      if (p.rows && p.rows.length) {
+        tpoShow = p.rows.reduce((s, r) => s + densityCountOf(r), 0);
+      }
+      if (!tpoShow) tpoShow = p.totalTpo || 0;
+      const pocStr = p.poc && p.poc.price != null ? fmtPrice(p.poc.price, step) : "—";
+      const vaLo = p.val && p.val.price != null ? fmtPrice(p.val.price, step) : "—";
+      const vaHi = p.vah && p.vah.price != null ? fmtPrice(p.vah.price, step) : "—";
+      return {
+        tpo: String(tpoShow),
+        va: vaLo + "–" + vaHi,
+        poc: pocStr,
+        ok: true,
+      };
+    } catch (e) {
+      console.warn("rangeGroupStats", e);
+      return empty;
+    }
+  }
+
   function syncMergeGroupList() {
     const list = $("mergeGroupList");
     const countEl = $("mergeCount");
@@ -1460,30 +1519,18 @@
       .map((g, i) => {
         const lab = rangeLabelFor(g.startIdx, g.endIdx);
         const n = g.endIdx - g.startIdx + 1;
-        const built = buildOneRangeGroup(g, i % RANGE_COLOR_N);
-        let statsHtml = "";
-        if (built && built.profile) {
-          const p = built.profile;
-          const step = p.step || 5;
-          const totalPrints = (p.rows || []).reduce((s, r) => s + densityCountOf(r), 0);
-          const tpoShow = totalPrints > 0 ? totalPrints : p.totalTpo || 0;
-          const pocStr = p.poc ? fmtPrice(p.poc.price, step) : "—";
-          const vaLo = p.val ? fmtPrice(p.val.price, step) : "—";
-          const vaHi = p.vah ? fmtPrice(p.vah.price, step) : "—";
-          statsHtml =
-            `<span class="merge-stats">` +
-            `<b>TPO</b> ${tpoShow}` +
-            ` · <b>VA</b> ${vaLo}–${vaHi}` +
-            ` · <b>POC</b> ${pocStr}` +
-            `</span>`;
-        }
-        const titleBits = [lab, n + "日"];
+        const st = rangeGroupStats(g, i % RANGE_COLOR_N);
+        const titleBits = [lab, n + "日", "TPO " + st.tpo, "VA " + st.va, "POC " + st.poc];
         return (
           `<div class="merge-row" data-gid="${g.id}">` +
           `<span class="merge-swatch merge-c${i % RANGE_COLOR_N}" aria-hidden="true"></span>` +
           `<div class="merge-lab-wrap">` +
           `<span class="merge-lab" title="${escapeHtml(titleBits.join(" · "))}">${escapeHtml(lab)} · ${n}日</span>` +
-          statsHtml +
+          `<div class="merge-stats" title="${escapeHtml(titleBits.join(" · "))}">` +
+          `<span class="merge-stat"><b>TPO</b> ${escapeHtml(st.tpo)}</span>` +
+          `<span class="merge-stat"><b>VA</b> ${escapeHtml(st.va)}</span>` +
+          `<span class="merge-stat"><b>POC</b> ${escapeHtml(st.poc)}</span>` +
+          `</div>` +
           `</div>` +
           `<button type="button" class="merge-x" data-clear-gid="${g.id}" title="清呢一組">×</button>` +
           `</div>`

@@ -897,14 +897,59 @@
       font-weight: 600;
     }
     .merge-stats {
-      font-size: 0.62rem;
-      color: #94a3b8;
-      line-height: 1.35;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      color: #e2e8f0;
+      line-height: 1.4;
       word-break: break-word;
+      margin-top: 0.1rem;
+    }
+    .merge-stat {
+      white-space: nowrap;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 3px;
+      padding: 0.08rem 0.35rem;
     }
     .merge-stats b {
-      color: #cbd5e1;
-      font-weight: 600;
+      color: #a5b4fc;
+      font-weight: 700;
+      margin-right: 0.15rem;
+    }
+    .axis-live {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 0;
+      z-index: 6;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+    .axis-live-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      border-top: 1.5px dashed #38bdf8;
+      opacity: 0.95;
+    }
+    .axis-live-tag {
+      position: absolute;
+      right: 2px;
+      top: 0;
+      transform: translateY(-50%);
+      background: #0ea5e9;
+      color: #0b1220;
+      font-weight: 800;
+      font-size: 10px;
+      line-height: 1.2;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      box-shadow: 0 0 0 1px #0284c7, 0 2px 6px #000a;
+      white-space: nowrap;
     }
     .merge-x {
       flex: 0 0 auto;
@@ -1419,6 +1464,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=merge-panel-stats-1"></script>
+  <script src="app.js?v=merge-panel-stats-2"></script>
 </body>
 </html>

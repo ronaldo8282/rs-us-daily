@@ -123,6 +123,20 @@
     .panel-block .empty {
       padding: 1rem; color: var(--muted); font-size: 0.9rem;
     }
+    .xl-panel {
+      margin: 0 1.5rem 1rem; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .xl-panel h2 {
+      margin: 0; padding: 0.55rem 0.9rem; font-size: 0.9rem;
+      border-bottom: 1px solid var(--border); background: #243044;
+      display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; justify-content: space-between;
+    }
+    .xl-panel h2 .hint { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+    .xl-panel .table-scroll { max-height: 280px; border: none; border-radius: 0; }
+    td.delta-cell.up { color: var(--accent2); }
+    td.delta-cell.down { color: var(--drop); }
+    td.delta-cell.flat { color: var(--muted); }
     .wow-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
       padding: 0 1.5rem 1.5rem;
@@ -176,6 +190,30 @@
     </div>
 
     <div class="status" id="status">Loading…</div>
+
+    <div class="xl-panel" id="xl-panel">
+      <h2>
+        <span>XL Sector ETFs</span>
+        <span class="hint" id="xl-hint">same week · Δ vs prior Friday &amp; range start</span>
+      </h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable-xl" data-xl-sort="xlrank">XlRank</th>
+              <th class="sortable-xl" data-xl-sort="ticker">Ticker</th>
+              <th>Sector</th>
+              <th class="num sortable-xl" data-xl-sort="rs">Rel Strength</th>
+              <th class="num sortable-xl" data-xl-sort="wow">ΔRS WoW</th>
+              <th class="num sortable-xl" data-xl-sort="period">ΔRS vs range</th>
+              <th class="num">Univ Rank</th>
+              <th class="num">Univ Pct</th>
+            </tr>
+          </thead>
+          <tbody id="xl-tbody"></tbody>
+        </table>
+      </div>
+    </div>
 
     <div class="wrap">
       <div class="table-scroll">
@@ -318,13 +356,17 @@
     ranks: "./data/rs_friday_ranks.csv",
     pcts: "./data/rs_friday_percentiles.csv",
     fund: "./data/fundamentals_latest.csv",
+    xl: "./data/xl_sector_etf_weekly.csv",
   };
 
   let ranksWide = null;
   let pctsWide = null;
   let fundMap = new Map();
+  let xlByDate = new Map(); // asof_date -> [{Ticker, SectorLabel, RelativeStrength, XlRank}]
+  let xlDates = [];
   let years = 0.5;
   let selectedWeek = null;
+  let xlSort = "xlrank";
 
   // RS90 state
   let rs90Weeks = 5;
@@ -441,6 +483,113 @@
     return m > MCAP_MIN;
   }
 
+
+  // ---- XL Sector ETFs panel (Ranks tab) ----
+  function fmtDelta(n) {
+    if (n == null || isNaN(n)) return { text: "—", cls: "flat" };
+    const sign = n > 0 ? "+" : "";
+    const cls = n > 0.0005 ? "up" : n < -0.0005 ? "down" : "flat";
+    return { text: sign + n.toFixed(2), cls };
+  }
+
+  function xlPriorDate(week) {
+    if (!xlDates.length || !week) return null;
+    const idx = xlDates.indexOf(week);
+    if (idx > 0) return xlDates[idx - 1];
+    let prev = null;
+    for (const d of xlDates) {
+      if (d < week) prev = d;
+      else break;
+    }
+    return prev;
+  }
+
+  function xlPeriodStart(week) {
+    const range = datesInRange(ranksWide ? ranksWide.dates : xlDates, years);
+    const eligible = range.filter(d => d <= week && xlByDate.has(d));
+    if (eligible.length) return eligible[0];
+    let start = null;
+    for (const d of xlDates) {
+      if (d <= week) { start = d; break; }
+    }
+    return start;
+  }
+
+  function renderXl() {
+    const tbodyXl = document.getElementById("xl-tbody");
+    const hint = document.getElementById("xl-hint");
+    if (!tbodyXl) return;
+    if (!selectedWeek || !xlByDate.size) {
+      tbodyXl.innerHTML = "";
+      if (hint) hint.textContent = "XL sidecar not loaded yet";
+      return;
+    }
+    let week = selectedWeek;
+    let rows = xlByDate.get(week);
+    if (!rows) {
+      let nearest = null;
+      for (const d of xlDates) {
+        if (d <= week) nearest = d;
+        else break;
+      }
+      if (!nearest) {
+        tbodyXl.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:0.75rem">No XL data for this week</td></tr>';
+        if (hint) hint.textContent = "no XL rows for this week";
+        return;
+      }
+      week = nearest;
+      rows = xlByDate.get(week);
+    }
+    const prior = xlPriorDate(week);
+    const pStart = xlPeriodStart(week);
+    const priorMap = prior ? new Map(xlByDate.get(prior).map(r => [r.Ticker, r.RelativeStrength])) : null;
+    const startLookup = pStart ? new Map(xlByDate.get(pStart).map(r => [r.Ticker, r.RelativeStrength])) : null;
+
+    const enriched = rows.map(r => {
+      const wow = priorMap && priorMap.has(r.Ticker) ? r.RelativeStrength - priorMap.get(r.Ticker) : null;
+      const per = startLookup && startLookup.has(r.Ticker) ? r.RelativeStrength - startLookup.get(r.Ticker) : null;
+      const rv = ranksWide && ranksWide.map.get(r.Ticker);
+      const pv = pctsWide && pctsWide.map.get(r.Ticker);
+      const univRank = rv && rv[selectedWeek] != null && !isNaN(rv[selectedWeek]) ? Number(rv[selectedWeek]) : null;
+      const univPct = pv && pv[selectedWeek] != null && !isNaN(pv[selectedWeek]) ? Number(pv[selectedWeek]) : null;
+      return Object.assign({}, r, { wow: wow, per: per, univRank: univRank, univPct: univPct });
+    });
+
+    enriched.sort((a, b) => {
+      if (xlSort === "ticker") return a.Ticker.localeCompare(b.Ticker);
+      if (xlSort === "rs") return b.RelativeStrength - a.RelativeStrength;
+      if (xlSort === "wow") return (b.wow != null ? b.wow : -999) - (a.wow != null ? a.wow : -999);
+      if (xlSort === "period") return (b.per != null ? b.per : -999) - (a.per != null ? a.per : -999);
+      return a.XlRank - b.XlRank || a.Ticker.localeCompare(b.Ticker);
+    });
+
+    const frag = document.createDocumentFragment();
+    for (const r of enriched) {
+      const wow = fmtDelta(r.wow);
+      const per = fmtDelta(r.per);
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="num">' + r.XlRank + '</td>' +
+        '<td>' + r.Ticker + '</td>' +
+        '<td>' + escapeHtml(r.SectorLabel || "") + '</td>' +
+        '<td class="num">' + r.RelativeStrength.toFixed(2) + '</td>' +
+        '<td class="num delta-cell ' + wow.cls + '">' + wow.text + '</td>' +
+        '<td class="num delta-cell ' + per.cls + '">' + per.text + '</td>' +
+        '<td class="num">' + (r.univRank != null ? r.univRank : "—") + '</td>' +
+        '<td class="num">' + (r.univPct != null ? r.univPct : "—") + '</td>';
+      frag.appendChild(tr);
+    }
+    tbodyXl.innerHTML = "";
+    tbodyXl.appendChild(frag);
+    if (hint) {
+      hint.textContent =
+        "asof " + week +
+        (prior ? " · WoW vs " + prior : " · no prior week") +
+        (pStart ? " · range start " + pStart : "") +
+        " · " + xlDates.length + " XL Fridays";
+    }
+  }
+
   // ---- Ranks tab ----
   function refreshWeekOptions() {
     if (!ranksWide) return;
@@ -522,6 +671,7 @@
       ` · ${ranksWide.dates.length} Friday column(s) in file` +
       ` · range ${years}y` + fundNote
     );
+    renderXl();
   }
 
   // ---- RS90–99 tab ----
@@ -755,10 +905,11 @@
   async function loadAll() {
     setStatus("Loading CSVs…");
     try {
-      const [rText, pText, fText] = await Promise.all([
+      const [rText, pText, fText, xlText] = await Promise.all([
         fetch(DATA.ranks).then(r => { if (!r.ok) throw new Error(DATA.ranks + " " + r.status); return r.text(); }),
         fetch(DATA.pcts).then(r => { if (!r.ok) throw new Error(DATA.pcts + " " + r.status); return r.text(); }),
         fetch(DATA.fund).then(r => r.ok ? r.text() : "").catch(() => ""),
+        fetch(DATA.xl).then(r => r.ok ? r.text() : "").catch(() => ""),
       ]);
       const rParsed = parseCSV(rText);
       const pParsed = parseCSV(pText);
@@ -776,6 +927,26 @@
             MarketCap: rec.MarketCap,
           });
         }
+      }
+      xlByDate = new Map();
+      xlDates = [];
+      if (xlText) {
+        const xlParsed = parseCSV(xlText);
+        const byDate = new Map();
+        for (const rec of xlParsed.records) {
+          const d = String(rec.asof_date || "").trim().slice(0, 10);
+          const t = String(rec.Ticker || "").trim().toUpperCase();
+          if (!d || !t) continue;
+          if (!byDate.has(d)) byDate.set(d, []);
+          byDate.get(d).push({
+            Ticker: t,
+            SectorLabel: rec.SectorLabel || "",
+            RelativeStrength: Number(rec.RelativeStrength),
+            XlRank: Number(rec.XlRank),
+          });
+        }
+        xlDates = [...byDate.keys()].sort();
+        xlByDate = byDate;
       }
       refreshWeekOptions();
       fillRs90Selects();
@@ -798,6 +969,12 @@
   weekEl.addEventListener("change", () => { selectedWeek = weekEl.value; renderRanks(); });
   sortEl.addEventListener("change", renderRanks);
   searchEl.addEventListener("input", renderRanks);
+  document.querySelectorAll("th.sortable-xl").forEach(th => {
+    th.addEventListener("click", () => {
+      xlSort = th.getAttribute("data-xl-sort") || "xlrank";
+      renderXl();
+    });
+  });
   document.querySelectorAll("#panel-ranks thead th.sortable").forEach(th => {
     th.addEventListener("click", () => {
       sortEl.value = th.getAttribute("data-sort");

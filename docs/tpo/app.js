@@ -138,7 +138,9 @@
   let globalGrid = null; // { minKey, maxKey, step, nBins }
   let scrollSyncing = false;
   let lastGeo = null; // { widths, offsets, totalW, gap, axisW, rh, hh, bodyH, barMode }
-  let crosshair = { sid: null, price: null, key: null, localX: 0, localY: 0, visible: false };
+  let crosshair = { sid: null, price: null, key: null, localX: 0, localY: 0, visible: false, step: 5, colIdx: null };
+  // Press-drag on HG: vertical → adjust price level; horizontal pan → clear. Scroll also clears.
+  let chDrag = null; // { pointerId, startX, startY, mode:'price'|'pan'|'track'|null, lockColIdx, lockSid, lockLocalX }
   let singlePinSegments = []; // { startIdx, endIdx, key, price, sid, step, extendsToPad }
 
   // Composite HG overlays: Day → Week → Month; custom multi-range exclusive with week/month
@@ -2823,21 +2825,42 @@
     updateTrendChart();
   }
 
+  function applyCrosshairHit(hit, lock) {
+    if (!hit || hit.price == null) return;
+    crosshair.visible = true;
+    crosshair.price = hit.price;
+    crosshair.key = hit.key;
+    crosshair.step = hit.step;
+    crosshair.localY = hit.localY;
+    if (lock) {
+      crosshair.sid = lock.sid;
+      crosshair.colIdx = lock.colIdx;
+      crosshair.localX = lock.localX;
+    } else {
+      crosshair.sid = hit.sid;
+      crosshair.colIdx = hit.colIdx;
+      crosshair.localX = hit.localX;
+    }
+    refreshCrosshairHud();
+  }
+
   function onChartPointer(ev) {
     const hit = hitTestChart(ev.clientX, ev.clientY);
     if (!hit || !hit.sid) {
       hideCrosshair();
       return;
     }
-    crosshair.visible = true;
-    crosshair.sid = hit.sid;
-    crosshair.price = hit.price;
-    crosshair.key = hit.key;
-    crosshair.step = hit.step;
-    crosshair.colIdx = hit.colIdx;
-    crosshair.localX = hit.localX;
-    crosshair.localY = hit.localY;
-    refreshCrosshairHud();
+    applyCrosshairHit(hit, null);
+  }
+
+  function endChDrag(ev) {
+    if (!chDrag) return;
+    if (ev && ev.pointerId != null && chDrag.pointerId !== ev.pointerId) return;
+    const sc = $("profilesScroll");
+    if (sc && chDrag.pointerId != null) {
+      try { sc.releasePointerCapture(chDrag.pointerId); } catch (_) {}
+    }
+    chDrag = null;
   }
 
   // Range toggle
@@ -2915,6 +2938,9 @@
         if (ev.touches.length === 2) {
           pinch = { dist0: distOf(ev.touches[0], ev.touches[1]), zoom0: zoom };
           lastApplied = zoom;
+          // Pinch supersedes price-drag / pinned crosshair
+          if (chDrag) endChDrag(null);
+          if (crosshair.visible) hideCrosshair();
         } else if (ev.touches.length < 2) {
           pinch = null;
         }
@@ -3010,6 +3036,10 @@
   $("profilesScroll").addEventListener(
     "scroll",
     () => {
+      // Panning / scrolling the HG wall clears pinned date+pts so it cannot lag behind
+      if (crosshair.visible && !(chDrag && chDrag.mode === "price")) {
+        hideCrosshair();
+      }
       scheduleRender();
       syncTimelineScroll();
       updateTrendChart();
@@ -3019,11 +3049,103 @@
 
   const scEl = $("profilesScroll");
   if (scEl) {
-    scEl.addEventListener("mousemove", onChartPointer, { passive: true });
-    scEl.addEventListener("mouseleave", () => {
-      hideCrosshair();
-      hideSinglePinTip();
-    }, { passive: true });
+    const CH_SLOP = 8; // px before classifying vertical price-drag vs horizontal pan
+
+    scEl.addEventListener(
+      "pointerdown",
+      (ev) => {
+        if (ev.pointerType === "mouse" && ev.button !== 0) return;
+        const t = ev.target;
+        if (t && t.closest) {
+          if (t.closest(".day-head-select")) return; // day-merge head taps
+          if (t.closest("button, a, input, select, label, .merge-panel")) return;
+        }
+        // Two-finger pinch owns the gesture
+        if (ev.isPrimary === false) return;
+        const hit = hitTestChart(ev.clientX, ev.clientY);
+        if (!hit || !hit.sid) return;
+        applyCrosshairHit(hit, null);
+        chDrag = {
+          pointerId: ev.pointerId,
+          startX: ev.clientX,
+          startY: ev.clientY,
+          mode: null,
+          lockColIdx: hit.colIdx,
+          lockSid: hit.sid,
+          lockLocalX: hit.localX,
+        };
+      },
+      { passive: true }
+    );
+
+    scEl.addEventListener(
+      "pointermove",
+      (ev) => {
+        if (chDrag && ev.pointerId === chDrag.pointerId) {
+          const dx = ev.clientX - chDrag.startX;
+          const dy = ev.clientY - chDrag.startY;
+          if (!chDrag.mode) {
+            if (Math.abs(dx) < CH_SLOP && Math.abs(dy) < CH_SLOP) return;
+            const touchLike = ev.pointerType === "touch" || ev.pointerType === "pen";
+            if (touchLike && Math.abs(dx) > Math.abs(dy)) {
+              // Horizontal pan: drop selection, let native scroll continue
+              chDrag.mode = "pan";
+              hideCrosshair();
+              endChDrag(ev);
+              return;
+            }
+            // Vertical (or mouse) drag → track price level
+            chDrag.mode = touchLike ? "price" : "track";
+            try { scEl.setPointerCapture(ev.pointerId); } catch (_) {}
+          }
+          if (chDrag.mode === "pan") return;
+          const hit = hitTestChart(ev.clientX, ev.clientY);
+          if (!hit) return;
+          if (chDrag.mode === "price") {
+            // Lock column/date; only the horizontal pts line follows finger
+            applyCrosshairHit(hit, {
+              sid: chDrag.lockSid,
+              colIdx: chDrag.lockColIdx,
+              localX: chDrag.lockLocalX,
+            });
+          } else {
+            applyCrosshairHit(hit, null);
+          }
+          return;
+        }
+        // Desktop hover follow when not pressing
+        if (ev.pointerType === "mouse" && ev.buttons === 0) {
+          onChartPointer(ev);
+        }
+      },
+      { passive: true }
+    );
+
+    // Block native scroll while vertically dragging the price level (touch)
+    scEl.addEventListener(
+      "touchmove",
+      (ev) => {
+        if (chDrag && chDrag.mode === "price" && ev.cancelable) {
+          ev.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    scEl.addEventListener("pointerup", endChDrag, { passive: true });
+    scEl.addEventListener("pointercancel", endChDrag, { passive: true });
+
+    scEl.addEventListener(
+      "pointerleave",
+      (ev) => {
+        if (ev.pointerType === "mouse" && !chDrag) {
+          hideCrosshair();
+          hideSinglePinTip();
+        }
+      },
+      { passive: true }
+    );
+
     scEl.addEventListener(
       "mouseover",
       (ev) => {

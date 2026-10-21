@@ -207,12 +207,30 @@
     if (!profile || !profile.rows || !profile.rows.length) return COL_MIN_PRINTS;
     let m = 0;
     for (let i = 0; i < profile.rows.length; i++) {
-      const n = (profile.rows[i].letters && profile.rows[i].letters.length) || profile.rows[i].count || 0;
+      const r = profile.rows[i];
+      // Prefer true TPO density when present (composites); else letter/count
+      const n =
+        r.density != null
+          ? r.density
+          : (r.letters && r.letters.length) || r.count || 0;
       if (n > m) m = n;
     }
     // also consider POC row
-    if (profile.poc && profile.poc.count && profile.poc.count > m) m = profile.poc.count;
+    if (profile.poc) {
+      const pn =
+        profile.poc.density != null
+          ? profile.poc.density
+          : profile.poc.count || 0;
+      if (pn > m) m = pn;
+    }
     return Math.max(COL_MIN_PRINTS, m);
+  }
+
+  /** Bar-width print count: composite density when set, else letters/count. */
+  function densityCountOf(row) {
+    if (!row) return 0;
+    if (row.density != null) return row.density;
+    return printCountOf(row);
   }
 
   // Bar/overview: keep ≥1.5px per print so HG bell never collapses to a stick
@@ -875,7 +893,7 @@
     return isFinite(v) ? v : 70;
   }
 
-  /** Merge day profiles: one letter per day; letter present if day had any TPO at that key. */
+  /** Merge day profiles: one letter per day (presence); also sum intraday prints as density for HG bars. */
   function mergeDayProfiles(sids, label) {
     const cacheKey =
       (label || "merge") +
@@ -901,13 +919,18 @@
     }
 
     const step = loaded[0].profile.step || parseFloat($("points").value) || 5;
-    const binMap = new Map(); // key -> letter string chars
+    const binMap = new Map(); // key -> letter string chars (1 per day presence)
+    const densityMap = new Map(); // key -> sum of intraday TPO prints (HG silhouette)
     let ibHi = null;
     let ibLo = null;
     for (const item of loaded) {
       const keys = new Set();
       for (const r of item.profile.rows) {
-        if (printCountOf(r) > 0) keys.add(r.key);
+        const n = printCountOf(r);
+        if (n > 0) {
+          keys.add(r.key);
+          densityMap.set(r.key, (densityMap.get(r.key) || 0) + n);
+        }
       }
       for (const k of keys) {
         const arr = binMap.get(k) || [];
@@ -923,7 +946,14 @@
     const keys = Array.from(binMap.keys()).sort((a, b) => b - a);
     const rows = keys.map((k) => {
       const letters = binMap.get(k).join("");
-      return { key: k, price: k * step, letters, count: letters.length };
+      // count = day-presence (POC/VA/letters); density = true prints for bar silhouette
+      return {
+        key: k,
+        price: k * step,
+        letters,
+        count: letters.length,
+        density: densityMap.get(k) || letters.length,
+      };
     });
     if (!rows.length) {
       compositeCache.set(cacheKey, null);
@@ -1111,6 +1141,7 @@
     const vaLo = Math.min(vah.key, val.key);
     // forceLetters only when not in bar mode (high zoom); at fit-all use bar silhouette
     const barMode = forceLetters ? false : isBarMode();
+    // Density silhouette uses summed intraday prints (not day-presence letters)
     const maxPrints = Math.max(1, maxPrintsOf(result));
     const cellH = barMode ? Math.max(rh, 1.5) + (rh < 3 ? 0.35 : 0) : rh;
     const innerW = Math.max(4, width - (barMode ? 0 : 4));
@@ -1121,7 +1152,7 @@
       const r = rows[i];
       if (r.key < grid.minKey || r.key > grid.maxKey) continue;
       const top = (grid.maxKey - r.key) * rh;
-      const n = printCountOf(r);
+      const n = barMode ? densityCountOf(r) : printCountOf(r);
       if (barMode && n <= 0) continue;
       const classes = ["tpo-cell"];
       if (barMode) classes.push("bar-only");

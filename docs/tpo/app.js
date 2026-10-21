@@ -462,7 +462,9 @@
 
   function placeholderCol(sid, w, bodyH) {
     const h = bodyH != null ? `height:${bodyH}px` : "min-height:120px";
-    return `<div class="day-col day-placeholder" data-sid="${sid}" style="width:${w}px;${h}">
+    const weekKey = weekStartKey(sid);
+    const weekBand = weekBandOf(sid);
+    return `<div class="day-col day-placeholder aligned week-band-${weekBand}" data-sid="${sid}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" style="width:${w}px;${h}">
       <div class="day-head"><b>${sid}</b><div class="day-meta">…</div></div>
       <div class="day-body"></div>
     </div>`;
@@ -552,7 +554,10 @@
     const fadeCls = colOpts.faded ? " day-faded" : "";
     const selCls = colOpts.rangeSelected ? " day-range-sel" : "";
     const anchorCls = colOpts.rangeAnchor ? " day-range-anchor" : "";
-    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${selCls}${anchorCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" style="width:${w}px;min-width:0">
+    const weekKey = weekStartKey(sessionId);
+    const weekBand = weekBandOf(sessionId);
+    const weekCls = " week-band-" + weekBand;
+    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" style="width:${w}px;min-width:0">
       ${head}
       <div class="day-body" style="height:${bodyH}px;position:relative">
         <div class="poc-line" style="top:${pocTop}px"></div>
@@ -768,13 +773,16 @@
     return [];
   }
 
-  /** Narrow density width for a merged HG column (not full span of constituent days). */
+  /** Width for a merged HG column (month stays narrow density; week wider for letters/POC/VA). */
   function compositeColW(profile, kind) {
     if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS);
     const w = dayColW(profile);
     // Soft caps so multi-month / multi-week walls stay scannable
     if (kind === "month") return Math.min(w, Math.max(28, Math.round(80 * Math.max(zoom, 0.12))));
-    if (kind === "week") return Math.min(w, Math.max(24, Math.round(64 * Math.max(zoom, 0.12))));
+    if (kind === "week") {
+      // Week HG: enough width for letter cells + readable POC/VA head (not ultra-narrow bars)
+      return Math.min(w, Math.max(56, Math.round(168 * Math.max(zoom, 0.18))));
+    }
     return Math.min(w, Math.max(36, Math.round(100 * Math.max(zoom, 0.15))));
   }
 
@@ -840,6 +848,21 @@
     const m = String(mon.getMonth() + 1).padStart(2, "0");
     const d = String(mon.getDate()).padStart(2, "0");
     return y + "-" + m + "-" + d;
+  }
+
+  /** Alternate 0/1 band for ISO-ish trading weeks (Mon-start) — day-wall tint. */
+  function weekBandOf(sid) {
+    const wk = weekStartKey(sid);
+    const dt = parseSidDate(wk.indexOf("week:") === 0 ? sid : wk);
+    if (!dt) {
+      let h = 0;
+      for (let i = 0; i < wk.length; i++) h = (h + wk.charCodeAt(i) * (i + 1)) | 0;
+      return h & 1;
+    }
+    // Week number within year from Monday key (stable alternate across weeks)
+    const jan1 = new Date(dt.getFullYear(), 0, 1, 12, 0, 0);
+    const weekNum = Math.floor((dt.getTime() - jan1.getTime()) / (7 * 86400000));
+    return weekNum & 1;
   }
 
   function monthKey(sid) {
@@ -1133,15 +1156,25 @@
 
     const pocTop = (grid.maxKey - poc.key) * rh + rh / 2;
     const thin = width < 72 || zoom < 0.35;
-    const meta = thin
-      ? ""
-      : `<div class="day-meta">${fmtPrice(poc.price, step)} · ${nLetters}L / ${totalTpo}p</div>`;
+    const isWeek = (group.kind || "") === "week";
+    // Week HG always shows POC + VA in head; month/range keep compact when thin
+    let meta = "";
+    if (isWeek || !thin) {
+      const vaBits =
+        "VA " + fmtPrice(val.price, step) + "–" + fmtPrice(vah.price, step);
+      const extra = thin
+        ? ""
+        : " · " + nLetters + "L / " + totalTpo + "p";
+      meta =
+        `<div class="day-meta">POC ${fmtPrice(poc.price, step)} · ${vaBits}${extra}</div>`;
+    }
     const fadeCls = faded ? " composite-faded" : "";
     const kindCls = " composite-" + (group.kind || "merge");
     const flowCls = opts.flow ? " composite-flow" : "";
+    const lettersCls = forceLetters ? " composite-letters" : "";
     const leftStyle = opts.flow ? "" : `left:${left}px;`;
     return (
-      `<div class="composite-col${kindCls}${fadeCls}${flowCls}" data-kind="${escapeHtml(group.kind || "")}"` +
+      `<div class="composite-col${kindCls}${fadeCls}${flowCls}${lettersCls}" data-kind="${escapeHtml(group.kind || "")}"` +
       ` style="${leftStyle}width:${width}px;min-width:${width}px">` +
       `<div class="day-head composite-head" style="height:${hh}px"><b title="${escapeHtml(
         group.label
@@ -1471,6 +1504,8 @@
         renderCompositeColumnHtml(groups[i], grid, 0, widths[i], rh, fp, hh, {
           flow: true,
           faded: false,
+          // Week: letter cells so POC/VA/spike/dual match legend; month stays density bars
+          forceLetters: kind === "week",
         })
       );
     }
@@ -1512,7 +1547,7 @@
       hh,
       bodyH,
       align: true,
-      barMode: true,
+      barMode: kind !== "week",
       groupMode: kind,
       groups,
       // parallel arrays for timeline/trend (one entry per group column)

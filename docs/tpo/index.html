@@ -380,6 +380,24 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* Alternating trading-week background (Mon-start) — subtle, letters stay primary */
+    .day-col.aligned.week-band-0 {
+      background: #0c1118;
+    }
+    .day-col.aligned.week-band-1 {
+      background: #141c2c;
+      box-shadow: inset 0 0 0 1px #24345044;
+    }
+    .day-col.aligned.week-band-0 .day-head {
+      background: #0c1118f5;
+    }
+    .day-col.aligned.week-band-1 .day-head {
+      background: #141c2cf5;
+    }
+    .day-col.aligned.week-band-1.day-range-sel .day-head,
+    .day-col.aligned.week-band-0.day-range-sel .day-head {
+      /* range selection keeps its own head tint (see .day-range-sel) */
+    }
     /* Density bars: width set inline ∝ TPO count — keeps bell/hourglass at low zoom */
     .tpo-cell.bar-only {
       left: 1px;
@@ -692,6 +710,31 @@
     .composite-col .tpo-cell.bar-only.row-spike { background: #ef4444bb; }
     .composite-col .tpo-cell.bar-only.row-poc { background: #f59e0bff; }
     .composite-col .tpo-cell.bar-only { background: #6b8fc4cc; }
+    /* Week letter HG: make POC / VA / spike / dual match legend clearly */
+    .composite-col.composite-letters .tpo-cell.row-poc {
+      color: var(--poc);
+      font-weight: 700;
+      background: #f59e0b33;
+    }
+    .composite-col.composite-letters .tpo-cell.row-va {
+      color: #86efac;
+      background: #22c55e22;
+    }
+    .composite-col.composite-letters .tpo-cell.row-spike {
+      color: var(--spike);
+      background: #ef444433;
+    }
+    .composite-col.composite-letters .tpo-cell.row-dual {
+      color: var(--dual);
+      background: #38bdf833;
+    }
+    .composite-col.composite-week .composite-head .day-meta {
+      color: #93c5fd;
+      font-size: 0.62rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .day-col.day-faded {
       opacity: 0.3;
       filter: saturate(0.65);
@@ -1119,6 +1162,6 @@
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
   <script>window.TPO_STATIC=true;</script>
-  <script src="app.js?v=fix-day-merge-1"></script>
+  <script src="app.js?v=week-band-stats-1"></script>
 </body>
 </html>

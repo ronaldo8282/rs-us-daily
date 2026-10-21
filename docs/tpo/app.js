@@ -1536,8 +1536,9 @@
         renderCompositeColumnHtml(groups[i], grid, 0, widths[i], rh, fp, hh, {
           flow: true,
           faded: false,
-          // Week: letter cells so POC/VA/spike/dual match legend; month stays density bars
-          forceLetters: kind === "week",
+          // Week: letters when readable; at fit-all / low zoom use density silhouette (same as day merge)
+          // Month stays density bars always
+          forceLetters: kind === "week" && !isBarMode(),
         })
       );
     }
@@ -1579,7 +1580,8 @@
       hh,
       bodyH,
       align: true,
-      barMode: kind !== "week",
+      // Week follows zoom bar-mode; month always density-style geo hint
+      barMode: kind === "month" || isBarMode(),
       groupMode: kind,
       groups,
       // parallel arrays for timeline/trend (one entry per group column)

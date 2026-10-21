@@ -856,11 +856,27 @@
     }
     /* Expanded: FAB stays as always-reachable 「收起」 (esp. mobile) */
     .settings-fab.is-collapse {
-      background: #334155;
-      border-color: #64748b;
+      background: #b91c1c;
+      border-color: #fca5a5;
+      /* Expanded: pin 收起 top-right so it never scrolls away */
+      left: auto;
+      right: max(0.65rem, env(safe-area-inset-right));
+      bottom: auto;
+      top: max(0.65rem, env(safe-area-inset-top));
+      z-index: 1000;
+      box-shadow: 0 6px 24px #000c, 0 0 0 1px #ffffff22 inset;
     }
     .layout.settings-collapsed aside {
-      display: none;
+      display: none !important;
+    }
+    /* First paint / open: keep FAB above chart chrome */
+    .settings-fab.show {
+      z-index: 1000;
+      pointer-events: auto;
+    }
+    body.tpo-settings-open header {
+      /* leave room so fixed 收起 doesn't cover title on phone */
+      padding-right: 5.5rem;
     }
     @media (max-width: 900px) {
       .layout.settings-collapsed {
@@ -942,7 +958,7 @@
     <h1>TPO Letter Hourglass · HSIF MVP</h1>
     <p>TV-style aligned TPO letter walls · shared Points scale · zoom/fit · session <b>0930→0300</b> HK</p>
   </header>
-  <div class="layout" id="appLayout">
+  <div class="layout settings-collapsed" id="appLayout">
     <aside id="settingsPane" aria-label="設定">
       <div class="settings-head">
         <span class="settings-title">設定</span>
@@ -1115,6 +1131,6 @@
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
   <script>window.TPO_STATIC=true;</script>
-  <script src="app.js?v=month-narrow-1"></script>
+  <script src="app.js?v=settings-collapse-3"></script>
 </body>
 </html>

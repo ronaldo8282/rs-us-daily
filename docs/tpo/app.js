@@ -2469,8 +2469,8 @@
   window.addEventListener("resize", () => updateTrendChart(), { passive: true });
 
 
-  // —— Settings pane collapse (mobile priority; FAB stays reachable) ——
-  const SETTINGS_COLLAPSE_KEY = "tpo-settings-collapsed";
+  // —— Settings pane collapse (default collapsed; FAB always reachable) ——
+  const SETTINGS_COLLAPSE_KEY = "tpo-settings-collapsed-v2";
   const layoutEl = document.getElementById("appLayout") || document.querySelector(".layout");
   const btnCollapseSettings = $("btnCollapseSettings");
   const btnExpandSettings = $("btnExpandSettings");
@@ -2481,64 +2481,65 @@
 
   function setSettingsCollapsed(collapsed, { persist = true } = {}) {
     if (!layoutEl) return;
-    layoutEl.classList.toggle("settings-collapsed", !!collapsed);
+    collapsed = !!collapsed;
+    layoutEl.classList.toggle("settings-collapsed", collapsed);
+    document.body.classList.toggle("tpo-settings-collapsed", collapsed);
+    document.body.classList.toggle("tpo-settings-open", !collapsed);
     if (btnCollapseSettings) {
-      // Header control only meaningful while expanded (aside visible)
       btnCollapseSettings.setAttribute("aria-expanded", collapsed ? "false" : "true");
       btnCollapseSettings.textContent = "收起";
       btnCollapseSettings.title = "收起設定";
-      btnCollapseSettings.hidden = !!collapsed;
+      btnCollapseSettings.hidden = collapsed;
+      btnCollapseSettings.disabled = collapsed;
     }
     if (btnExpandSettings) {
-      // Always show FAB: 「設定」when collapsed, 「收起」when expanded (mobile thumb reach)
+      // Always on screen: 「設定」bottom-left when collapsed; 「收起」top-right when open
       btnExpandSettings.classList.add("show");
       btnExpandSettings.classList.toggle("is-collapse", !collapsed);
       btnExpandSettings.textContent = collapsed ? "設定" : "收起";
       btnExpandSettings.setAttribute("aria-label", collapsed ? "展開設定" : "收起設定");
       btnExpandSettings.title = collapsed ? "展開設定" : "收起設定";
       btnExpandSettings.setAttribute("aria-hidden", "false");
+      btnExpandSettings.hidden = false;
+      btnExpandSettings.disabled = false;
     }
     if (persist) {
       try {
         localStorage.setItem(SETTINGS_COLLAPSE_KEY, collapsed ? "1" : "0");
       } catch (_) {}
     }
-    // Chart fills freed space
     requestAnimationFrame(() => {
-      try {
-        scheduleRender();
-      } catch (_) {}
-      try {
-        updateTrendChart();
-      } catch (_) {}
-      window.dispatchEvent(new Event("resize"));
+      try { scheduleRender(); } catch (_) {}
+      try { updateTrendChart(); } catch (_) {}
+      try { window.dispatchEvent(new Event("resize")); } catch (_) {}
     });
   }
 
   function readStoredCollapsed() {
     try {
       const v = localStorage.getItem(SETTINGS_COLLAPSE_KEY);
+      if (v === "0") return false; // user explicitly expanded last time
       if (v === "1") return true;
-      if (v === "0") return false;
     } catch (_) {}
-    // First visit: collapse on phone so HG gets the screen
-    return isNarrowViewport();
+    return true; // 預設收起
   }
 
+  function onCollapseClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setSettingsCollapsed(true);
+  }
+  function onFabClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const collapsed = !!(layoutEl && layoutEl.classList.contains("settings-collapsed"));
+    setSettingsCollapsed(!collapsed);
+  }
   if (btnCollapseSettings) {
-    btnCollapseSettings.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setSettingsCollapsed(true);
-    });
+    btnCollapseSettings.addEventListener("click", onCollapseClick, true);
   }
   if (btnExpandSettings) {
-    btnExpandSettings.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const now = layoutEl && layoutEl.classList.contains("settings-collapsed");
-      setSettingsCollapsed(!now);
-    });
+    btnExpandSettings.addEventListener("click", onFabClick, true);
   }
 
 
@@ -2773,6 +2774,7 @@
   bindLegendTips();
 
 
+  // Apply collapse ASAP (HTML already has settings-collapsed; re-assert after read)
   setSettingsCollapsed(readStoredCollapsed(), { persist: false });
 
   // If user rotates / resizes across breakpoint with no stored pref, keep current;

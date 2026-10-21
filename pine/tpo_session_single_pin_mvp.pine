@@ -1,1 +1,229 @@
-PLACEHOLDER
+//@version=5
+// TPO / Market Profile — Full Session · Single Pin (private draft for Leung)
+// Scope: custom session (incl. overnight); POC + VAH/VAL + IB + TPO count; single pin.
+// Price step: manual points-per-level (0 = auto mintick×mult). Letters off (not used).
+// Chart TF ≤ TPO block. Not a Sierra Chart clone.
+indicator("TPO Session · Single Pin MVP", overlay = true, max_boxes_count = 500, max_lines_count = 100, max_labels_count = 50)
+
+// ── Session (custom open/close; overnight OK e.g. 1800-1700) ──────────
+grpS = "Session (custom / overnight OK)"
+sessOpen  = input.string("0930", "Session open (HHmm)", group = grpS, tooltip = "e.g. 0930 equities RTH, or 1800 overnight futures.")
+sessClose = input.string("1600", "Session close (HHmm)", group = grpS, tooltip = "e.g. 1600 RTH, or 1700 next day for overnight (open>close crosses midnight).")
+sessionTz = input.string("America/New_York", "Timezone", options = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC", "Exchange"], group = grpS)
+tpoMins   = input.int(30, "TPO block (minutes)", minval = 5, maxval = 60, step = 5, group = grpS)
+// Built session string — TradingView supports overnight when open>close (e.g. "1800-1700")
+sessionStr = sessOpen + "-" + sessClose
+
+// ── Price / single-pin ────────────────────────────────────────────────
+grpP = "Price / single-pin profile"
+pointsPerLevel    = input.float(0.0, "Points per TPO level (0 = auto)", minval = 0.0, step = 0.01, group = grpP, tooltip = "Manual bin size in price points. Example: 0.25, 1.0, 5.0. Set 0 to use mintick × Auto mult.")
+autoStepMult      = input.int(1, "Auto step × mintick (when points=0)", minval = 1, maxval = 100, group = grpP)
+maxLevels         = input.int(80, "Max price levels drawn", minval = 20, maxval = 200, group = grpP)
+profileWidthBars  = input.int(40, "Pin width (bars)", minval = 10, maxval = 120, group = grpP)
+profileOffsetBars = input.int(2, "Pin offset right of last bar (bars)", minval = 0, maxval = 50, group = grpP)
+
+// ── Required features (defaults ON) ───────────────────────────────────
+grpF = "Required features (defaults ON)"
+showPOC      = input.bool(true, "POC", group = grpF)
+showVA       = input.bool(true, "Value Area (VAH / VAL)", group = grpF)
+vaPct        = input.float(70.0, "Value Area %", minval = 50.0, maxval = 90.0, step = 1.0, group = grpF)
+showIB       = input.bool(true, "Initial Balance", group = grpF)
+ibMins       = input.int(60, "IB = first N minutes", minval = 15, maxval = 120, step = 15, group = grpF)
+showTpoCount = input.bool(true, "TPO count (single pin blocks)", group = grpF)
+
+grpC = "Colors"
+colBlock  = input.color(color.new(#3b82f6, 55), "TPO pin block", group = grpC)
+colPOC    = input.color(color.new(#f59e0b, 0), "POC", group = grpC)
+colVA     = input.color(color.new(#22c55e, 75), "Value Area fill", group = grpC)
+colVALine = input.color(color.new(#22c55e, 0), "VAH / VAL", group = grpC)
+colIB     = input.color(color.new(#a855f7, 0), "IB high / low", group = grpC)
+
+// ── Helpers ───────────────────────────────────────────────────────────
+tz = sessionTz == "Exchange" ? syminfo.timezone : sessionTz
+
+f_inSession() =>
+    not na(time(timeframe.period, sessionStr, tz))
+
+f_step() =>
+    float s = pointsPerLevel > 0 ? pointsPerLevel : syminfo.mintick * autoStepMult
+    s <= 0 ? syminfo.mintick : s
+
+f_roundStep(price, step) =>
+    math.round(price / step) * step
+
+var box[]   gBoxes  = array.new_box()
+var line[]  gLines  = array.new_line()
+var label[] gLabels = array.new_label()
+
+f_clearAll() =>
+    if array.size(gBoxes) > 0
+        for i = 0 to array.size(gBoxes) - 1
+            box.delete(array.get(gBoxes, i))
+        array.clear(gBoxes)
+    if array.size(gLines) > 0
+        for i = 0 to array.size(gLines) - 1
+            line.delete(array.get(gLines, i))
+        array.clear(gLines)
+    if array.size(gLabels) > 0
+        for i = 0 to array.size(gLabels) - 1
+            label.delete(array.get(gLabels, i))
+        array.clear(gLabels)
+
+var float[] sessHi = array.new_float()
+var float[] sessLo = array.new_float()
+var int[]   sessT  = array.new_int()
+var int     sessStartBar = na
+var int     sessStartTime = na
+var float   ibHi = na
+var float   ibLo = na
+
+tOpen = time("D", sessionStr, tz)
+newSess = not na(tOpen) and (na(tOpen[1]) or tOpen != tOpen[1])
+
+if newSess
+    array.clear(sessHi)
+    array.clear(sessLo)
+    array.clear(sessT)
+    sessStartBar := bar_index
+    sessStartTime := time
+    ibHi := high
+    ibLo := low
+
+inS = f_inSession()
+if inS
+    array.push(sessHi, high)
+    array.push(sessLo, low)
+    array.push(sessT, time)
+    if showIB and not na(sessStartTime)
+        elapsedMin = (time - sessStartTime) / 60000.0
+        if elapsedMin <= ibMins
+            ibHi := math.max(nz(ibHi, high), high)
+            ibLo := math.min(nz(ibLo, low), low)
+
+sessionJustEnded = not inS and inS[1]
+
+f_buildDraw(endBar) =>
+    int n = array.size(sessT)
+    bool ok = n >= 2
+    if ok
+        float step0 = f_step()
+        float mn = f_roundStep(array.min(sessLo), step0)
+        float mx = f_roundStep(array.max(sessHi), step0)
+        ok := mx >= mn
+        if ok
+            float useStep = step0
+            int nLevels = int(math.round((mx - mn) / useStep)) + 1
+            if nLevels > maxLevels
+                useStep := math.max((mx - mn) / (maxLevels - 1), syminfo.mintick)
+                nLevels := int(math.round((mx - mn) / useStep)) + 1
+                nLevels := math.max(nLevels, 2)
+
+            int periodMs = tpoMins * 60 * 1000
+            int t0 = array.get(sessT, 0)
+            int[] counts = array.new_int(nLevels, 0)
+            int[] lastPeriod = array.new_int(nLevels, -1)
+
+            for i = 0 to n - 1
+                int ti = array.get(sessT, i)
+                float hi = array.get(sessHi, i)
+                float lo = array.get(sessLo, i)
+                int pIdx = int(math.floor((ti - t0) / float(periodMs)))
+                int iLo = int(math.floor((lo - mn) / useStep))
+                int iHi = int(math.floor((hi - mn) / useStep))
+                iLo := math.max(0, math.min(nLevels - 1, iLo))
+                iHi := math.max(0, math.min(nLevels - 1, iHi))
+                for lv = iLo to iHi
+                    if array.get(lastPeriod, lv) != pIdx
+                        array.set(lastPeriod, lv, pIdx)
+                        array.set(counts, lv, array.get(counts, lv) + 1)
+
+            int maxC = 0
+            for lv = 0 to nLevels - 1
+                maxC := math.max(maxC, array.get(counts, lv))
+
+            int pocLv = 0
+            float midP = (mn + mx) * 0.5
+            float bestDist = 10e10
+            for lv = 0 to nLevels - 1
+                if array.get(counts, lv) == maxC
+                    float px = mn + lv * useStep
+                    float d = math.abs(px - midP)
+                    if d < bestDist
+                        bestDist := d
+                        pocLv := lv
+            float pocPrice = mn + pocLv * useStep
+
+            int totalTpo = 0
+            for lv = 0 to nLevels - 1
+                totalTpo += array.get(counts, lv)
+            int target = int(math.ceil(totalTpo * vaPct / 100.0))
+            int vaLo = pocLv
+            int vaHi = pocLv
+            int acc = array.get(counts, pocLv)
+            int guard = 0
+            while acc < target and guard < nLevels + 2
+                guard += 1
+                int below = vaLo > 0 ? array.get(counts, vaLo - 1) : -1
+                int above = vaHi < nLevels - 1 ? array.get(counts, vaHi + 1) : -1
+                if above < 0 and below < 0
+                    break
+                if above >= below and above >= 0
+                    vaHi += 1
+                    acc += array.get(counts, vaHi)
+                else if below >= 0
+                    vaLo -= 1
+                    acc += array.get(counts, vaLo)
+                else
+                    break
+            float vah = mn + vaHi * useStep
+            float valp = mn + vaLo * useStep
+
+            // Single pin: one-sided blocks growing RIGHT from anchor (not split)
+            int x1 = endBar + profileOffsetBars
+            int maxCount = math.max(1, maxC)
+
+            if showVA
+                array.push(gBoxes, box.new(x1, vah + useStep * 0.5, x1 + profileWidthBars, valp - useStep * 0.5, border_color = color.new(colVA, 100), bgcolor = colVA))
+                array.push(gLines, line.new(x1, vah, x1 + profileWidthBars, vah, color = colVALine, width = 1, style = line.style_dashed))
+                array.push(gLines, line.new(x1, valp, x1 + profileWidthBars, valp, color = colVALine, width = 1, style = line.style_dashed))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, vah, "VAH", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, valp, "VAL", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
+
+            if showTpoCount
+                for lv = 0 to nLevels - 1
+                    int c = array.get(counts, lv)
+                    if c > 0
+                        float px = mn + lv * useStep
+                        int w = int(math.max(1, math.round(profileWidthBars * c / float(maxCount))))
+                        color bc = showPOC and lv == pocLv ? color.new(colPOC, 35) : colBlock
+                        array.push(gBoxes, box.new(x1, px + useStep * 0.45, x1 + w, px - useStep * 0.45, border_color = color.new(bc, 40), bgcolor = bc))
+                        if c == maxC or c >= math.ceil(maxCount * 0.6)
+                            array.push(gLabels, label.new(x1 + w, px, str.tostring(c), style = label.style_label_left, color = color.new(color.black, 100), textcolor = color.white, size = size.tiny))
+
+            if showPOC
+                int x0 = na(sessStartBar) ? math.max(0, endBar - n) : sessStartBar
+                array.push(gLines, line.new(x0, pocPrice, x1 + profileWidthBars, pocPrice, color = colPOC, width = 2))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, pocPrice, "POC " + str.tostring(pocPrice, format.mintick) + " ×" + str.tostring(maxC), style = label.style_label_left, color = color.new(colPOC, 85), textcolor = colPOC, size = size.small))
+
+            if showIB and not na(ibHi) and not na(ibLo) and not na(sessStartBar)
+                array.push(gLines, line.new(sessStartBar, ibHi, endBar, ibHi, color = colIB, width = 1, style = line.style_dotted))
+                array.push(gLines, line.new(sessStartBar, ibLo, endBar, ibLo, color = colIB, width = 1, style = line.style_dotted))
+                array.push(gLabels, label.new(sessStartBar, ibHi, "IBH", style = label.style_label_down, color = color.new(colIB, 85), textcolor = colIB, size = size.tiny))
+                array.push(gLabels, label.new(sessStartBar, ibLo, "IBL", style = label.style_label_up, color = color.new(colIB, 85), textcolor = colIB, size = size.tiny))
+    ok
+
+if barstate.isfirst
+    f_clearAll()
+
+if sessionJustEnded
+    f_clearAll()
+    f_buildDraw(bar_index[1])
+
+if barstate.islast and inS and array.size(sessT) > 2
+    f_clearAll()
+    f_buildDraw(bar_index)
+
+tfSec = timeframe.in_seconds()
+tooCoarse = not na(tfSec) and tfSec > tpoMins * 60
+if barstate.islast and tooCoarse
+    array.push(gLabels, label.new(bar_index, high, "TPO: use chart TF ≤ " + str.tostring(tpoMins) + "m", style = label.style_label_down, color = color.new(color.red, 70), textcolor = color.white, size = size.small))

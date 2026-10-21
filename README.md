@@ -181,7 +181,7 @@ Appended automatically by Actions when the daily asof date is a **Friday**
 
 ## GitHub Pages MVP
 
-Interactive Friday rank browser (no build step):
+Interactive Friday browser (no build step) with two tabs:
 
 - Site root: `docs/index.html` (enable Pages: Settings → Pages → Deploy from branch `main` / folder `/docs`)
 - Suggested URL: https://ronaldo8282.github.io/rs-us-daily/
@@ -190,7 +190,19 @@ Interactive Friday rank browser (no build step):
   - `rs_friday_percentiles.csv` — wide Ticker × Friday Percentile
   - `fundamentals_latest.csv` — Ticker, Sector, Industry, MarketCap, updated_at
 
-UI: range buttons (6M/1Y/2Y/3Y/5Y), week dropdown, sort by Rank/Percentile/Ticker/MarketCap, ticker search, join latest fundamentals.
+### Tab: Ranks
+
+Range buttons (6M/1Y/2Y/3Y/5Y), week dropdown, sort by Rank/Percentile/Ticker/MarketCap, ticker search, join latest fundamentals.
+
+### Tab: RS90–99
+
+Weekly dashboard for names with **Percentile ≥ 90** on the as-of Friday:
+
+- Period presets `5w` / `10w` / `20w`, plus From / As-of week dropdowns
+- Summary cards: RS90–99 count, WoW Δ, period average count
+- Sector & Industry count tables (% of RS90 set); blank fundamentals → `(unknown)`
+- WoW adds / drops lists (ticker, percentile, sector, industry); shows “no prior week” if the previous Friday column is missing
+- Optional toggle **MKT CAP >3B only** (default **off** so incomplete MarketCap does not understate counts)
 
 Daily Actions copies the three CSVs into `docs/data/` and commits `docs/` with the rank outputs.
 

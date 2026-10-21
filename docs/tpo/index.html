@@ -339,7 +339,8 @@
     }
     .day-col.aligned {
       padding: 0;
-      overflow: hidden;
+      /* visible so .day-head position:sticky can pin to HG scroll top */
+      overflow: visible;
       min-width: 0 !important;
       border-radius: 2px;
     }
@@ -357,9 +358,22 @@
       margin: 0;
       position: sticky;
       top: 0;
-      z-index: 2;
-      background: #0c1118ee;
-      backdrop-filter: blur(4px);
+      z-index: 12;
+      background: #0c1118f5;
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+      box-shadow: 0 2px 8px #000a;
+    }
+    .price-axis .day-head,
+    .price-axis .axis-head {
+      position: sticky;
+      top: 0;
+      z-index: 14;
+      background: #0a0e14f5;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 8px #000a;
+      margin: 0;
+      padding: 0.25rem 0.3rem;
       overflow: hidden;
     }
     .day-col.aligned .day-head b {
@@ -639,7 +653,8 @@
       border-radius: 3px;
       background: #0c121acc;
       box-shadow: 0 0 0 1px #0006, 0 4px 18px #0008;
-      overflow: hidden;
+      /* visible so composite date head can sticky with day heads */
+      overflow: visible;
       pointer-events: none;
     }
     .composite-col.composite-week { border-color: #38bdf888; }
@@ -651,8 +666,13 @@
       z-index: 4;
     }
     .composite-col .composite-head {
-      background: #132033ee;
+      position: sticky;
+      top: 0;
+      z-index: 13;
+      background: #132033f5;
       border-bottom: 1px solid #2d3a4f;
+      box-shadow: 0 2px 8px #000a;
+      overflow: hidden;
     }
     .composite-col.composite-month .composite-head { background: #2a1f0eee; }
     .composite-col.composite-week .composite-head { background: #0e1a24ee; }
@@ -1080,6 +1100,6 @@
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
   <script>window.TPO_STATIC=true;</script>
-  <script src="app.js?v=composite-hg-2"></script>
+  <script src="app.js?v=sticky-date-1"></script>
 </body>
 </html>

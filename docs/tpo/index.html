@@ -640,7 +640,7 @@
 
     .trend-pane {
       flex-shrink: 0;
-      height: 84px;
+      height: 120px; /* desktop: slightly taller mid trend */
       background: #0a0e14;
       border: 1px solid var(--border);
       border-top: 1px solid #2d3a4f;
@@ -1010,6 +1010,42 @@
     .legend-tip .lt-body { color: #e7ecf3; }
 
     .trend-badge b { color: #38bdf8; font-weight: 700; }
+
+    /*
+     * Mobile: unlock vertical scroll so users can swipe down to the trend pane.
+     * Root cause was body/layout locking to 100vh + 84px trend squeezed under HG.
+     * Keep HG ~first-screen tall; trend tall below; main scrolls. H-drag / pinch /
+     * sticky day-heads (inside profiles-scroll) / settings collapse unchanged.
+     */
+    @media (max-width: 900px) {
+      main {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+      }
+      .chart-stage {
+        flex: 0 0 auto;
+        min-height: auto;
+      }
+      .hg-wrap {
+        flex: 0 0 auto;
+        /* Fill most of the first screen; trend sits below the fold */
+        height: calc(100dvh - 10.5rem);
+        min-height: 58vh;
+        max-height: none;
+      }
+      .hg-wrap .profiles-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+      }
+      .trend-pane {
+        /* Usable amplitude when user scrolls down to it */
+        height: min(42vh, 280px);
+        min-height: 200px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1190,6 +1226,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=fix-line-week-month-1"></script>
+  <script src="app.js?v=mobile-trend-tall-1"></script>
 </body>
 </html>

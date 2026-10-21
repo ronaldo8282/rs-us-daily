@@ -116,3 +116,14 @@ rs-us-daily/
   reports/         # overlap_YYYYMMDD.md
   .github/workflows/daily.yml
 ```
+
+
+## Friday rank history (wide)
+
+Leung’s continuous Friday full-universe rank table (GitHub, not Sheets):
+
+- `output/friday/rs_friday_ranks.csv` — Ticker × asof date columns (Rank)
+- `output/friday/rs_friday_percentiles.csv` — same layout (Percentile)
+
+Appended automatically by Actions when the daily asof date is a **Friday**
+(`src/append_friday_wide.py`). Bootstrap / non-Friday seed: `--force`.

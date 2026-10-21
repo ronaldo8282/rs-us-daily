@@ -2493,7 +2493,7 @@
       btnCollapseSettings.disabled = collapsed;
     }
     if (btnExpandSettings) {
-      // Always on screen: 「設定」bottom-left when collapsed; 「收起」top-right when open
+      // Always top-right: 「設定」when collapsed; 「收起」when open
       btnExpandSettings.classList.add("show");
       btnExpandSettings.classList.toggle("is-collapse", !collapsed);
       btnExpandSettings.textContent = collapsed ? "設定" : "收起";

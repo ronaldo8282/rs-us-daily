@@ -39,7 +39,7 @@
       top: 0;
       z-index: 200;
       flex-shrink: 0;
-      padding: 0.75rem 1.25rem;
+      padding: 0.75rem 5.5rem 0.75rem 1.25rem; /* right room for 設定/收起 FAB */
       border-bottom: 1px solid var(--border);
       background: var(--panel);
       box-shadow: 0 2px 12px #0006;
@@ -830,9 +830,11 @@
     }
     .settings-fab {
       position: fixed;
-      z-index: 400;
-      left: max(0.65rem, env(safe-area-inset-left));
-      bottom: max(0.75rem, env(safe-area-inset-bottom));
+      z-index: 1000;
+      left: auto;
+      right: max(0.65rem, env(safe-area-inset-right));
+      bottom: auto;
+      top: max(0.65rem, env(safe-area-inset-top));
       width: auto;
       min-width: 3.6rem;
       min-height: 2.75rem;
@@ -849,6 +851,7 @@
       justify-content: center;
       gap: 0.35rem;
       touch-action: manipulation;
+      pointer-events: auto;
     }
     .settings-fab:hover { filter: brightness(1.1); }
     .settings-fab.show {
@@ -858,12 +861,6 @@
     .settings-fab.is-collapse {
       background: #b91c1c;
       border-color: #fca5a5;
-      /* Expanded: pin 收起 top-right so it never scrolls away */
-      left: auto;
-      right: max(0.65rem, env(safe-area-inset-right));
-      bottom: auto;
-      top: max(0.65rem, env(safe-area-inset-top));
-      z-index: 1000;
       box-shadow: 0 6px 24px #000c, 0 0 0 1px #ffffff22 inset;
     }
     .layout.settings-collapsed aside {
@@ -873,10 +870,6 @@
     .settings-fab.show {
       z-index: 1000;
       pointer-events: auto;
-    }
-    body.tpo-settings-open header {
-      /* leave room so fixed 收起 doesn't cover title on phone */
-      padding-right: 5.5rem;
     }
     @media (max-width: 900px) {
       .layout.settings-collapsed {
@@ -891,11 +884,6 @@
     @media (min-width: 901px) {
       .layout.settings-collapsed {
         grid-template-columns: 1fr;
-      }
-      .settings-fab.show {
-        left: max(0.75rem, env(safe-area-inset-left));
-        bottom: auto;
-        top: max(4.5rem, env(safe-area-inset-top));
       }
     }
 
@@ -1131,6 +1119,6 @@
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
   <script>window.TPO_STATIC=true;</script>
-  <script src="app.js?v=settings-collapse-3"></script>
+  <script src="app.js?v=settings-tr-1"></script>
 </body>
 </html>

@@ -1372,6 +1372,29 @@
     scheduleRender();
   }
 
+  function setMergePanelOpen(open) {
+    const mp = $("mergePanel");
+    const btn = $("btnMergeInfo");
+    const on = !!open;
+    if (mp) {
+      mp.hidden = !on;
+      mp.classList.toggle("is-open", on);
+    }
+    if (btn) {
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  function isMergePanelOpen() {
+    const mp = $("mergePanel");
+    return !!(mp && !mp.hidden && mp.classList.contains("is-open"));
+  }
+
+  function toggleMergePanel() {
+    setMergePanelOpen(!isMergePanelOpen());
+  }
+
   function startAddMergeGroup() {
     if (weekHgOn || monthHgOn) {
       weekHgOn = false;
@@ -1379,8 +1402,7 @@
     }
     rangeAnchorIdx = null;
     rangeDraft = null;
-    const mp = $("mergePanel");
-    if (mp) mp.open = true;
+    setMergePanelOpen(true);
     syncCompositeButtons();
     scheduleRender();
     const hint = $("compositeHint");
@@ -1422,8 +1444,13 @@
   function syncMergeGroupList() {
     const list = $("mergeGroupList");
     const countEl = $("mergeCount");
+    const btn = $("btnMergeInfo");
     const groups = completedRangeGroups();
-    if (countEl) countEl.textContent = groups.length ? "(" + groups.length + ")" : "";
+    const countTxt = groups.length ? "(" + groups.length + ")" : "";
+    if (countEl) countEl.textContent = countTxt;
+    if (btn) {
+      btn.textContent = groups.length ? "合併資訊 " + countTxt : "合併資訊";
+    }
     if (!list) return;
     if (!groups.length) {
       list.innerHTML = '<div class="merge-empty">未有日合併組 · 撳兩個日期頭</div>';
@@ -1433,10 +1460,31 @@
       .map((g, i) => {
         const lab = rangeLabelFor(g.startIdx, g.endIdx);
         const n = g.endIdx - g.startIdx + 1;
+        const built = buildOneRangeGroup(g, i % RANGE_COLOR_N);
+        let statsHtml = "";
+        if (built && built.profile) {
+          const p = built.profile;
+          const step = p.step || 5;
+          const totalPrints = (p.rows || []).reduce((s, r) => s + densityCountOf(r), 0);
+          const tpoShow = totalPrints > 0 ? totalPrints : p.totalTpo || 0;
+          const pocStr = p.poc ? fmtPrice(p.poc.price, step) : "—";
+          const vaLo = p.val ? fmtPrice(p.val.price, step) : "—";
+          const vaHi = p.vah ? fmtPrice(p.vah.price, step) : "—";
+          statsHtml =
+            `<span class="merge-stats">` +
+            `<b>TPO</b> ${tpoShow}` +
+            ` · <b>VA</b> ${vaLo}–${vaHi}` +
+            ` · <b>POC</b> ${pocStr}` +
+            `</span>`;
+        }
+        const titleBits = [lab, n + "日"];
         return (
           `<div class="merge-row" data-gid="${g.id}">` +
           `<span class="merge-swatch merge-c${i % RANGE_COLOR_N}" aria-hidden="true"></span>` +
-          `<span class="merge-lab" title="${escapeHtml(lab)}">${escapeHtml(lab)} · ${n}日</span>` +
+          `<div class="merge-lab-wrap">` +
+          `<span class="merge-lab" title="${escapeHtml(titleBits.join(" · "))}">${escapeHtml(lab)} · ${n}日</span>` +
+          statsHtml +
+          `</div>` +
           `<button type="button" class="merge-x" data-clear-gid="${g.id}" title="清呢一組">×</button>` +
           `</div>`
         );
@@ -1517,8 +1565,7 @@
           if (hint) hint.textContent = msg;
           const ph = $("mergePanelHint");
           if (ph) ph.textContent = msg;
-          const mp = $("mergePanel");
-          if (mp) mp.open = true;
+          setMergePanelOpen(true);
           syncCompositeButtons();
           scheduleRender();
           return;
@@ -1527,8 +1574,7 @@
         rangeAnchorIdx = null;
         rangeDraft = null;
         if ($("alignPrices") && !$("alignPrices").checked) $("alignPrices").checked = true;
-        const mp = $("mergePanel");
-        if (mp) mp.open = true;
+        // Keep panel collapsed by default; user opens via 合併資訊
       }
     }
     syncCompositeButtons();
@@ -3451,6 +3497,17 @@
   if (btnClearMerge) {
     btnClearMerge.addEventListener("click", () => clearAllComposites());
   }
+  const btnMergeInfo = $("btnMergeInfo");
+  if (btnMergeInfo) {
+    btnMergeInfo.addEventListener("click", () => toggleMergePanel());
+  }
+  const btnCollapseMergePanel = $("btnCollapseMergePanel");
+  if (btnCollapseMergePanel) {
+    btnCollapseMergePanel.addEventListener("click", () => setMergePanelOpen(false));
+  }
+  // Default collapsed (settings-style)
+  setMergePanelOpen(false);
+
   const btnAddMergeGroup = $("btnAddMergeGroup");
   if (btnAddMergeGroup) {
     btnAddMergeGroup.addEventListener("click", () => startAddMergeGroup());

@@ -1109,7 +1109,7 @@
     const bodyH = grid.nBins * rh;
     const vaHi = Math.max(vah.key, val.key);
     const vaLo = Math.min(vah.key, val.key);
-    // Hand-picked day-range merge: always letter cells (full HG), not density bars
+    // forceLetters only when not in bar mode (high zoom); at fit-all use bar silhouette
     const barMode = forceLetters ? false : isBarMode();
     const maxPrints = Math.max(1, maxPrintsOf(result));
     const cellH = barMode ? Math.max(rh, 1.5) + (rh < 3 ? 0.35 : 0) : rh;
@@ -1195,7 +1195,7 @@
     const overlaps = (g) => g.endIdx >= viewFirst && g.startIdx <= viewLast;
 
     // Week/month use primary (in-flow) columns — skip full-span overlays here.
-    // Hand-picked day-range: full-span overlay with complete merged letter HG (not narrow density).
+    // Hand-picked day-range: full-span overlay; follow isBarMode (bar silhouette at fit-all).
     if (compositePrimaryKind()) {
       /* overlays handled by virtualRenderGroupPrimary */
     }
@@ -1203,13 +1203,14 @@
       const g = buildRangeGroup();
       if (g && overlaps(g)) {
         const span = spanLeftWidth(geo, g.startIdx, g.endIdx);
-        // Full width of selected days so merged letters / shape are fully visible
+        // Full width of selected days so merged HG shape is fully visible
         const width = span.width;
         const left = span.left;
         parts.push(
           renderCompositeColumnHtml(g, grid, left, width, rh, fp, hh, {
             faded: false,
-            forceLetters: true,
+            // Low zoom: bar-only density; high zoom: letters (do not always forceLetters)
+            forceLetters: !isBarMode(),
           })
         );
       }

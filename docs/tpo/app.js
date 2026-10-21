@@ -141,12 +141,15 @@
   let crosshair = { sid: null, price: null, key: null, localX: 0, localY: 0, visible: false };
   let singlePinSegments = []; // { startIdx, endIdx, key, price, sid, step, extendsToPad }
 
-  // Composite HG overlays: Day → Week → Month; custom range exclusive with week/month
+  // Composite HG overlays: Day → Week → Month; custom multi-range exclusive with week/month
   let weekHgOn = false;
   let monthHgOn = false;
-  let rangeSel = null; // { startIdx, endIdx } inclusive, or null
-  let rangeAnchorIdx = null; // first tap while selecting
+  let rangeGroups = []; // [{ id, startIdx, endIdx }] completed day merges (non-overlapping)
+  let rangeAnchorIdx = null; // first tap while selecting next group
+  let rangeDraft = null; // { startIdx, endIdx } while selecting (may be single day)
+  let nextRangeId = 1;
   const compositeCache = new Map(); // key -> merged profile
+  const RANGE_COLOR_N = 5;
 
 
   function showErr(msg) {
@@ -803,8 +806,36 @@
   // ---- Composite HG (week / month / multi-day merge) ----
   const DAY_FADE_OPACITY = 0.3;
 
+  function completedRangeGroups() {
+    return rangeGroups.filter((g) => g && g.endIdx > g.startIdx);
+  }
+
+  function rangesOverlap(a0, a1, b0, b1) {
+    return !(a1 < b0 || b1 < a0);
+  }
+
+  function findOverlappingRangeGroup(startIdx, endIdx) {
+    const a = Math.min(startIdx, endIdx);
+    const b = Math.max(startIdx, endIdx);
+    for (let i = 0; i < rangeGroups.length; i++) {
+      const g = rangeGroups[i];
+      if (rangesOverlap(a, b, g.startIdx, g.endIdx)) return g;
+    }
+    return null;
+  }
+
+  function rangeLabelFor(startIdx, endIdx) {
+    const a = Math.min(startIdx, endIdx);
+    const b = Math.max(startIdx, endIdx);
+    const sa = sessionIds[a] || "";
+    const sb = sessionIds[b] || "";
+    if (!sa) return "合併";
+    if (a === b) return sa.slice(5);
+    return sa.slice(5) + "–" + sb.slice(5);
+  }
+
   function compositeActive() {
-    return !!(weekHgOn || monthHgOn || (rangeSel && rangeSel.endIdx > rangeSel.startIdx));
+    return !!(weekHgOn || monthHgOn || completedRangeGroups().length);
   }
 
   /** Week/month replace the day wall with in-flow narrow density columns (not overlays). Month wins. */
@@ -1118,29 +1149,42 @@
       .filter(Boolean);
   }
 
-  function buildRangeGroup() {
-    if (!rangeSel || rangeSel.endIdx <= rangeSel.startIdx) return null;
-    const a = Math.min(rangeSel.startIdx, rangeSel.endIdx);
-    const b = Math.max(rangeSel.startIdx, rangeSel.endIdx);
+  function buildOneRangeGroup(g, colorIdx) {
+    if (!g || g.endIdx <= g.startIdx) return null;
+    const a = Math.min(g.startIdx, g.endIdx);
+    const b = Math.max(g.startIdx, g.endIdx);
     const sids = sessionIds.slice(a, b + 1);
-    const profile = mergeDayProfiles(sids, "R " + sids[0] + ".." + sids[sids.length - 1]);
+    if (sids.length < 2) return null;
+    const profile = mergeDayProfiles(
+      sids,
+      "R" + g.id + " " + sids[0] + ".." + sids[sids.length - 1]
+    );
     if (!profile) return null;
     return {
       kind: "range",
+      id: g.id,
+      colorIdx: colorIdx != null ? colorIdx : 0,
       startIdx: a,
       endIdx: b,
       sids,
       profile,
-      label: sids[0].slice(5) + "–" + sids[sids.length - 1].slice(5) + " 合併",
+      label: rangeLabelFor(a, b) + " 合併",
     };
+  }
+
+  function buildAllRangeGroups() {
+    return completedRangeGroups()
+      .map((g, i) => buildOneRangeGroup(g, i % RANGE_COLOR_N))
+      .filter(Boolean);
   }
 
   function indicesUnderComposite() {
     const set = new Set();
-    if (rangeSel && rangeSel.endIdx > rangeSel.startIdx) {
-      const a = Math.min(rangeSel.startIdx, rangeSel.endIdx);
-      const b = Math.max(rangeSel.startIdx, rangeSel.endIdx);
-      for (let i = a; i <= b; i++) set.add(i);
+    const groups = completedRangeGroups();
+    if (groups.length) {
+      for (const g of groups) {
+        for (let i = g.startIdx; i <= g.endIdx; i++) set.add(i);
+      }
       return set;
     }
     if (monthHgOn || weekHgOn) {
@@ -1233,9 +1277,17 @@
     const kindCls = " composite-" + (group.kind || "merge");
     const flowCls = opts.flow ? " composite-flow" : "";
     const lettersCls = forceLetters ? " composite-letters" : "";
+    const colorIdx =
+      opts.colorIdx != null
+        ? opts.colorIdx
+        : group.colorIdx != null
+          ? group.colorIdx
+          : 0;
+    const colorCls =
+      (group.kind || "") === "range" ? " merge-c" + (colorIdx % RANGE_COLOR_N) : "";
     const leftStyle = opts.flow ? "" : `left:${left}px;`;
     return (
-      `<div class="composite-col${kindCls}${fadeCls}${flowCls}${lettersCls}" data-kind="${escapeHtml(group.kind || "")}"` +
+      `<div class="composite-col${kindCls}${fadeCls}${flowCls}${lettersCls}${colorCls}" data-kind="${escapeHtml(group.kind || "")}" data-gid="${group.id != null ? group.id : ""}"` +
       ` style="${leftStyle}width:${width}px;min-width:${width}px">` +
       `<div class="day-head composite-head" style="height:${hh}px"><b title="${escapeHtml(
         group.label
@@ -1256,25 +1308,22 @@
     const overlaps = (g) => g.endIdx >= viewFirst && g.startIdx <= viewLast;
 
     // Week/month use primary (in-flow) columns — skip full-span overlays here.
-    // Hand-picked day-range: full-span overlay; follow isBarMode (bar silhouette at fit-all).
+    // Hand-picked day-ranges: full-span overlays (multi-group); follow isBarMode.
     if (compositePrimaryKind()) {
       /* overlays handled by virtualRenderGroupPrimary */
     }
-    if (rangeSel && rangeSel.endIdx > rangeSel.startIdx) {
-      const g = buildRangeGroup();
-      if (g && overlaps(g)) {
-        const span = spanLeftWidth(geo, g.startIdx, g.endIdx);
-        // Full width of selected days so merged HG shape is fully visible
-        const width = span.width;
-        const left = span.left;
-        parts.push(
-          renderCompositeColumnHtml(g, grid, left, width, rh, fp, hh, {
-            faded: false,
-            // Low zoom: bar-only density; high zoom: letters (do not always forceLetters)
-            forceLetters: !isBarMode(),
-          })
-        );
-      }
+    const rangeOverlays = buildAllRangeGroups();
+    for (let ri = 0; ri < rangeOverlays.length; ri++) {
+      const g = rangeOverlays[ri];
+      if (!overlaps(g)) continue;
+      const span = spanLeftWidth(geo, g.startIdx, g.endIdx);
+      parts.push(
+        renderCompositeColumnHtml(g, grid, span.left, span.width, rh, fp, hh, {
+          faded: false,
+          forceLetters: !isBarMode(),
+          colorIdx: g.colorIdx,
+        })
+      );
     }
 
     if (!parts.length) return "";
@@ -1286,8 +1335,41 @@
   }
 
   function clearRangeSelection() {
-    rangeSel = null;
+    rangeGroups = [];
     rangeAnchorIdx = null;
+    rangeDraft = null;
+  }
+
+  function clearOneRangeGroup(id) {
+    const nid = typeof id === "string" ? parseInt(id, 10) : id;
+    rangeGroups = rangeGroups.filter((g) => g.id !== nid);
+    syncCompositeButtons();
+    scheduleRender();
+  }
+
+  function clearDayMergesOnly() {
+    rangeGroups = [];
+    rangeAnchorIdx = null;
+    rangeDraft = null;
+    syncCompositeButtons();
+    scheduleRender();
+  }
+
+  function startAddMergeGroup() {
+    if (weekHgOn || monthHgOn) {
+      weekHgOn = false;
+      monthHgOn = false;
+    }
+    rangeAnchorIdx = null;
+    rangeDraft = null;
+    const mp = $("mergePanel");
+    if (mp) mp.open = true;
+    syncCompositeButtons();
+    scheduleRender();
+    const hint = $("compositeHint");
+    if (hint) hint.textContent = "加新組：撳起始日，再撳結束日";
+    const ph = $("mergePanelHint");
+    if (ph) ph.textContent = "撳兩個日期頭選連續日 · 唔好同現有組合併重疊";
   }
 
   function setWeekHg(on) {
@@ -1320,6 +1402,31 @@
     scheduleRender();
   }
 
+  function syncMergeGroupList() {
+    const list = $("mergeGroupList");
+    const countEl = $("mergeCount");
+    const groups = completedRangeGroups();
+    if (countEl) countEl.textContent = groups.length ? "(" + groups.length + ")" : "";
+    if (!list) return;
+    if (!groups.length) {
+      list.innerHTML = '<div class="merge-empty">未有日合併組 · 撳兩個日期頭</div>';
+      return;
+    }
+    list.innerHTML = groups
+      .map((g, i) => {
+        const lab = rangeLabelFor(g.startIdx, g.endIdx);
+        const n = g.endIdx - g.startIdx + 1;
+        return (
+          `<div class="merge-row" data-gid="${g.id}">` +
+          `<span class="merge-swatch merge-c${i % RANGE_COLOR_N}" aria-hidden="true"></span>` +
+          `<span class="merge-lab" title="${escapeHtml(lab)}">${escapeHtml(lab)} · ${n}日</span>` +
+          `<button type="button" class="merge-x" data-clear-gid="${g.id}" title="清呢一組">×</button>` +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
   function syncCompositeButtons() {
     const bw = $("btnWeekHg");
     const bm = $("btnMonthHg");
@@ -1337,23 +1444,29 @@
       bc.hidden = !show;
       bc.disabled = !show;
     }
+    syncMergeGroupList();
+    const groups = completedRangeGroups();
     const hint = $("compositeHint");
-    if (hint) {
-      if (rangeSel && rangeSel.endIdx > rangeSel.startIdx) {
-        const a = sessionIds[Math.min(rangeSel.startIdx, rangeSel.endIdx)];
-        const b = sessionIds[Math.max(rangeSel.startIdx, rangeSel.endIdx)];
-        hint.textContent = "合併 " + (a || "") + " → " + (b || "");
-      } else if (rangeAnchorIdx != null) {
-        hint.textContent = "已選 " + (sessionIds[rangeAnchorIdx] || "") + " · 再撳另一日完成範圍";
-      } else if (monthHgOn && weekHgOn) {
-        hint.textContent = "月欄（窄密度 HG）· 週按鈕讓路畀月";
-      } else if (monthHgOn) {
-        hint.textContent = "每月一欄密度 HG · 可橫掃幾個月";
-      } else if (weekHgOn) {
-        hint.textContent = "每週一欄密度 HG · 可橫掃幾週";
-      } else {
-        hint.textContent = "撳日期頭可合併連續日";
-      }
+    const ph = $("mergePanelHint");
+    let msg = "";
+    if (rangeAnchorIdx != null) {
+      msg = "已選 " + (sessionIds[rangeAnchorIdx] || "") + " · 再撳另一日完成第 " + (groups.length + 1) + " 組";
+    } else if (groups.length) {
+      msg = groups.length + " 組日合併 · 再撳日期頭可加新組";
+    } else if (monthHgOn && weekHgOn) {
+      msg = "月欄（窄密度 HG）· 週按鈕讓路畀月";
+    } else if (monthHgOn) {
+      msg = "每月一欄密度 HG · 可橫掃幾個月";
+    } else if (weekHgOn) {
+      msg = "每週一欄密度 HG · 可橫掃幾週";
+    } else {
+      msg = "撳日期頭可合併連續日 · 可加多組";
+    }
+    if (hint) hint.textContent = msg;
+    if (ph && rangeAnchorIdx == null) {
+      ph.textContent = groups.length
+        ? "可再撳日期頭加新組（唔好同現有重疊）"
+        : "撳兩個日期頭選連續日；可加多組互唔重疊範圍";
     }
   }
 
@@ -1366,17 +1479,39 @@
     }
     if (rangeAnchorIdx == null) {
       rangeAnchorIdx = idx;
-      rangeSel = { startIdx: idx, endIdx: idx };
+      rangeDraft = { startIdx: idx, endIdx: idx };
     } else {
       const a = Math.min(rangeAnchorIdx, idx);
       const b = Math.max(rangeAnchorIdx, idx);
       if (b === a) {
-        // same day again → cancel
-        clearRangeSelection();
-      } else {
-        rangeSel = { startIdx: a, endIdx: b };
+        // same day again → cancel in-progress only (keep completed groups)
         rangeAnchorIdx = null;
+        rangeDraft = null;
+      } else {
+        const overlap = findOverlappingRangeGroup(a, b);
+        if (overlap) {
+          rangeAnchorIdx = null;
+          rangeDraft = null;
+          const msg =
+            "與組「" +
+            rangeLabelFor(overlap.startIdx, overlap.endIdx) +
+            "」重疊 · 先清該組或另選";
+          const hint = $("compositeHint");
+          if (hint) hint.textContent = msg;
+          const ph = $("mergePanelHint");
+          if (ph) ph.textContent = msg;
+          const mp = $("mergePanel");
+          if (mp) mp.open = true;
+          syncCompositeButtons();
+          scheduleRender();
+          return;
+        }
+        rangeGroups.push({ id: nextRangeId++, startIdx: a, endIdx: b });
+        rangeAnchorIdx = null;
+        rangeDraft = null;
         if ($("alignPrices") && !$("alignPrices").checked) $("alignPrices").checked = true;
+        const mp = $("mergePanel");
+        if (mp) mp.open = true;
       }
     }
     syncCompositeButtons();
@@ -1679,9 +1814,15 @@
     }
 
     const fadeIdx = indicesUnderComposite();
-    const rangeActive = !!(rangeSel && rangeSel.endIdx >= rangeSel.startIdx);
-    const rA = rangeActive ? Math.min(rangeSel.startIdx, rangeSel.endIdx) : -1;
-    const rB = rangeActive ? Math.max(rangeSel.startIdx, rangeSel.endIdx) : -1;
+    const selectedSet = new Set();
+    completedRangeGroups().forEach((g) => {
+      for (let i = g.startIdx; i <= g.endIdx; i++) selectedSet.add(i);
+    });
+    if (rangeDraft) {
+      const dA = Math.min(rangeDraft.startIdx, rangeDraft.endIdx);
+      const dB = Math.max(rangeDraft.startIdx, rangeDraft.endIdx);
+      for (let i = dA; i <= dB; i++) selectedSet.add(i);
+    }
 
     for (let i = first; i <= last; i++) {
       const sid = sessionIds[i];
@@ -1692,7 +1833,7 @@
           renderAlignedColumn(p, grid, w, rh, fp, hh, {
             idx: i,
             faded: fadeIdx.has(i),
-            rangeSelected: rangeActive && i >= rA && i <= rB,
+            rangeSelected: selectedSet.has(i),
             rangeAnchor: rangeAnchorIdx === i,
           })
         );
@@ -2040,10 +2181,13 @@
     if (weekHgOn || monthHgOn) {
       weekHgOn = false;
       monthHgOn = false;
-      clearRangeSelection();
+      // keep completed day-merge groups; only drop in-progress draft
+      rangeAnchorIdx = null;
+      rangeDraft = null;
       syncCompositeButtons();
-    } else if (rangeSel || rangeAnchorIdx != null) {
-      clearRangeSelection();
+    } else if (rangeAnchorIdx != null || rangeDraft) {
+      rangeAnchorIdx = null;
+      rangeDraft = null;
       syncCompositeButtons();
     }
     const toIdx = sessionIds.length - 1;
@@ -3169,6 +3313,23 @@
   }
   if (btnClearMerge) {
     btnClearMerge.addEventListener("click", () => clearAllComposites());
+  }
+  const btnAddMergeGroup = $("btnAddMergeGroup");
+  if (btnAddMergeGroup) {
+    btnAddMergeGroup.addEventListener("click", () => startAddMergeGroup());
+  }
+  const btnClearDayMerges = $("btnClearDayMerges");
+  if (btnClearDayMerges) {
+    btnClearDayMerges.addEventListener("click", () => clearDayMergesOnly());
+  }
+  const mergeGroupList = $("mergeGroupList");
+  if (mergeGroupList) {
+    mergeGroupList.addEventListener("click", (ev) => {
+      const btn = ev.target && ev.target.closest && ev.target.closest("[data-clear-gid]");
+      if (!btn) return;
+      ev.preventDefault();
+      clearOneRangeGroup(btn.getAttribute("data-clear-gid"));
+    });
   }
   if ($("alphabet")) {
     $("alphabet").addEventListener("change", () => {

@@ -797,6 +797,141 @@
       text-overflow: ellipsis;
     }
 
+    /* Multi day-merge panel (collapsible) */
+    .merge-panel {
+      margin: 0.2rem 0.5rem 0.35rem;
+      border: 1px solid #2d3a4f;
+      border-radius: 6px;
+      background: #0e1520cc;
+      max-width: 36rem;
+    }
+    .merge-panel > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.72rem;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      user-select: none;
+    }
+    .merge-panel > summary::-webkit-details-marker { display: none; }
+    .merge-panel > summary::before {
+      content: "▸";
+      font-size: 0.65rem;
+      color: #94a3b8;
+    }
+    .merge-panel[open] > summary::before { content: "▾"; }
+    .merge-panel .merge-count {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+    .merge-panel-body {
+      padding: 0 0.55rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .merge-group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      max-height: 7.5rem;
+      overflow-y: auto;
+    }
+    .merge-empty {
+      font-size: 0.68rem;
+      color: var(--muted);
+      padding: 0.15rem 0;
+    }
+    .merge-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.3rem;
+      border-radius: 4px;
+      background: #121a26;
+    }
+    .merge-swatch {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 2px;
+      flex: 0 0 auto;
+    }
+    .merge-lab {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #e2e8f0;
+    }
+    .merge-x {
+      flex: 0 0 auto;
+      border: 1px solid #4c1d3a;
+      background: #1f1218;
+      color: #fca5a5;
+      border-radius: 4px;
+      width: 1.5rem;
+      height: 1.5rem;
+      line-height: 1;
+      font-size: 0.95rem;
+      cursor: pointer;
+      padding: 0;
+    }
+    .merge-x:hover { filter: brightness(1.15); }
+    .merge-panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .merge-panel-actions button {
+      font-size: 0.68rem;
+      padding: 0.28rem 0.55rem;
+      border-radius: 4px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      cursor: pointer;
+    }
+    .merge-panel-actions button:hover { border-color: #60a5fa; }
+    .merge-panel-actions #btnClearDayMerges {
+      border-color: #7f1d1d;
+      color: #fca5a5;
+    }
+    .merge-panel-hint {
+      margin: 0;
+      font-size: 0.65rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .merge-c0 { --merge-accent: #a855f7; }
+    .merge-c1 { --merge-accent: #14b8a6; }
+    .merge-c2 { --merge-accent: #f43f5e; }
+    .merge-c3 { --merge-accent: #f59e0b; }
+    .merge-c4 { --merge-accent: #38bdf8; }
+    .merge-swatch.merge-c0 { background: #a855f7; }
+    .merge-swatch.merge-c1 { background: #14b8a6; }
+    .merge-swatch.merge-c2 { background: #f43f5e; }
+    .merge-swatch.merge-c3 { background: #f59e0b; }
+    .merge-swatch.merge-c4 { background: #38bdf8; }
+    .composite-col.composite-range.merge-c0 { border-color: #a855f788; }
+    .composite-col.composite-range.merge-c1 { border-color: #14b8a688; }
+    .composite-col.composite-range.merge-c2 { border-color: #f43f5e88; }
+    .composite-col.composite-range.merge-c3 { border-color: #f59e0b88; }
+    .composite-col.composite-range.merge-c4 { border-color: #38bdf888; }
+    .composite-col.composite-range.merge-c0 .composite-head { background: #1a1028ee; }
+    .composite-col.composite-range.merge-c1 .composite-head { background: #0a1f1cee; }
+    .composite-col.composite-range.merge-c2 .composite-head { background: #1f1014ee; }
+    .composite-col.composite-range.merge-c3 .composite-head { background: #1f180aee; }
+    .composite-col.composite-range.merge-c4 .composite-head { background: #0a1824ee; }
+    @media (max-width: 720px) {
+      .merge-panel { max-width: none; margin-left: 0.35rem; margin-right: 0.35rem; }
+      .zoom-bar .composite-hint { max-width: 9rem; }
+    }
+
     /* Single-pin (isolated single-print) orphan highlights */
     .profiles-row {
       position: relative;
@@ -1193,9 +1328,22 @@
         <button type="button" id="btnWeekHg" class="comp-btn" aria-pressed="false" title="週 TPO：合併當週交易日，日 HG 淡底">週 HG</button>
         <button type="button" id="btnMonthHg" class="comp-btn" aria-pressed="false" title="月 TPO：合併當月全日，週淡底／日更淡">月 HG</button>
         <button type="button" id="btnClearMerge" class="comp-btn-clear" hidden disabled title="清除週／月／手選合併">清除合併</button>
-        <span class="composite-hint" id="compositeHint">撳日期頭可合併連續日</span>
+        <span class="composite-hint" id="compositeHint">撳日期頭可合併連續日 · 可加多組</span>
         <span class="hint-inline">Ctrl+wheel · 雙指縮放 · 30d/60d</span>
       </div>
+      <details class="merge-panel" id="mergePanel">
+        <summary>日合併 <span class="merge-count" id="mergeCount"></span></summary>
+        <div class="merge-panel-body">
+          <div class="merge-group-list" id="mergeGroupList">
+            <div class="merge-empty">未有日合併組 · 撳兩個日期頭</div>
+          </div>
+          <div class="merge-panel-actions">
+            <button type="button" id="btnAddMergeGroup" title="開始選下一組連續日">加新組</button>
+            <button type="button" id="btnClearDayMerges" title="只清手選日合併（保留週／月）">清全部日合併</button>
+          </div>
+          <p class="merge-panel-hint" id="mergePanelHint">撳兩個日期頭選連續日；可加多組互唔重疊範圍</p>
+        </div>
+      </details>
       </div>
       <div class="chart-stage" id="chartStage">
         <div class="hg-wrap" id="hgWrap">
@@ -1226,6 +1374,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=mobile-trend-tall-1"></script>
+  <script src="app.js?v=multi-day-merge-1"></script>
 </body>
 </html>

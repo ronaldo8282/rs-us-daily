@@ -1,45 +1,96 @@
 //@version=5
-// TPO / Market Profile — Full Session · Single Pin (private draft for Leung)
-// Scope: custom session (incl. overnight); POC + VAH/VAL + IB + TPO count; single pin.
-// Price step: manual points-per-level (0 = auto mintick×mult). Letters off (not used).
-// Chart TF ≤ TPO block. Not a Sierra Chart clone.
-indicator("TPO Session · Single Pin MVP", overlay = true, max_boxes_count = 500, max_lines_count = 100, max_labels_count = 50)
+// TPO Session · Letter Wall MVP (classic Market Profile letters)
+// Locked 2026-10-21 (Klaus/Leung): 港期 alphabet (skip J/K, firstLetter D);
+// IB = first TWO TPO periods; VA = normal 收集法 + Double Distribution + Spike;
+// night = one letter per 30m (no S/T compress); single-sided letter wall.
+//
+// Pine limits (honest):
+// - One session letter-row OK; NOT multi-day Sierra Chart wall.
+// - OHLC bar High–Low only (not tick tape).
+// - Labels approximate monospace — not a true fixed-width grid.
+// - Chart TF should be ≤ TPO block minutes.
+indicator("TPO Session · Single Pin MVP", overlay = true, max_boxes_count = 500, max_lines_count = 150, max_labels_count = 500)
 
 // ── Session (custom open/close; overnight OK e.g. 1800-1700) ──────────
 grpS = "Session (custom / overnight OK)"
 sessOpen  = input.string("0930", "Session open (HHmm)", group = grpS, tooltip = "e.g. 0930 equities RTH, or 1800 overnight futures.")
 sessClose = input.string("1600", "Session close (HHmm)", group = grpS, tooltip = "e.g. 1600 RTH, or 1700 next day for overnight (open>close crosses midnight).")
-sessionTz = input.string("America/New_York", "Timezone", options = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC", "Exchange"], group = grpS)
+sessionTz = input.string("America/New_York", "Timezone", options = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC", "Exchange", "Asia/Hong_Kong"], group = grpS)
 tpoMins   = input.int(30, "TPO block (minutes)", minval = 5, maxval = 60, step = 5, group = grpS)
-// Built session string — TradingView supports overnight when open>close (e.g. "1800-1700")
 sessionStr = sessOpen + "-" + sessClose
 
-// ── Price / single-pin ────────────────────────────────────────────────
-grpP = "Price / single-pin profile"
-pointsPerLevel    = input.float(5.0, "Points per TPO level (0 = auto)", minval = 0.0, step = 0.01, group = grpP, tooltip = "Manual bin size in price points. Example: 0.25, 1.0, 5.0. Set 0 to use mintick × Auto mult.")
+// ── Alphabet (港期書例) ───────────────────────────────────────────────
+grpA = "Alphabet (港期書例)"
+firstLetter = input.string("D", "First TPO letter", group = grpA, tooltip = "Period 0 starts here (港期 day often D). Walks alphabet; wraps UPPER→lower→UPPER.")
+skipJK      = input.bool(true, "Skip J/K (港期 lunch)", group = grpA, tooltip = "When on: alphabet omits J/K and j/k.")
+maxLetterChars = input.int(24, "Max letters shown per row", minval = 8, maxval = 48, group = grpA)
+
+// ── Price / letter wall ───────────────────────────────────────────────
+grpP = "Price / letter wall"
+pointsPerLevel    = input.float(5.0, "Points per TPO level (0 = auto)", minval = 0.0, step = 0.01, group = grpP, tooltip = "Manual bin size. HSI book = 5. Set 0 → mintick × Auto mult.")
 autoStepMult      = input.int(1, "Auto step × mintick (when points=0)", minval = 1, maxval = 100, group = grpP)
 maxLevels         = input.int(80, "Max price levels drawn", minval = 20, maxval = 200, group = grpP)
-profileWidthBars  = input.int(40, "Pin width (bars)", minval = 10, maxval = 120, group = grpP)
-profileOffsetBars = input.int(2, "Pin offset right of last bar (bars)", minval = 0, maxval = 50, group = grpP)
+profileWidthBars  = input.int(40, "Pin / wall width (bars)", minval = 10, maxval = 120, group = grpP)
+profileOffsetBars = input.int(2, "Offset right of last bar (bars)", minval = 0, maxval = 50, group = grpP)
 
-// ── Required features (defaults ON) ───────────────────────────────────
+// ── Features ──────────────────────────────────────────────────────────
 grpF = "Required features (defaults ON)"
-showPOC      = input.bool(true, "POC", group = grpF)
-showVA       = input.bool(true, "Value Area (VAH / VAL)", group = grpF)
-vaPct        = input.float(70.0, "Value Area %", minval = 50.0, maxval = 90.0, step = 1.0, group = grpF)
-showIB       = input.bool(true, "Initial Balance", group = grpF)
-ibMins       = input.int(60, "IB = first N minutes", minval = 15, maxval = 120, step = 15, group = grpF)
-showTpoCount = input.bool(true, "TPO count (single pin blocks)", group = grpF)
+showLetterWall = input.bool(true, "Letter wall (primary)", group = grpF)
+showPOC        = input.bool(true, "POC", group = grpF)
+showVA         = input.bool(true, "Value Area (VAH / VAL)", group = grpF)
+vaPct          = input.float(70.0, "Value Area %", minval = 50.0, maxval = 90.0, step = 0.01, group = grpF, tooltip = "Book ≈68.26; industry often 70.")
+detectDouble   = input.bool(true, "Double Distribution VA + Single Pin bridge", group = grpF)
+detectSpike    = input.bool(true, "Spike (late thin extension)", group = grpF)
+showIB         = input.bool(true, "Initial Balance (first 2 TPO periods)", group = grpF)
+showTpoCount   = input.bool(false, "Thin count pin behind letters", group = grpF)
+highlightSingle = input.bool(true, "Highlight single-print / Single Pin rows", group = grpF)
 
 grpC = "Colors"
-colBlock  = input.color(color.new(#3b82f6, 55), "TPO pin block", group = grpC)
-colPOC    = input.color(color.new(#f59e0b, 0), "POC", group = grpC)
-colVA     = input.color(color.new(#22c55e, 75), "Value Area fill", group = grpC)
-colVALine = input.color(color.new(#22c55e, 0), "VAH / VAL", group = grpC)
-colIB     = input.color(color.new(#a855f7, 0), "IB high / low", group = grpC)
+colVaLetters = input.color(#3b82f6, "VA letter text", group = grpC)
+colOutside   = input.color(color.new(#94a3b8, 20), "Outside-VA letter text", group = grpC)
+colPOC       = input.color(#f59e0b, "POC", group = grpC)
+colVAFill    = input.color(color.new(#3b82f6, 88), "VA fill", group = grpC)
+colVALine    = input.color(#3b82f6, "VAH / VAL line", group = grpC)
+colVA2Line   = input.color(#06b6d4, "VA2 (double) line", group = grpC)
+colSpike     = input.color(#1e3a8a, "Spike high / low", group = grpC)
+colIB        = input.color(#a855f7, "IB high / low", group = grpC)
+colSingle    = input.color(#f97316, "Single-print / bridge", group = grpC)
+colPin       = input.color(color.new(#3b82f6, 70), "Optional count pin", group = grpC)
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ── Alphabet helpers ──────────────────────────────────────────────────
+ALPHA_UP_SKIP = "ABCDEFGHILMNOPQRSTUVWXYZ"
+ALPHA_LO_SKIP = "abcdefghilmnopqrstuvwxyz"
+ALPHA_UP_FULL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ALPHA_LO_FULL = "abcdefghijklmnopqrstuvwxyz"
+
 tz = sessionTz == "Exchange" ? syminfo.timezone : sessionTz
+
+f_alphaUp() =>
+    skipJK ? ALPHA_UP_SKIP : ALPHA_UP_FULL
+
+f_alphaLo() =>
+    skipJK ? ALPHA_LO_SKIP : ALPHA_LO_FULL
+
+f_fullAlpha() =>
+    f_alphaUp() + f_alphaLo()
+
+f_letterAt(periodIdx) =>
+    string up = f_alphaUp()
+    string full = f_fullAlpha()
+    int lenFull = str.length(full)
+    string fl = str.upper(str.substring(firstLetter, 0, math.min(1, str.length(firstLetter))))
+    if str.length(fl) < 1
+        fl := "A"
+    int startIdx = nz(str.pos(up, fl), -1)
+    // If first letter not in UP (e.g. skipped J), fall back via full alphabet
+    if startIdx < 0
+        startIdx := nz(str.pos(full, fl), -1)
+    if startIdx < 0
+        startIdx := 0
+    int idx = (startIdx + periodIdx) % lenFull
+    if idx < 0
+        idx := 0
+    str.substring(full, idx, idx + 1)
 
 f_inSession() =>
     not na(time(timeframe.period, sessionStr, tz))
@@ -51,6 +102,11 @@ f_step() =>
 f_roundStep(price, step) =>
     math.round(price / step) * step
 
+f_truncLetters(s) =>
+    int lim = maxLetterChars
+    str.length(s) <= lim ? s : str.substring(s, 0, lim) + "+"
+
+// ── Drawing object pools ──────────────────────────────────────────────
 var box[]   gBoxes  = array.new_box()
 var line[]  gLines  = array.new_line()
 var label[] gLabels = array.new_label()
@@ -74,8 +130,6 @@ var float[] sessLo = array.new_float()
 var int[]   sessT  = array.new_int()
 var int     sessStartBar = na
 var int     sessStartTime = na
-var float   ibHi = na
-var float   ibLo = na
 
 tOpen = time("D", sessionStr, tz)
 newSess = not na(tOpen) and (na(tOpen[1]) or tOpen != tOpen[1])
@@ -86,21 +140,58 @@ if newSess
     array.clear(sessT)
     sessStartBar := bar_index
     sessStartTime := time
-    ibHi := high
-    ibLo := low
 
 inS = f_inSession()
 if inS
     array.push(sessHi, high)
     array.push(sessLo, low)
     array.push(sessT, time)
-    if showIB and not na(sessStartTime)
-        elapsedMin = (time - sessStartTime) / 60000.0
-        if elapsedMin <= ibMins
-            ibHi := math.max(nz(ibHi, high), high)
-            ibLo := math.min(nz(ibLo, low), low)
 
 sessionJustEnded = not inS and inS[1]
+
+// Collect VA from a POC level (normal 收集法)
+f_collectVA(counts, nLevels, pocLv, target) =>
+    int vaLo = pocLv
+    int vaHi = pocLv
+    int acc = array.get(counts, pocLv)
+    int guard = 0
+    while acc < target and guard < nLevels + 2
+        guard += 1
+        int below = vaLo > 0 ? array.get(counts, vaLo - 1) : -1
+        int above = vaHi < nLevels - 1 ? array.get(counts, vaHi + 1) : -1
+        if above < 0 and below < 0
+            break
+        if above >= below and above >= 0
+            vaHi += 1
+            acc += array.get(counts, vaHi)
+        else if below >= 0
+            vaLo -= 1
+            acc += array.get(counts, vaLo)
+        else
+            break
+    [vaLo, vaHi]
+
+f_sumRange(counts, a, b) =>
+    int s = 0
+    if a <= b
+        for i = a to b
+            s += array.get(counts, i)
+    s
+
+f_localPocInRange(counts, nLevels, a, b, midP, mn, useStep) =>
+    int bestLv = a
+    int bestC = -1
+    float bestDist = 10e10
+    if a <= b
+        for lv = a to b
+            int c = array.get(counts, lv)
+            float px = mn + lv * useStep
+            float d = math.abs(px - midP)
+            if c > bestC or (c == bestC and d < bestDist)
+                bestC := c
+                bestDist := d
+                bestLv := lv
+    bestLv
 
 f_buildDraw(endBar) =>
     int n = array.size(sessT)
@@ -122,25 +213,37 @@ f_buildDraw(endBar) =>
             int t0 = array.get(sessT, 0)
             int[] counts = array.new_int(nLevels, 0)
             int[] lastPeriod = array.new_int(nLevels, -1)
+            string[] letters = array.new_string(nLevels, "")
+            // IB from first two TPO periods
+            float ibHi = na
+            float ibLo = na
+            int maxPeriodSeen = 0
 
             for i = 0 to n - 1
                 int ti = array.get(sessT, i)
                 float hi = array.get(sessHi, i)
                 float lo = array.get(sessLo, i)
                 int pIdx = int(math.floor((ti - t0) / float(periodMs)))
+                maxPeriodSeen := math.max(maxPeriodSeen, pIdx)
+                if pIdx <= 1
+                    ibHi := na(ibHi) ? hi : math.max(ibHi, hi)
+                    ibLo := na(ibLo) ? lo : math.min(ibLo, lo)
                 int iLo = int(math.floor((lo - mn) / useStep))
                 int iHi = int(math.floor((hi - mn) / useStep))
                 iLo := math.max(0, math.min(nLevels - 1, iLo))
                 iHi := math.max(0, math.min(nLevels - 1, iHi))
+                string L = f_letterAt(pIdx)
                 for lv = iLo to iHi
                     if array.get(lastPeriod, lv) != pIdx
                         array.set(lastPeriod, lv, pIdx)
                         array.set(counts, lv, array.get(counts, lv) + 1)
+                        array.set(letters, lv, array.get(letters, lv) + L)
 
             int maxC = 0
             for lv = 0 to nLevels - 1
                 maxC := math.max(maxC, array.get(counts, lv))
 
+            // Primary POC — most letters; tie → closest to mid range
             int pocLv = 0
             float midP = (mn + mx) * 0.5
             float bestDist = 10e10
@@ -157,53 +260,218 @@ f_buildDraw(endBar) =>
             for lv = 0 to nLevels - 1
                 totalTpo += array.get(counts, lv)
             int target = int(math.ceil(totalTpo * vaPct / 100.0))
-            int vaLo = pocLv
-            int vaHi = pocLv
-            int acc = array.get(counts, pocLv)
-            int guard = 0
-            while acc < target and guard < nLevels + 2
-                guard += 1
-                int below = vaLo > 0 ? array.get(counts, vaLo - 1) : -1
-                int above = vaHi < nLevels - 1 ? array.get(counts, vaHi + 1) : -1
-                if above < 0 and below < 0
-                    break
-                if above >= below and above >= 0
-                    vaHi += 1
-                    acc += array.get(counts, vaHi)
-                else if below >= 0
-                    vaLo -= 1
-                    acc += array.get(counts, vaLo)
-                else
-                    break
+
+            [vaLo, vaHi] = f_collectVA(counts, nLevels, pocLv, target)
             float vah = mn + vaHi * useStep
             float valp = mn + vaLo * useStep
 
-            // Single pin: one-sided blocks growing RIGHT from anchor (not split)
+            // ── Double Distribution: contiguous single-print bridge between lobes ──
+            bool hasDouble = false
+            int bridgeLo = -1
+            int bridgeHi = -1
+            int va2Lo = -1
+            int va2Hi = -1
+            int poc2Lv = -1
+            float vah2 = na
+            float val2 = na
+            float poc2Price = na
+            bool[] isBridge = array.new_bool(nLevels, false)
+
+            if detectDouble and totalTpo > 0
+                int minLobe = int(math.max(2, math.ceil(totalTpo * 0.15)))
+                // Scan for longest contiguous run of count==1 that separates two mass lobes
+                int runStart = -1
+                int bestLen = 0
+                int bestBLo = -1
+                int bestBHi = -1
+                for lv = 0 to nLevels - 1
+                    int c = array.get(counts, lv)
+                    if c == 1
+                        if runStart < 0
+                            runStart := lv
+                    else
+                        if runStart >= 0
+                            int runEnd = lv - 1
+                            int runLen = runEnd - runStart + 1
+                            if runStart > 0 and runEnd < nLevels - 1
+                                int massBelow = f_sumRange(counts, 0, runStart - 1)
+                                int massAbove = f_sumRange(counts, runEnd + 1, nLevels - 1)
+                                int maxBelow = 0
+                                int maxAbove = 0
+                                for j = 0 to runStart - 1
+                                    maxBelow := math.max(maxBelow, array.get(counts, j))
+                                for j = runEnd + 1 to nLevels - 1
+                                    maxAbove := math.max(maxAbove, array.get(counts, j))
+                                bool lobesOk = (massBelow >= minLobe and massAbove >= minLobe) or (maxBelow >= 2 and maxAbove >= 2 and massBelow >= 3 and massAbove >= 3)
+                                if lobesOk and runLen >= bestLen and runLen >= 1
+                                    bestLen := runLen
+                                    bestBLo := runStart
+                                    bestBHi := runEnd
+                        runStart := -1
+                // trailing run
+                if runStart >= 0
+                    int runEnd = nLevels - 1
+                    // trailing single prints are tails, not bridges — ignore
+                    runStart := -1
+
+                if bestBLo >= 0
+                    bridgeLo := bestBLo
+                    bridgeHi := bestBHi
+                    hasDouble := true
+                    for lv = bridgeLo to bridgeHi
+                        array.set(isBridge, lv, true)
+                    // Secondary POC in the lobe that does NOT contain primary POC
+                    int lobeA0 = 0
+                    int lobeA1 = bridgeLo - 1
+                    int lobeB0 = bridgeHi + 1
+                    int lobeB1 = nLevels - 1
+                    bool pocInA = pocLv >= lobeA0 and pocLv <= lobeA1
+                    int s0 = pocInA ? lobeB0 : lobeA0
+                    int s1 = pocInA ? lobeB1 : lobeA1
+                    if s0 <= s1
+                        poc2Lv := f_localPocInRange(counts, nLevels, s0, s1, midP, mn, useStep)
+                        poc2Price := mn + poc2Lv * useStep
+                        int lobeTotal = f_sumRange(counts, s0, s1)
+                        int target2 = int(math.ceil(lobeTotal * vaPct / 100.0))
+                        [v2l, v2h] = f_collectVA(counts, nLevels, poc2Lv, target2)
+                        // Clamp secondary VA inside its lobe
+                        va2Lo := math.max(v2l, s0)
+                        va2Hi := math.min(v2h, s1)
+                        vah2 := mn + va2Hi * useStep
+                        val2 := mn + va2Lo * useStep
+
+            // ── Spike: late extension beyond early range with thin (mostly single) prints ──
+            bool hasSpike = false
+            float spikeHi = na
+            float spikeLo = na
+            bool[] isSpikeLv = array.new_bool(nLevels, false)
+            if detectSpike and maxPeriodSeen >= 4
+                int cutPeriod = int(math.floor(maxPeriodSeen * 0.70))
+                float earlyHi = na
+                float earlyLo = na
+                for i = 0 to n - 1
+                    int ti = array.get(sessT, i)
+                    int pIdx = int(math.floor((ti - t0) / float(periodMs)))
+                    if pIdx <= cutPeriod
+                        float hi = array.get(sessHi, i)
+                        float lo = array.get(sessLo, i)
+                        earlyHi := na(earlyHi) ? hi : math.max(earlyHi, hi)
+                        earlyLo := na(earlyLo) ? lo : math.min(earlyLo, lo)
+                if not na(earlyHi) and not na(earlyLo)
+                    float sessHiPx = array.max(sessHi)
+                    float sessLoPx = array.min(sessLo)
+                    // Upper spike
+                    if sessHiPx > earlyHi + useStep * 0.5
+                        int eHiLv = int(math.floor((earlyHi - mn) / useStep))
+                        eHiLv := math.max(0, math.min(nLevels - 1, eHiLv))
+                        int topLv = nLevels - 1
+                        int thin = 0
+                        int tot = 0
+                        if eHiLv + 1 <= topLv
+                            for lv = eHiLv + 1 to topLv
+                                int c = array.get(counts, lv)
+                                if c > 0
+                                    tot += 1
+                                    if c == 1
+                                        thin += 1
+                            if tot >= 2 and thin >= math.ceil(tot * 0.6)
+                                hasSpike := true
+                                spikeLo := mn + (eHiLv + 1) * useStep
+                                spikeHi := mn + topLv * useStep
+                                for lv = eHiLv + 1 to topLv
+                                    if array.get(counts, lv) > 0
+                                        array.set(isSpikeLv, lv, true)
+                    // Lower spike
+                    if sessLoPx < earlyLo - useStep * 0.5
+                        int eLoLv = int(math.floor((earlyLo - mn) / useStep))
+                        eLoLv := math.max(0, math.min(nLevels - 1, eLoLv))
+                        int thin2 = 0
+                        int tot2 = 0
+                        if 0 <= eLoLv - 1
+                            for lv = 0 to eLoLv - 1
+                                int c = array.get(counts, lv)
+                                if c > 0
+                                    tot2 += 1
+                                    if c == 1
+                                        thin2 += 1
+                            if tot2 >= 2 and thin2 >= math.ceil(tot2 * 0.6)
+                                hasSpike := true
+                                float sLoCand = mn + 0 * useStep
+                                float sHiCand = mn + (eLoLv - 1) * useStep
+                                spikeLo := na(spikeLo) ? sLoCand : math.min(spikeLo, sLoCand)
+                                spikeHi := na(spikeHi) ? sHiCand : math.max(spikeHi, sHiCand)
+                                for lv = 0 to eLoLv - 1
+                                    if array.get(counts, lv) > 0
+                                        array.set(isSpikeLv, lv, true)
+
             int x1 = endBar + profileOffsetBars
             int maxCount = math.max(1, maxC)
+            int x0 = na(sessStartBar) ? math.max(0, endBar - n) : sessStartBar
 
+            // VA1 fill + lines
             if showVA
-                array.push(gBoxes, box.new(x1, vah + useStep * 0.5, x1 + profileWidthBars, valp - useStep * 0.5, border_color = color.new(colVA, 100), bgcolor = colVA))
+                array.push(gBoxes, box.new(x1, vah + useStep * 0.5, x1 + profileWidthBars, valp - useStep * 0.5, border_color = color.new(colVAFill, 100), bgcolor = colVAFill))
                 array.push(gLines, line.new(x1, vah, x1 + profileWidthBars, vah, color = colVALine, width = 1, style = line.style_dashed))
                 array.push(gLines, line.new(x1, valp, x1 + profileWidthBars, valp, color = colVALine, width = 1, style = line.style_dashed))
-                array.push(gLabels, label.new(x1 + profileWidthBars + 1, vah, "VAH", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
-                array.push(gLabels, label.new(x1 + profileWidthBars + 1, valp, "VAL", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, vah, hasDouble ? "VA1H" : "VAH", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, valp, hasDouble ? "VA1L" : "VAL", style = label.style_label_left, color = color.new(colVALine, 85), textcolor = colVALine, size = size.tiny))
 
+            // VA2 (double)
+            if showVA and hasDouble and not na(vah2) and not na(val2)
+                array.push(gBoxes, box.new(x1, vah2 + useStep * 0.5, x1 + profileWidthBars, val2 - useStep * 0.5, border_color = color.new(colVA2Line, 100), bgcolor = color.new(colVA2Line, 90)))
+                array.push(gLines, line.new(x1, vah2, x1 + profileWidthBars, vah2, color = colVA2Line, width = 1, style = line.style_dashed))
+                array.push(gLines, line.new(x1, val2, x1 + profileWidthBars, val2, color = colVA2Line, width = 1, style = line.style_dashed))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, vah2, "VA2H", style = label.style_label_left, color = color.new(colVA2Line, 85), textcolor = colVA2Line, size = size.tiny))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, val2, "VA2L", style = label.style_label_left, color = color.new(colVA2Line, 85), textcolor = colVA2Line, size = size.tiny))
+
+            // Spike zone
+            if hasSpike and not na(spikeHi) and not na(spikeLo)
+                array.push(gLines, line.new(x1, spikeHi, x1 + profileWidthBars, spikeHi, color = colSpike, width = 2, style = line.style_solid))
+                array.push(gLines, line.new(x1, spikeLo, x1 + profileWidthBars, spikeLo, color = colSpike, width = 2, style = line.style_solid))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, spikeHi, "SpikeH", style = label.style_label_left, color = color.new(colSpike, 80), textcolor = colSpike, size = size.tiny))
+                array.push(gLabels, label.new(x1 + profileWidthBars + 1, spikeLo, "SpikeL", style = label.style_label_left, color = color.new(colSpike, 80), textcolor = colSpike, size = size.tiny))
+
+            // Optional thin count pin behind letters
             if showTpoCount
                 for lv = 0 to nLevels - 1
                     int c = array.get(counts, lv)
                     if c > 0
                         float px = mn + lv * useStep
-                        int w = int(math.max(1, math.round(profileWidthBars * c / float(maxCount))))
-                        color bc = showPOC and lv == pocLv ? color.new(colPOC, 35) : colBlock
-                        array.push(gBoxes, box.new(x1, px + useStep * 0.45, x1 + w, px - useStep * 0.45, border_color = color.new(bc, 40), bgcolor = bc))
-                        if c == maxC or c >= math.ceil(maxCount * 0.6)
-                            array.push(gLabels, label.new(x1 + w, px, str.tostring(c), style = label.style_label_left, color = color.new(color.black, 100), textcolor = color.white, size = size.tiny))
+                        int w = int(math.max(1, math.round(profileWidthBars * c / float(maxCount) * 0.35)))
+                        color bc = showPOC and lv == pocLv ? color.new(colPOC, 50) : colPin
+                        array.push(gBoxes, box.new(x1, px + useStep * 0.4, x1 + w, px - useStep * 0.4, border_color = color.new(bc, 50), bgcolor = bc))
+
+            // Letter wall — one label per level with letter string
+            if showLetterWall
+                for lv = 0 to nLevels - 1
+                    int c = array.get(counts, lv)
+                    if c > 0
+                        float px = mn + lv * useStep
+                        string raw = array.get(letters, lv)
+                        string txt = f_truncLetters(raw)
+                        bool inVA1 = lv >= vaLo and lv <= vaHi
+                        bool inVA2 = hasDouble and va2Lo >= 0 and lv >= va2Lo and lv <= va2Hi
+                        bool inVA = inVA1 or inVA2
+                        bool isPoc = showPOC and lv == pocLv
+                        bool isPoc2 = hasDouble and poc2Lv >= 0 and lv == poc2Lv
+                        bool singleRow = c == 1
+                        bool bridgeRow = array.get(isBridge, lv)
+                        color tc = isPoc or isPoc2 ? colPOC : (bridgeRow or (highlightSingle and singleRow) ? colSingle : (inVA ? colVaLetters : colOutside))
+                        string tag = ""
+                        if isPoc
+                            tag := " ◀POC"
+                        else if isPoc2
+                            tag := " ◀POC2"
+                        else if bridgeRow
+                            tag := " ▏Pin"
+                        array.push(gLabels, label.new(x1, px, txt + tag, style = label.style_label_left, color = color.new(color.black, 100), textcolor = tc, size = size.small, textalign = text.align_left))
 
             if showPOC
-                int x0 = na(sessStartBar) ? math.max(0, endBar - n) : sessStartBar
                 array.push(gLines, line.new(x0, pocPrice, x1 + profileWidthBars, pocPrice, color = colPOC, width = 2))
                 array.push(gLabels, label.new(x1 + profileWidthBars + 1, pocPrice, "POC " + str.tostring(pocPrice, format.mintick) + " ×" + str.tostring(maxC), style = label.style_label_left, color = color.new(colPOC, 85), textcolor = colPOC, size = size.small))
+                if hasDouble and not na(poc2Price)
+                    array.push(gLines, line.new(x0, poc2Price, x1 + profileWidthBars, poc2Price, color = color.new(colPOC, 40), width = 1, style = line.style_dotted))
+                    array.push(gLabels, label.new(x1 + profileWidthBars + 1, poc2Price, "POC2 " + str.tostring(poc2Price, format.mintick), style = label.style_label_left, color = color.new(colPOC, 85), textcolor = color.new(colPOC, 20), size = size.tiny))
 
             if showIB and not na(ibHi) and not na(ibLo) and not na(sessStartBar)
                 array.push(gLines, line.new(sessStartBar, ibHi, endBar, ibHi, color = colIB, width = 1, style = line.style_dotted))

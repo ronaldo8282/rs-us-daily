@@ -132,6 +132,7 @@
   let lastMeta = null;
   let renderScheduled = false;
   let fillInFlight = false;
+  let profilesLoading = false;
   let lastParamsKey = "";
   let zoom = 1; // scales row height + col width
   let globalGrid = null; // { minKey, maxKey, step, nBins }
@@ -753,6 +754,55 @@
     return !!(weekHgOn || monthHgOn || (rangeSel && rangeSel.endIdx > rangeSel.startIdx));
   }
 
+  /** Week/month replace the day wall with in-flow narrow density columns (not overlays). Month wins. */
+  function compositePrimaryKind() {
+    if (monthHgOn) return "month";
+    if (weekHgOn) return "week";
+    return null;
+  }
+
+  function buildPrimaryGroups() {
+    const kind = compositePrimaryKind();
+    if (kind === "month") return buildMonthGroups();
+    if (kind === "week") return buildWeekGroups();
+    return [];
+  }
+
+  /** Narrow density width for a merged HG column (not full span of constituent days). */
+  function compositeColW(profile, kind) {
+    if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS);
+    const w = dayColW(profile);
+    // Soft caps so multi-month / multi-week walls stay scannable
+    if (kind === "month") return Math.min(w, Math.max(28, Math.round(80 * Math.max(zoom, 0.12))));
+    if (kind === "week") return Math.min(w, Math.max(24, Math.round(64 * Math.max(zoom, 0.12))));
+    return Math.min(w, Math.max(36, Math.round(100 * Math.max(zoom, 0.15))));
+  }
+
+  function buildGroupGeometry(groups) {
+    const gap = colGap();
+    const kind = compositePrimaryKind() || ((groups[0] && groups[0].kind) || "week");
+    const n = groups.length;
+    const widths = new Array(n);
+    const offsets = new Array(n + 1);
+    offsets[0] = 0;
+    for (let i = 0; i < n; i++) {
+      const g = groups[i];
+      const w = compositeColW(g && g.profile, (g && g.kind) || kind);
+      widths[i] = w;
+      offsets[i + 1] = offsets[i] + w + gap;
+    }
+    const contentW = offsets[n] || 0;
+    return {
+      widths,
+      offsets,
+      gap,
+      contentW,
+      rightEdgePad: RIGHT_EDGE_PAD,
+      totalW: contentW + RIGHT_EDGE_PAD,
+      groupMode: kind,
+    };
+  }
+
   function buildAlphabetList() {
     const mode = ($("alphabet") && $("alphabet").value) || "hk";
     const firstLetter = (($("firstLetter") && $("firstLetter").value) || "D").trim() || "D";
@@ -1086,9 +1136,11 @@
       : `<div class="day-meta">${fmtPrice(poc.price, step)} · ${nLetters}L / ${totalTpo}p</div>`;
     const fadeCls = faded ? " composite-faded" : "";
     const kindCls = " composite-" + (group.kind || "merge");
+    const flowCls = opts.flow ? " composite-flow" : "";
+    const leftStyle = opts.flow ? "" : `left:${left}px;`;
     return (
-      `<div class="composite-col${kindCls}${fadeCls}" data-kind="${escapeHtml(group.kind || "")}"` +
-      ` style="left:${left}px;width:${width}px;min-width:${width}px">` +
+      `<div class="composite-col${kindCls}${fadeCls}${flowCls}" data-kind="${escapeHtml(group.kind || "")}"` +
+      ` style="${leftStyle}width:${width}px;min-width:${width}px">` +
       `<div class="day-head composite-head" style="height:${hh}px"><b title="${escapeHtml(
         group.label
       )}">${escapeHtml(group.label)}</b>${meta}</div>` +
@@ -1234,15 +1286,32 @@
     renderScheduled = true;
     requestAnimationFrame(() => {
       renderScheduled = false;
-      virtualRender();
+      try {
+        virtualRender();
+      } catch (e) {
+        console.error(e);
+        try {
+          showErr("Render: " + (e && e.message ? e.message : String(e)));
+        } catch (_) {}
+      }
     });
   }
 
   function virtualRender() {
     const sc = $("profilesScroll");
+    if (!sc) return;
     if (!sessionIds.length) {
+      // During fetchAndBuild we clear sessionIds before await — don't clobber the wall with
+      // a sticky "No sessions" if a rAF from setSettingsCollapsed / scroll races the load.
+      if (profilesLoading) {
+        if (!sc.querySelector(".profile") && !sc.querySelector(".profiles-aligned")) {
+          sc.innerHTML = `<div class="profiles-row" id="profilesRow"><div class="day-col single"><pre class="profile">Loading…</pre></div></div>`;
+        }
+        return;
+      }
       sc.innerHTML = `<div class="profiles-row" id="profilesRow"><div class="day-col single"><pre class="profile">No sessions.</pre></div></div>`;
-      $("stats").innerHTML = "";
+      const st = $("stats");
+      if (st) st.innerHTML = "";
       return;
     }
 
@@ -1827,6 +1896,7 @@
       const payload = await readResponseJson(res, "/api/profiles");
       if (!res.ok || payload.error) throw new Error(payload.error || "HTTP " + res.status);
       ingestProfiles(payload);
+      profilesLoading = false;
       const ms = Math.round(performance.now() - t0);
       showSrcNote(
         [
@@ -1870,6 +1940,7 @@
     btn.disabled = true;
     const t0 = performance.now();
     try {
+      profilesLoading = true;
       profileById = new Map();
       compositeCache.clear();
       sessionIds = [];
@@ -1945,8 +2016,10 @@
       }
     } catch (e) {
       console.error(e);
+      profilesLoading = false;
       showErr(e.message || String(e));
     } finally {
+      profilesLoading = false;
       btn.disabled = false;
     }
   }

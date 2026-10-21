@@ -1,24 +1,13 @@
 # TPO Letter Hourglass — GitHub Pages snapshot
 
-Static export of the Flask MVP (single-pin highlights + prior features).
-Loads `data/profiles.json` (no backend).
+Static export of the Flask MVP (composite week/month/range HG + single-pin + prior features).
+Loads `data/profiles.json` (no backend). `window.TPO_STATIC=true` + github.io detect.
 
-## Local check
-Serve this folder (Pages needs HTTP, not `file://` for fetch):
+## Range UI
+**12M / 6M / 3M / 1M** (~252 / 126 / 63 / 21 sessions). Snapshot may be shorter than target if bar history is short (TV 30m for HSI1! currently ~Jan→Oct 2026).
 
-```bash
-cd pages-dist && python3 -m http.server 8787
-```
+## Include
+`index.html`, `app.js`, `data/profiles.json`, `sample.csv` (optional).
 
-Open: http://127.0.0.1:8787/?v=single-pin-1
-
-## Deploy (parent / GitHub MCP)
-Push contents of this folder to a repo Pages root (or `/docs`), e.g.:
-
-- Repo suggestion: `ronaldo8282/tpo-letter-mvp` (or branch `gh-pages`)
-- Public URL shape: `https://ronaldo8282.github.io/tpo-letter-mvp/`
-- Existing Pages site `rs-us-daily` can host under a subpath if preferred.
-
-Include: `index.html`, `app.js`, `data/profiles.json`, `sample.csv` (optional).
-
-Snapshot: HSIF TV profiles, ~half-year sessions, points=5, HK alphabet, session 0930→0300.
+## Cache-bust
+Open with `?v=composite-hg-2`.

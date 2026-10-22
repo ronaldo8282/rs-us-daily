@@ -824,6 +824,11 @@
       display: block;
       background: #0c121af0;
       pointer-events: auto;
+      z-index: 2;
+    }
+    .composite-col.composite-flow.composite-range {
+      background: #1a1028f2;
+      box-shadow: 0 0 0 1px #a855f755, 0 4px 14px #0009;
     }
     .composite-col.composite-flow .day-body {
       background: transparent;
@@ -859,10 +864,22 @@
       text-overflow: ellipsis;
     }
     .day-col.day-faded {
-      opacity: 0.3;
-      filter: saturate(0.65);
+      opacity: 0.42;
+      filter: saturate(0.7);
     }
-    .day-col.day-faded .day-head { opacity: 0.95; }
+    .day-col.day-faded .day-head { opacity: 0.9; }
+    /* Hand-merge constituent days sitting to the right of merged HG (A) */
+    .day-col.day-merge-ghost {
+      opacity: 0.42;
+      filter: saturate(0.7);
+    }
+    .day-col.day-merge-ghost .day-head {
+      opacity: 0.85;
+      font-style: italic;
+    }
+    .day-col.day-merge-ghost .day-body {
+      pointer-events: none;
+    }
     .day-head-select { cursor: pointer; }
     .day-head-select:hover { outline: 1px solid var(--accent); outline-offset: -1px; }
     .day-col.day-range-sel .day-head {
@@ -1578,6 +1595,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=zoom-xy-3"></script>
+  <script src="app.js?v=merge-ghost-1"></script>
 </body>
 </html>

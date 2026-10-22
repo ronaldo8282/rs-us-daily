@@ -364,19 +364,97 @@
     return row.count || 0;
   }
 
-  // Cumulative column geometry for variable-width virtualization
-  function buildColGeometry() {
+  // Cumulative column geometry for variable-width virtualization.
+  // Hand-picked day merges insert an opaque merged HG column, then ghost
+  // (semi-transparent) constituent day columns immediately to its right:
+  //   [Merged A] [day1 ghost] [day2 ghost] …
+  // Week/month modes keep plain day geometry (they use group primary render).
+  function buildColGeometry(opts) {
+    opts = opts || {};
     const gap = colGap();
-    const widths = new Array(sessionIds.length);
-    const offsets = new Array(sessionIds.length + 1);
-    offsets[0] = 0;
-    for (let i = 0; i < sessionIds.length; i++) {
-      const p = profileById.get(sessionIds[i]);
-      const w = p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS);
-      widths[i] = w;
-      offsets[i + 1] = offsets[i] + w + gap;
+    const useGhostMerges =
+      !opts.plain &&
+      !weekHgOn &&
+      !monthHgOn &&
+      completedRangeGroups().length > 0;
+    if (!useGhostMerges) {
+      const widths = new Array(sessionIds.length);
+      const offsets = new Array(sessionIds.length + 1);
+      offsets[0] = 0;
+      for (let i = 0; i < sessionIds.length; i++) {
+        const p = profileById.get(sessionIds[i]);
+        const w = p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS);
+        widths[i] = w;
+        offsets[i + 1] = offsets[i] + w + gap;
+      }
+      const contentW = offsets[sessionIds.length];
+      const dayToVisual = new Array(sessionIds.length);
+      for (let i = 0; i < sessionIds.length; i++) dayToVisual[i] = i;
+      return {
+        widths,
+        offsets,
+        gap,
+        contentW,
+        rightEdgePad: RIGHT_EDGE_PAD,
+        totalW: contentW + RIGHT_EDGE_PAD,
+        visualCols: null,
+        dayToVisual,
+        mergeGhost: false,
+      };
     }
-    const contentW = offsets[sessionIds.length];
+
+    const rangeOverlays = buildAllRangeGroups();
+    const mergeByStart = new Map();
+    const covered = new Set();
+    for (let ri = 0; ri < rangeOverlays.length; ri++) {
+      const g = rangeOverlays[ri];
+      mergeByStart.set(g.startIdx, g);
+      for (let j = g.startIdx; j <= g.endIdx; j++) covered.add(j);
+    }
+
+    const visualCols = [];
+    const widths = [];
+    for (let i = 0; i < sessionIds.length; i++) {
+      if (mergeByStart.has(i)) {
+        const g = mergeByStart.get(i);
+        visualCols.push({
+          type: "merge",
+          group: g,
+          dayIdx: i,
+          startIdx: g.startIdx,
+          endIdx: g.endIdx,
+          sid: (g.sids && g.sids[g.sids.length - 1]) || g.label,
+        });
+        widths.push(compositeColW(g.profile, "range"));
+        for (let j = g.startIdx; j <= g.endIdx; j++) {
+          const p = profileById.get(sessionIds[j]);
+          visualCols.push({
+            type: "ghost",
+            dayIdx: j,
+            group: g,
+            sid: sessionIds[j],
+          });
+          widths.push(p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS));
+        }
+        continue;
+      }
+      if (covered.has(i)) continue;
+      const p = profileById.get(sessionIds[i]);
+      visualCols.push({ type: "day", dayIdx: i, sid: sessionIds[i] });
+      widths.push(p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS));
+    }
+
+    const offsets = new Array(widths.length + 1);
+    offsets[0] = 0;
+    for (let i = 0; i < widths.length; i++) {
+      offsets[i + 1] = offsets[i] + widths[i] + gap;
+    }
+    const dayToVisual = new Array(sessionIds.length).fill(-1);
+    for (let v = 0; v < visualCols.length; v++) {
+      const vc = visualCols[v];
+      if (vc.type === "day" || vc.type === "ghost") dayToVisual[vc.dayIdx] = v;
+    }
+    const contentW = offsets[widths.length] || 0;
     return {
       widths,
       offsets,
@@ -384,7 +462,19 @@
       contentW,
       rightEdgePad: RIGHT_EDGE_PAD,
       totalW: contentW + RIGHT_EDGE_PAD,
+      visualCols,
+      dayToVisual,
+      mergeGhost: true,
     };
+  }
+
+  function dayOffsetRight(geo, dayIdx) {
+    if (!geo) return 0;
+    if (geo.dayToVisual && geo.dayToVisual[dayIdx] != null && geo.dayToVisual[dayIdx] >= 0) {
+      const v = geo.dayToVisual[dayIdx];
+      return geo.offsets[v + 1] != null ? geo.offsets[v + 1] : geo.contentW;
+    }
+    return geo.offsets[dayIdx + 1] != null ? geo.offsets[dayIdx + 1] : geo.contentW;
   }
 
   function findColAtX(offsets, x) {
@@ -656,18 +746,25 @@
     const meta = thin
       ? ""
       : `<div class="day-meta">${fmtPrice(poc.price, step)} · ${nLetters}L</div>`;
-    const head = `<div class="day-head day-head-select" style="height:${hh}px" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" title="撳選合併範圍 · ${sessionId}"><b title="${sessionId}">${escapeHtml(
+    const isGhost = !!colOpts.ghost;
+    const selectable = colOpts.selectable !== false && !isGhost;
+    const headCls = selectable ? "day-head day-head-select" : "day-head";
+    const headTitle = isGhost
+      ? "合併組內原日（半透明） · " + sessionId
+      : "撳選合併範圍 · " + sessionId;
+    const head = `<div class="${headCls}" style="height:${hh}px" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" title="${escapeHtml(headTitle)}"><b title="${sessionId}">${escapeHtml(
       label
     )}</b>${meta}</div>`;
     const thinCls = thin ? " thin" : "";
     const barCls = barMode ? " bar-mode" : "";
-    const fadeCls = colOpts.faded ? " day-faded" : "";
+    const fadeCls = colOpts.faded || isGhost ? " day-faded" : "";
+    const ghostCls = isGhost ? " day-merge-ghost" : "";
     const selCls = colOpts.rangeSelected ? " day-range-sel" : "";
     const anchorCls = colOpts.rangeAnchor ? " day-range-anchor" : "";
     const weekKey = weekStartKey(sessionId);
     const weekBand = weekBandOf(sessionId);
     const weekCls = " week-band-" + weekBand;
-    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" style="width:${w}px;min-width:0">
+    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${ghostCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" style="width:${w}px;min-width:0">
       ${head}
       <div class="day-body" style="height:${bodyH}px;position:relative">
         <div class="poc-line" style="top:${pocTop}px"></div>
@@ -1391,38 +1488,10 @@
   }
 
   function renderCompositeLayersHtml(geo, grid, rh, fp, hh, viewFirst, viewLast) {
-    if (!grid || !geo || !compositeActive()) return "";
-    const layerW = (geo.contentW != null ? geo.contentW : geo.offsets[sessionIds.length]) + (geo.rightEdgePad || RIGHT_EDGE_PAD);
-    const layerH = hh + grid.nBins * rh;
-    const parts = [];
-
-    const overlaps = (g) => g.endIdx >= viewFirst && g.startIdx <= viewLast;
-
-    // Week/month use primary (in-flow) columns — skip full-span overlays here.
-    // Hand-picked day-ranges: full-span overlays (multi-group); follow isBarMode.
-    if (compositePrimaryKind()) {
-      /* overlays handled by virtualRenderGroupPrimary */
-    }
-    const rangeOverlays = buildAllRangeGroups();
-    for (let ri = 0; ri < rangeOverlays.length; ri++) {
-      const g = rangeOverlays[ri];
-      if (!overlaps(g)) continue;
-      const span = spanLeftWidth(geo, g.startIdx, g.endIdx);
-      parts.push(
-        renderCompositeColumnHtml(g, grid, span.left, span.width, rh, fp, hh, {
-          faded: false,
-          forceLetters: !isBarMode(),
-          colorIdx: g.colorIdx,
-        })
-      );
-    }
-
-    if (!parts.length) return "";
-    return (
-      `<div class="composite-layer" id="compositeLayer" style="width:${layerW}px;height:${layerH}px">` +
-      parts.join("") +
-      `</div>`
-    );
+    // Hand-picked day merges now render in-flow as [merge][ghost days]
+    // (see buildColGeometry + virtualRenderAlignedDays). Week/month use
+    // virtualRenderGroupPrimary. No full-span overlays remain.
+    return "";
   }
 
   function clearRangeSelection() {
@@ -1736,7 +1805,7 @@
     }
     const row = $("profilesRow");
     const compact = sessionIds.length > 1;
-    const geo = buildColGeometry();
+    const geo = buildColGeometry({ plain: true });
     // unaligned HTML columns need a bit more room for price gutter when shown
     const widths = geo.widths.map((w) => Math.max(w, compact ? 80 : 180));
     const gap = 6;
@@ -1940,27 +2009,30 @@
     const bodyH = grid.nBins * rh;
     const geo = buildColGeometry();
     const { widths, offsets, totalW } = geo;
+    const visualCols = geo.visualCols;
+    const nCols = widths.length;
+    const mergeGhost = !!geo.mergeGhost && visualCols && visualCols.length;
 
     const scrollLeft = sc.scrollLeft;
     const viewW = sc.clientWidth || 800;
-    const avgW = sessionIds.length ? totalW / sessionIds.length : 40;
+    const avgW = nCols ? totalW / nCols : 40;
     const os = overscanCols(avgW);
 
     let first = findColAtX(offsets, scrollLeft) - os;
     let last = findColAtX(offsets, scrollLeft + viewW) + os;
     first = Math.max(0, first);
-    last = Math.min(sessionIds.length - 1, last);
+    last = Math.min(nCols - 1, last);
 
     // Cap DOM columns so extreme zoom-out still stays snappy
     const MAX_DOM = 90;
     if (last - first + 1 > MAX_DOM) {
       const mid = Math.floor((first + last) / 2);
       first = Math.max(0, mid - Math.floor(MAX_DOM / 2));
-      last = Math.min(sessionIds.length - 1, first + MAX_DOM - 1);
+      last = Math.min(nCols - 1, first + MAX_DOM - 1);
     }
 
     const parts = [];
-    const leftPad = offsets[first];
+    const leftPad = offsets[first] || 0;
     const spacerH = hh + bodyH;
     if (leftPad > 0) {
       parts.push(
@@ -1968,37 +2040,69 @@
       );
     }
 
-    const fadeIdx = indicesUnderComposite();
     const selectedSet = new Set();
-    completedRangeGroups().forEach((g) => {
-      for (let i = g.startIdx; i <= g.endIdx; i++) selectedSet.add(i);
-    });
+    // Draft highlight only (completed merges use ghost columns, not sel tint)
     if (rangeDraft) {
       const dA = Math.min(rangeDraft.startIdx, rangeDraft.endIdx);
       const dB = Math.max(rangeDraft.startIdx, rangeDraft.endIdx);
       for (let i = dA; i <= dB; i++) selectedSet.add(i);
     }
 
-    for (let i = first; i <= last; i++) {
-      const sid = sessionIds[i];
-      const p = profileById.get(sid);
-      const w = widths[i];
-      if (p) {
-        parts.push(
-          renderAlignedColumn(p, grid, w, rh, fp, hh, {
-            idx: i,
-            faded: fadeIdx.has(i),
-            rangeSelected: selectedSet.has(i),
-            rangeAnchor: rangeAnchorIdx === i,
-          })
-        );
-      } else {
-        parts.push(placeholderCol(sid, w, spacerH));
+    if (mergeGhost) {
+      for (let i = first; i <= last; i++) {
+        const vc = visualCols[i];
+        const w = widths[i];
+        if (!vc) continue;
+        if (vc.type === "merge" && vc.group && vc.group.profile) {
+          parts.push(
+            renderCompositeColumnHtml(vc.group, grid, 0, w, rh, fp, hh, {
+              flow: true,
+              faded: false,
+              forceLetters: !isBarMode(),
+              colorIdx: vc.group.colorIdx,
+            })
+          );
+        } else if (vc.type === "ghost" || vc.type === "day") {
+          const sid = vc.sid || sessionIds[vc.dayIdx];
+          const p = profileById.get(sid);
+          if (p) {
+            parts.push(
+              renderAlignedColumn(p, grid, w, rh, fp, hh, {
+                idx: vc.dayIdx,
+                faded: vc.type === "ghost",
+                ghost: vc.type === "ghost",
+                rangeSelected: selectedSet.has(vc.dayIdx),
+                rangeAnchor: rangeAnchorIdx === vc.dayIdx,
+                selectable: vc.type !== "ghost",
+              })
+            );
+          } else {
+            parts.push(placeholderCol(sid, w, spacerH));
+          }
+        }
+      }
+    } else {
+      for (let i = first; i <= last; i++) {
+        const sid = sessionIds[i];
+        const p = profileById.get(sid);
+        const w = widths[i];
+        if (p) {
+          parts.push(
+            renderAlignedColumn(p, grid, w, rh, fp, hh, {
+              idx: i,
+              faded: false,
+              rangeSelected: selectedSet.has(i),
+              rangeAnchor: rangeAnchorIdx === i,
+            })
+          );
+        } else {
+          parts.push(placeholderCol(sid, w, spacerH));
+        }
       }
     }
 
-    const contentW = geo.contentW != null ? geo.contentW : offsets[sessionIds.length];
-    const virtRight = Math.max(0, contentW - offsets[last + 1]);
+    const contentW = geo.contentW != null ? geo.contentW : offsets[nCols];
+    const virtRight = Math.max(0, contentW - (offsets[last + 1] || 0));
     const edgePad = geo.rightEdgePad != null ? geo.rightEdgePad : RIGHT_EDGE_PAD;
     const rightPad = virtRight + edgePad;
     if (rightPad > 0) {
@@ -2010,7 +2114,7 @@
     const keep = sc.scrollLeft;
     const keepTop = sc.scrollTop;
 
-    // Hide single-pin while any composite overlay is active
+    // Hide single-pin while any composite / day-merge is active
     if (compositeActive()) {
       singlePinSegments = [];
     } else {
@@ -2022,22 +2126,12 @@
       rh,
       hh
     );
-    const compLayer = renderCompositeLayersHtml(
-      { offsets, contentW, rightEdgePad: edgePad, gap: geo.gap },
-      grid,
-      rh,
-      fp,
-      hh,
-      first,
-      last
-    );
     const axisHtml = renderPriceAxis(grid, rh, fp, hh);
     sc.innerHTML =
       `<div class="profiles-aligned">` +
       axisHtml +
       `<div class="profiles-row" id="profilesRow" style="gap:${geo.gap}px;position:relative">` +
       pinLayer +
-      compLayer +
       `${parts.join("")}</div>` +
       `</div>`;
 
@@ -2057,6 +2151,9 @@
       bodyH,
       barMode: isBarMode(),
       align: true,
+      visualCols: mergeGhost ? visualCols : null,
+      dayToVisual: geo.dayToVisual,
+      mergeGhost,
     };
     updateTimeline();
     updateTrendChart();
@@ -2303,6 +2400,41 @@
     zoomX = z;
     let sum = 0;
     const gap = colGap();
+    // Use full merge-ghost geometry so Fit accounts for inserted merge columns
+    const geo = buildColGeometry();
+    if (geo.mergeGhost && geo.dayToVisual) {
+      const v0 = geo.dayToVisual[fromIdx];
+      const v1 = geo.dayToVisual[toIdx];
+      if (v0 >= 0 && v1 >= 0) {
+        // Include any merge column immediately before v0 if that merge covers fromIdx
+        let startV = v0;
+        if (
+          geo.visualCols &&
+          startV > 0 &&
+          geo.visualCols[startV - 1] &&
+          geo.visualCols[startV - 1].type === "merge" &&
+          geo.visualCols[startV - 1].startIdx >= fromIdx &&
+          geo.visualCols[startV - 1].startIdx <= toIdx
+        ) {
+          startV = startV - 1;
+        }
+        // Also: if fromIdx starts a merge, dayToVisual[fromIdx] is the ghost; merge is before it
+        if (
+          geo.visualCols &&
+          v0 > 0 &&
+          geo.visualCols[v0 - 1] &&
+          geo.visualCols[v0 - 1].type === "merge" &&
+          geo.visualCols[v0 - 1].startIdx === fromIdx
+        ) {
+          startV = v0 - 1;
+        }
+        for (let v = startV; v <= v1; v++) {
+          sum += (geo.widths[v] || 0) + gap;
+        }
+        zoomX = prev;
+        return sum;
+      }
+    }
     for (let i = fromIdx; i <= toIdx; i++) {
       const p = profileById.get(sessionIds[i]);
       sum += (p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + gap;
@@ -2391,7 +2523,7 @@
     requestAnimationFrame(() => {
       // Align so the range's right edge (latest) sits near the right of the view
       const geo = buildColGeometry();
-      const right = geo.offsets[toIdx + 1] || geo.contentW;
+      const right = dayOffsetRight(geo, toIdx);
       const targetLeft = Math.max(0, right + (geo.rightEdgePad || RIGHT_EDGE_PAD) * 0.15 - sc.clientWidth + AXIS_W);
       // Fallback: full right scroll when geometry still settling
       sc.scrollLeft = Math.max(targetLeft, Math.max(0, sc.scrollWidth - sc.clientWidth));
@@ -2469,7 +2601,7 @@
       const sc = $("profilesScroll");
       if (!sc) return;
       const geo = buildColGeometry();
-      const right = geo.offsets[toIdx + 1] || geo.contentW;
+      const right = dayOffsetRight(geo, toIdx);
       const targetLeft = Math.max(
         0,
         right + (geo.rightEdgePad || RIGHT_EDGE_PAD) * 0.15 - sc.clientWidth + AXIS_W
@@ -2735,10 +2867,17 @@
     const fullW = axisW + totalW + pad;
     inner.style.width = fullW + "px";
 
-    const idList =
-      lastGeo.groupMode && lastGeo.groupLabels && lastGeo.groupLabels.length
-        ? lastGeo.groupLabels
-        : sessionIds;
+    let idList;
+    if (lastGeo.groupMode && lastGeo.groupLabels && lastGeo.groupLabels.length) {
+      idList = lastGeo.groupLabels;
+    } else if (lastGeo.visualCols && lastGeo.visualCols.length) {
+      idList = lastGeo.visualCols.map((vc) => {
+        if (vc.type === "merge" && vc.group) return vc.group.label || "合併";
+        return vc.sid || sessionIds[vc.dayIdx] || "";
+      });
+    } else {
+      idList = sessionIds;
+    }
     const ticks = [];
     let lastX = -999;
     const avgW = idList.length ? totalW / idList.length : 40;
@@ -2751,6 +2890,9 @@
       if (/^\d{4}-\d{2}-\d{2}/.test(label)) label = label.slice(5);
       else if (typeof label === "string" && label.indexOf("月 ") === 0) label = label.slice(2);
       else if (typeof label === "string" && label.indexOf("週 ") === 0) label = label.slice(2);
+      else if (typeof label === "string" && label.indexOf(" 合併") > 0) {
+        label = label.replace(" 合併", "");
+      }
       const w = Math.max(widths[i] || 24, 24);
       ticks.push(
         `<div class="tl-tick" data-idx="${i}" style="left:${x}px;width:${w}px">${escapeHtml(label)}</div>`
@@ -2763,6 +2905,9 @@
       if (/^\d{4}-\d{2}-\d{2}/.test(label)) label = label.slice(5);
       else if (typeof label === "string" && label.indexOf("月 ") === 0) label = label.slice(2);
       else if (typeof label === "string" && label.indexOf("週 ") === 0) label = label.slice(2);
+      else if (typeof label === "string" && label.indexOf(" 合併") > 0) {
+        label = label.replace(" 合併", "");
+      }
       ticks.push(
         `<div class="tl-tick" data-idx="${last}" style="left:${x}px;width:${Math.max(widths[last] || 24, 24)}px">${escapeHtml(label)}</div>`
       );
@@ -2819,6 +2964,7 @@
     // Collect points; week/month also keep each column's actual H/L for Y scale
     const pts = [];
     const nCols = widths.length;
+    const visualCols = lastGeo.visualCols;
     for (let i = 0; i < nCols; i++) {
       let price = null;
       let sid = sessionIds[i];
@@ -2829,6 +2975,18 @@
         price = groupTrendPrice(g);
         sid = (g.sids && g.sids.length && g.sids[g.sids.length - 1]) || g.label;
         const hl = profileHiLo(g.profile);
+        if (hl) {
+          hi = hl.hi;
+          lo = hl.lo;
+        }
+      } else if (visualCols && visualCols[i]) {
+        const vc = visualCols[i];
+        // Skip merge columns in trend — keep one mid per calendar day (ghost/day)
+        if (vc.type === "merge") continue;
+        sid = vc.sid || sessionIds[vc.dayIdx];
+        const p = profileById.get(sid);
+        price = p ? sessionTrendPrice(p) : null;
+        const hl = profileHiLo(p);
         if (hl) {
           hi = hl.hi;
           lo = hl.lo;
@@ -2970,6 +3128,14 @@
         let price = null;
         if (groupMode && lastGeo.groups[i]) {
           price = groupTrendPrice(lastGeo.groups[i]);
+        } else if (lastGeo.visualCols && lastGeo.visualCols[i]) {
+          const vc = lastGeo.visualCols[i];
+          if (vc.type === "merge" && vc.group) {
+            price = groupTrendPrice(vc.group);
+          } else {
+            const p = profileById.get(vc.sid || sessionIds[vc.dayIdx]);
+            price = p ? sessionTrendPrice(p) : null;
+          }
         } else {
           const p = profileById.get(sessionIds[i]);
           price = p ? sessionTrendPrice(p) : null;
@@ -3031,6 +3197,13 @@
       if (lastGeo.groupMode && lastGeo.groups && lastGeo.groups[colIdx]) {
         const g = lastGeo.groups[colIdx];
         sid = (g.sids && g.sids.length && g.sids[g.sids.length - 1]) || g.label;
+      } else if (lastGeo.visualCols && lastGeo.visualCols[colIdx]) {
+        const vc = lastGeo.visualCols[colIdx];
+        if (vc.type === "merge" && vc.group) {
+          sid = vc.group.label || vc.sid;
+        } else {
+          sid = vc.sid || sessionIds[vc.dayIdx];
+        }
       } else {
         sid = sessionIds[colIdx];
       }

@@ -4,7 +4,7 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-04-24,XLI,Industrials,102.2384,3
 2026-04-24,XLB,Materials,101.623,4
 2026-04-24,XLU,Utilities,98.5339,5
-2026-04-24,XLRE,Real Estate,95.0838,6
+2026-04-24,XLRE,Real Estate,95.0839,6
 2026-04-24,XLC,Communication,94.6428,7
 2026-04-24,XLY,Consumer Disc,93.4114,8
 2026-04-24,XLP,Consumer Staples,91.6798,9
@@ -49,26 +49,26 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-05-22,XLB,Materials,93.3388,4
 2026-05-22,XLRE,Real Estate,93.1716,5
 2026-05-22,XLY,Consumer Disc,92.0282,6
-2026-05-22,XLC,Communication,90.9415,7
+2026-05-22,XLC,Communication,90.9414,7
 2026-05-22,XLU,Utilities,90.1204,8
 2026-05-22,XLV,Health Care,88.9348,9
 2026-05-22,XLP,Consumer Staples,88.9193,10
 2026-05-22,XLF,Financials,88.2815,11
 2026-05-29,XLK,Technology,124.3018,1
 2026-05-29,XLE,Energy,103.6206,2
-2026-05-29,XLI,Industrials,94.1472,3
+2026-05-29,XLI,Industrials,94.1471,3
 2026-05-29,XLB,Materials,93.4489,4
 2026-05-29,XLY,Consumer Disc,90.8323,5
 2026-05-29,XLRE,Real Estate,90.6443,6
 2026-05-29,XLC,Communication,89.1076,7
-2026-05-29,XLU,Utilities,87.4148,8
+2026-05-29,XLU,Utilities,87.4147,8
 2026-05-29,XLV,Health Care,87.377,9
 2026-05-29,XLP,Consumer Staples,86.2302,10
 2026-05-29,XLF,Financials,86.1172,11
 2026-06-05,XLK,Technology,119.4408,1
 2026-06-05,XLE,Energy,107.4491,2
 2026-06-05,XLI,Industrials,98.2264,3
-2026-06-05,XLB,Materials,96.5462,4
+2026-06-05,XLB,Materials,96.5461,4
 2026-06-05,XLRE,Real Estate,95.2304,5
 2026-06-05,XLV,Health Care,93.336,6
 2026-06-05,XLU,Utilities,90.5828,7
@@ -82,7 +82,7 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-06-12,XLB,Materials,99.256,4
 2026-06-12,XLRE,Real Estate,96.3994,5
 2026-06-12,XLV,Health Care,93.595,6
-2026-06-12,XLP,Consumer Staples,93.042,7
+2026-06-12,XLP,Consumer Staples,93.0419,7
 2026-06-12,XLF,Financials,91.8932,8
 2026-06-12,XLU,Utilities,90.4178,9
 2026-06-12,XLY,Consumer Disc,90.4169,10
@@ -121,7 +121,7 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-07-02,XLY,Consumer Disc,90.6218,10
 2026-07-02,XLC,Communication,85.2376,11
 2026-07-10,XLK,Technology,116.8078,1
-2026-07-10,XLE,Energy,100.5868,2
+2026-07-10,XLE,Energy,100.5867,2
 2026-07-10,XLI,Industrials,99.9948,3
 2026-07-10,XLV,Health Care,96.9957,4
 2026-07-10,XLRE,Real Estate,95.5168,5
@@ -166,11 +166,11 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-07-31,XLC,Communication,86.8887,11
 2026-08-07,XLK,Technology,111.8666,1
 2026-08-07,XLE,Energy,104.9181,2
-2026-08-07,XLV,Health Care,103.0098,3
+2026-08-07,XLV,Health Care,103.0097,3
 2026-08-07,XLI,Industrials,100.8721,4
 2026-08-07,XLB,Materials,99.2478,5
 2026-08-07,XLF,Financials,98.4828,6
-2026-08-07,XLRE,Real Estate,95.5111,7
+2026-08-07,XLRE,Real Estate,95.511,7
 2026-08-07,XLP,Consumer Staples,92.7739,8
 2026-08-07,XLY,Consumer Disc,90.5358,9
 2026-08-07,XLU,Utilities,88.7504,10
@@ -199,7 +199,7 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-08-21,XLU,Utilities,87.0861,11
 2026-08-28,XLE,Energy,113.6961,1
 2026-08-28,XLK,Technology,109.2451,2
-2026-08-28,XLV,Health Care,104.0277,3
+2026-08-28,XLV,Health Care,104.0276,3
 2026-08-28,XLF,Financials,101.7698,4
 2026-08-28,XLB,Materials,99.544,5
 2026-08-28,XLI,Industrials,97.9247,6
@@ -219,7 +219,7 @@ asof_date,Ticker,SectorLabel,RelativeStrength,XlRank
 2026-09-04,XLY,Consumer Disc,88.9733,9
 2026-09-04,XLU,Utilities,88.7203,10
 2026-09-04,XLC,Communication,88.6502,11
-2026-09-11,XLE,Energy,115.6315,1
+2026-09-11,XLE,Energy,115.6316,1
 2026-09-11,XLK,Technology,109.7697,2
 2026-09-11,XLV,Health Care,101.1628,3
 2026-09-11,XLF,Financials,100.0642,4

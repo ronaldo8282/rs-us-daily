@@ -95,6 +95,54 @@
       background: linear-gradient(180deg, var(--bg) 85%, transparent);
       padding-bottom: 0.25rem;
     }
+
+    .chrome-info-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.15rem;
+    }
+    .chrome-info-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .info-toggle {
+      width: auto;
+      min-height: 2.5rem;
+      min-width: 4.5rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.88rem;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      touch-action: manipulation;
+      box-shadow: none;
+    }
+    .info-toggle:hover {
+      border-color: var(--accent);
+      filter: none;
+    }
+    .info-toggle[aria-expanded="true"] {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff;
+    }
+    .chrome-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .chrome-info-wrap.info-collapsed .chrome-info {
+      display: none !important;
+    }
+    .chrome-info-wrap.info-collapsed ~ .zoom-bar .hint-inline,
+    .chrome-info-wrap.info-collapsed ~ .zoom-bar .composite-hint {
+      display: none !important;
+    }
     label {
       display: block;
       font-size: 0.75rem;
@@ -1433,19 +1481,26 @@
     <main>
       <div class="main-chrome">
       <div id="err" class="err"></div>
-      <div class="stats" id="stats"></div>
-      <div class="legend" id="legendBar" role="list">
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="poc"><i style="background:#f59e0b"></i>POC</span>
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="va"><i style="background:#22c55e"></i>Value Area</span>
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="ib"><i style="background:#a855f7"></i>IB range</span>
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="dual"><i style="background:#38bdf8"></i>Dual</span>
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="spike"><i style="background:#ef4444"></i>Spike</span>
-        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="singlepin"><i style="background:rgba(186,150,220,0.85)"></i>Single pin</span>
-        <span>Same price = same row across days · scroll H/V</span>
-      </div>
-      <div class="legend-tip" id="legendTip" role="tooltip" aria-hidden="true">
-        <span class="lt-name"></span>
-        <span class="lt-body"></span>
+      <div class="chrome-info-wrap info-collapsed" id="chromeInfoWrap">
+        <div class="chrome-info-toolbar">
+          <button type="button" id="btnToggleChromeInfo" class="info-toggle" aria-expanded="false" aria-controls="chromeInfo" title="展開資訊（統計／圖例）">資訊</button>
+        </div>
+        <div class="chrome-info" id="chromeInfo">
+          <div class="stats" id="stats"></div>
+          <div class="legend" id="legendBar" role="list">
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="poc"><i style="background:#f59e0b"></i>POC</span>
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="va"><i style="background:#22c55e"></i>Value Area</span>
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="ib"><i style="background:#a855f7"></i>IB range</span>
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="dual"><i style="background:#38bdf8"></i>Dual</span>
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="spike"><i style="background:#ef4444"></i>Spike</span>
+            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="singlepin"><i style="background:rgba(186,150,220,0.85)"></i>Single pin</span>
+            <span>Same price = same row across days · scroll H/V</span>
+          </div>
+          <div class="legend-tip" id="legendTip" role="tooltip" aria-hidden="true">
+            <span class="lt-name"></span>
+            <span class="lt-body"></span>
+          </div>
+        </div>
       </div>
       <div class="zoom-bar" id="zoomBar">
         <button type="button" id="btnLinkAxes" class="link-axes-btn active" aria-pressed="true" title="闊／高連動（撳轉分軸）">連動</button>
@@ -1521,6 +1576,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=zoom-xy-2"></script>
+  <script src="app.js?v=zoom-xy-3"></script>
 </body>
 </html>

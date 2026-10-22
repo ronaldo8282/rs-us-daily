@@ -3588,6 +3588,51 @@
   window.addEventListener("resize", () => updateTrendChart(), { passive: true });
 
 
+
+  // —— Chrome info stack collapse (stats + legend; default collapsed) ——
+  const CHROME_INFO_COLLAPSE_KEY = "tpo-chrome-info-collapsed";
+  const chromeInfoWrap = document.getElementById("chromeInfoWrap");
+  const btnToggleChromeInfo = $("btnToggleChromeInfo");
+
+  function setChromeInfoCollapsed(collapsed, { persist = true } = {}) {
+    if (!chromeInfoWrap) return;
+    collapsed = !!collapsed;
+    chromeInfoWrap.classList.toggle("info-collapsed", collapsed);
+    if (btnToggleChromeInfo) {
+      btnToggleChromeInfo.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      btnToggleChromeInfo.textContent = collapsed ? "資訊" : "收起資訊";
+      btnToggleChromeInfo.title = collapsed ? "展開資訊（統計／圖例）" : "收起資訊";
+    }
+    if (persist) {
+      try {
+        localStorage.setItem(CHROME_INFO_COLLAPSE_KEY, collapsed ? "1" : "0");
+      } catch (_) {}
+    }
+    requestAnimationFrame(() => {
+      try { scheduleRender(); } catch (_) {}
+      try { updateTrendChart(); } catch (_) {}
+      try { window.dispatchEvent(new Event("resize")); } catch (_) {}
+    });
+  }
+
+  function readStoredChromeInfoCollapsed() {
+    try {
+      const v = localStorage.getItem(CHROME_INFO_COLLAPSE_KEY);
+      if (v === "0") return false;
+      if (v === "1") return true;
+    } catch (_) {}
+    return true; // 預設收起
+  }
+
+  if (btnToggleChromeInfo) {
+    btnToggleChromeInfo.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const collapsed = !!(chromeInfoWrap && chromeInfoWrap.classList.contains("info-collapsed"));
+      setChromeInfoCollapsed(!collapsed);
+    }, true);
+  }
+
   // —— Settings pane collapse (default collapsed; FAB always reachable) ——
   const SETTINGS_COLLAPSE_KEY = "tpo-settings-collapsed-v2";
   const layoutEl = document.getElementById("appLayout") || document.querySelector(".layout");
@@ -3923,6 +3968,7 @@
 
   // Apply collapse ASAP (HTML already has settings-collapsed; re-assert after read)
   setSettingsCollapsed(readStoredCollapsed(), { persist: false });
+  setChromeInfoCollapsed(readStoredChromeInfoCollapsed(), { persist: false });
 
   // If user rotates / resizes across breakpoint with no stored pref, keep current;
   // stored pref always wins (already applied).

@@ -206,7 +206,22 @@
       .replace(/>/g, "&gt;");
   }
 
-  /** POC / VA / TPO strings for HG column hover tip. */
+  /**
+   * Print/TPO count for the hover tip.
+   * Sum row density (intraday prints on composites) and ignore letterCount /
+   * day-presence length. Fall back to profile.totalTpo only when rows have
+   * no density.
+   */
+  function hgTipPrintCount(result) {
+    let total = 0;
+    if (result.rows && result.rows.length) {
+      total = result.rows.reduce((s, r) => s + (densityCountOf(r) || 0), 0);
+    }
+    if (!total && result.totalTpo != null) total = result.totalTpo;
+    return total || 0;
+  }
+
+  /** POC / VA / TPO strings for HG column hover tip. TPO is prints only. */
   function hgTipFields(result) {
     if (!result) return { poc: "—", va: "—", tpo: "—", title: "" };
     const step = result.step || 5;
@@ -216,18 +231,13 @@
       result.val && result.val.price != null ? fmtPrice(result.val.price, step) : "—";
     const vaHi =
       result.vah && result.vah.price != null ? fmtPrice(result.vah.price, step) : "—";
-    const nLetters = result.letterCount != null ? result.letterCount : 0;
-    let totalTpo = result.totalTpo != null ? result.totalTpo : 0;
-    if (!totalTpo && result.rows && result.rows.length) {
-      totalTpo = result.rows.reduce((s, r) => s + (printCountOf(r) || 0), 0);
-    }
-    const tpo = nLetters + "L / " + totalTpo + "p";
+    const tpo = hgTipPrintCount(result) + "p";
     const va = vaLo + "–" + vaHi;
     return {
       poc,
       va,
       tpo,
-      title: "POC " + poc + " · VA " + va + " · " + tpo,
+      title: "POC " + poc + " · VA " + va + " · TPO " + tpo,
     };
   }
 

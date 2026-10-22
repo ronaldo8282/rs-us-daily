@@ -1193,14 +1193,19 @@
       font-weight: 600;
       padding: 0.4rem 0.6rem;
       border-radius: 6px;
-      white-space: nowrap;
+      white-space: normal;
+      line-height: 1.45;
       box-shadow: 0 4px 16px #000a;
       pointer-events: none;
-      max-width: min(92vw, 420px);
-      overflow: hidden;
-      text-overflow: ellipsis;
+      width: max-content;
+      max-width: min(96vw, 720px);
+      overflow: visible;
     }
     .hg-col-tip.show { display: block; }
+    .hg-col-tip .hg-tip-label,
+    .hg-col-tip .hg-tip-poc,
+    .hg-col-tip .hg-tip-va,
+    .hg-col-tip .hg-tip-tpo { white-space: nowrap; }
     .hg-col-tip .hg-tip-label { color: #93c5fd; }
     .hg-col-tip .hg-tip-poc { color: #fbbf24; }
     .hg-col-tip .hg-tip-va { color: #4ade80; }
@@ -1625,6 +1630,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=week-letters-1"></script>
+  <script src="app.js?v=hg-tip-tpo-1"></script>
 </body>
 </html>

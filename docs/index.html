@@ -172,6 +172,18 @@
     th.xl-date { font-size: 0.75rem; text-align: right; }
     th.xl-primary { color: var(--accent2); }
     td.xl-primary { font-weight: 700; }
+    .tpo-links {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+      padding: 0.65rem 1.5rem; background: #152033; border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .tpo-links .tpo-label { color: var(--muted); margin-right: 0.25rem; font-weight: 600; }
+    .tpo-links a {
+      color: var(--accent2); text-decoration: none; font-weight: 650;
+      background: #243044; border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+    }
+    .tpo-links a:hover { border-color: var(--accent2); filter: brightness(1.08); }
   </style>
 </head>
 <body>
@@ -179,6 +191,13 @@
     <h1>RS US Daily</h1>
     <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth &amp; XL sector strength · data from <code>docs/data/</code></div>
   </header>
+
+  <div class="tpo-links" role="navigation" aria-label="TPO letter walls">
+    <span class="tpo-label">TPO 字母牆</span>
+    <a href="tpo/">HSIF TPO</a>
+    <a href="tpo-ym/">道指 YM</a>
+    <a href="tpo-nq/">納指 NQ</a>
+  </div>
 
   <nav class="tabs" role="tablist">
     <button class="tab active" data-tab="ranks" role="tab" aria-selected="true">Ranks</button>

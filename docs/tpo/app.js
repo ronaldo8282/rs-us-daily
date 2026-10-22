@@ -134,7 +134,9 @@
   let fillInFlight = false;
   let profilesLoading = false;
   let lastParamsKey = "";
-  let zoom = 1; // scales row height + col width
+  let zoomX = 1; // column / prints density (charW)
+  let zoomY = 1; // row height / font height
+  let linkAxes = true; // default linked = old single-zoom feel
   let globalGrid = null; // { minKey, maxKey, step, nBins }
   let scrollSyncing = false;
   let lastGeo = null; // { widths, offsets, totalW, gap, axisW, rh, hh, bodyH, barMode }
@@ -312,11 +314,11 @@
 
   function dayColWFromPrints(prints) {
     if (isBarMode()) {
-      const unit = Math.max(BAR_PX_PER_PRINT, CHAR_W0 * zoom);
+      const unit = Math.max(BAR_PX_PER_PRINT, CHAR_W0 * zoomX);
       return Math.max(COL_MIN_BAR, Math.round(prints * unit + 2));
     }
-    const ch = CHAR_W0 * zoom;
-    const pad = Math.max(2, COL_PAD0 * Math.min(zoom, 1));
+    const ch = CHAR_W0 * zoomX;
+    const pad = Math.max(2, COL_PAD0 * Math.min(zoomX, 1));
     return Math.max(4, Math.round(prints * ch + pad));
   }
 
@@ -325,28 +327,29 @@
   }
 
   function colGap() {
-    return zoom < 0.2 ? 1 : 2;
+    return zoomX < 0.2 ? 1 : 2;
   }
 
   function rowH() {
     // Bar/overview: keep a visible bin strip so the bell silhouette never blanks
-    if (isBarMode()) return Math.max(1.5, BASE_ROW_H * zoom);
-    return Math.max(1, BASE_ROW_H * zoom);
+    if (isBarMode()) return Math.max(1.5, BASE_ROW_H * zoomY);
+    return Math.max(1, BASE_ROW_H * zoomY);
   }
 
   function fontPx() {
-    return Math.max(2, Math.min(13, 11 * zoom));
+    // Letter height follows Y; X drives column width separately
+    return Math.max(2, Math.min(13, 11 * zoomY));
   }
 
   function headH() {
-    // shrink header when zoomed out (overview)
-    return zoom < 0.35 ? HEAD_H_THIN : HEAD_H;
+    // shrink header when zoomed out (overview) — follow column density
+    return zoomX < 0.35 ? HEAD_H_THIN : HEAD_H;
   }
 
   function isBarMode() {
-    // <50%: letters unreadable — keep HG silhouette via density bars
-    // (zoom-only — do not call rowH/fontPx here; those call isBarMode)
-    return zoom < 0.5;
+    // Letters need BOTH axes readable (old bar at single zoom < 0.5).
+    // Do not call rowH/fontPx here (they call isBarMode).
+    return zoomX < 0.5 || zoomY < 0.5;
   }
 
   function printCountOf(row) {
@@ -430,9 +433,29 @@
 
   function updateZoomLabel() {
     const sel = $("zoomSelect");
+    const dual = $("zoomDualLabel");
+    const linkBtn = $("btnLinkAxes");
+    if (linkBtn) {
+      linkBtn.setAttribute("aria-pressed", linkAxes ? "true" : "false");
+      linkBtn.classList.toggle("active", linkAxes);
+      linkBtn.textContent = linkAxes ? "連動" : "分軸";
+      linkBtn.title = linkAxes
+        ? "闊／高連動（撳轉分軸）"
+        : "闊／高分開（撳轉連動）";
+    }
+    if (dual) {
+      if (linkAxes) {
+        dual.hidden = true;
+        dual.textContent = "";
+      } else {
+        dual.hidden = false;
+        dual.textContent =
+          "闊 " + Math.round(zoomX * 100) + "% · 高 " + Math.round(zoomY * 100) + "%";
+      }
+    }
     if (!sel) return;
-    const pct = Math.round(zoom * 100);
-    // Drop prior custom (non-preset) option
+    // Linked: one %; unlinked: select shows Y (default +/- axis) with optional custom
+    const pct = Math.round((linkAxes ? zoomX : zoomY) * 100);
     const custom = sel.querySelector("option[data-custom]");
     if (custom) custom.remove();
     if (ZOOM_PRESETS.includes(pct)) {
@@ -565,7 +588,7 @@
     const nLetters = letterCount != null ? letterCount : 0;
     const vaHi = Math.max(vah.key, val.key);
     const vaLo = Math.min(vah.key, val.key);
-    const thin = w < 48 || zoom < 0.4;
+    const thin = w < 48 || zoomX < 0.4;
     const barMode = isBarMode();
     const maxPrints = Math.max(1, maxPrintsOf(result));
     // Compact date label for thin cols: MM-DD
@@ -608,7 +631,7 @@
         style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
       } else {
         text = escapeHtml(r.letters || "");
-        if (zoom < 0.65 && n > 0) {
+        if (zoomX < 0.65 && n > 0) {
           const minBlock = Math.max(2, Math.round((n / maxPrints) * innerW * 0.85));
           style += `;min-width:${minBlock}px`;
         }
@@ -917,12 +940,12 @@
     if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS);
     const w = dayColW(profile);
     // Soft caps so multi-month / multi-week walls stay scannable
-    if (kind === "month") return Math.min(w, Math.max(28, Math.round(80 * Math.max(zoom, 0.12))));
+    if (kind === "month") return Math.min(w, Math.max(28, Math.round(80 * Math.max(zoomX, 0.12))));
     if (kind === "week") {
       // Week HG: enough width for letter cells + readable POC/VA head (not ultra-narrow bars)
-      return Math.min(w, Math.max(56, Math.round(168 * Math.max(zoom, 0.18))));
+      return Math.min(w, Math.max(56, Math.round(168 * Math.max(zoomX, 0.18))));
     }
-    return Math.min(w, Math.max(36, Math.round(100 * Math.max(zoom, 0.15))));
+    return Math.min(w, Math.max(36, Math.round(100 * Math.max(zoomX, 0.15))));
   }
 
   function buildGroupGeometry(groups) {
@@ -1322,7 +1345,7 @@
     }
 
     const pocTop = (grid.maxKey - poc.key) * rh + rh / 2;
-    const thin = width < 72 || zoom < 0.35;
+    const thin = width < 72 || zoomX < 0.35;
     const isWeek = (group.kind || "") === "week";
     // Week HG always shows POC + VA in head; month/range keep compact when thin
     let meta = "";
@@ -2055,7 +2078,9 @@
             step
           )} (${g.nBins} bins)</span>`
         : `<span><b>Align</b>off</span>`,
-      `<span><b>Zoom</b>${Math.round(zoom * 100)}%</span>`,
+      linkAxes
+        ? `<span><b>Zoom</b>${Math.round(zoomX * 100)}%</span>`
+        : `<span><b>Zoom</b>闊${Math.round(zoomX * 100)}%·高${Math.round(zoomY * 100)}%</span>`,
       lastP ? `<span><b>Latest POC</b>${fmtPrice(lastP.poc.price, step)}</span>` : "",
       `<span><b>Points</b>${step}</span>`,
       renderMs != null ? `<span><b>Render</b>${renderMs}ms</span>` : "",
@@ -2077,52 +2102,140 @@
     });
   }
 
-  // ---- zoom ----
-  function setZoom(z, opts) {
-    opts = opts || {};
-    const sc = $("profilesScroll");
-    const prevZoom = zoom;
-    zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+  // ---- zoom (dual-axis: zoomX / zoomY, linkAxes) ----
+  function clampZoom(z) {
+    return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+  }
 
-    // Keep vertical center price stable when zooming
-    if (sc && globalGrid && prevZoom > 0 && !opts.skipAnchor) {
-      const rh0 = Math.max(2, BASE_ROW_H * prevZoom);
-      const centerY = sc.scrollTop + sc.clientHeight / 2 - HEAD_H;
-      const keyAtCenter = globalGrid.maxKey - centerY / rh0;
+  /**
+   * Set one or both axes. opts:
+   *   skipAnchor, immediate,
+   *   clientX/clientY (pointer anchor; else viewport center),
+   *   unlink (force linkAxes=false before apply)
+   */
+  function setZoomXY(nx, ny, opts) {
+    opts = opts || {};
+    if (opts.unlink) linkAxes = false;
+    const sc = $("profilesScroll");
+    const prevX = zoomX;
+    const prevY = zoomY;
+    const nextX = nx != null && isFinite(nx) ? clampZoom(nx) : zoomX;
+    const nextY = ny != null && isFinite(ny) ? clampZoom(ny) : zoomY;
+    const changedX = Math.abs(nextX - prevX) > 1e-9;
+    const changedY = Math.abs(nextY - prevY) > 1e-9;
+    if (!changedX && !changedY) {
       updateZoomLabel();
-      if (opts.immediate) {
-        // Pinch path: sync scrollTop now so the next paint is already anchored (less lag)
-        const rh1 = Math.max(2, BASE_ROW_H * zoom);
-        const newTop = (globalGrid.maxKey - keyAtCenter) * rh1 - sc.clientHeight / 2 + HEAD_H;
+      return;
+    }
+
+    let keyAtPointer = null;
+    let anchorContentX = null;
+    let localX = null;
+    let localY = null;
+    let useCenterY = true;
+    let useCenterX = true;
+
+    if (sc && !opts.skipAnchor) {
+      const rect = sc.getBoundingClientRect();
+      if (opts.clientX != null && isFinite(opts.clientX)) {
+        localX = opts.clientX - rect.left;
+        useCenterX = false;
+      } else {
+        localX = sc.clientWidth / 2;
+      }
+      if (opts.clientY != null && isFinite(opts.clientY)) {
+        localY = opts.clientY - rect.top;
+        useCenterY = false;
+      } else {
+        localY = sc.clientHeight / 2;
+      }
+      if (changedY && globalGrid && prevY > 0) {
+        const rh0 = Math.max(2, BASE_ROW_H * prevY);
+        const yInBody = sc.scrollTop + localY - HEAD_H;
+        keyAtPointer = globalGrid.maxKey - yInBody / rh0;
+      }
+      if (changedX && prevX > 0) {
+        anchorContentX = sc.scrollLeft + localX;
+      }
+    }
+
+    zoomX = nextX;
+    zoomY = nextY;
+    updateZoomLabel();
+
+    function applyAnchors() {
+      if (!sc) return;
+      if (changedY && globalGrid && keyAtPointer != null) {
+        const rh1 = opts.immediate
+          ? Math.max(2, BASE_ROW_H * zoomY)
+          : rowH();
+        const hh = opts.immediate ? HEAD_H : headH();
+        const newTop = (globalGrid.maxKey - keyAtPointer) * rh1 - localY + hh;
         sc.scrollTop = Math.max(0, newTop);
+      }
+      if (changedX && anchorContentX != null && prevX > 0) {
+        const scaled = anchorContentX * (zoomX / prevX);
+        sc.scrollLeft = Math.max(0, scaled - localX);
+      }
+    }
+
+    if (sc && !opts.skipAnchor && (changedX || changedY)) {
+      if (opts.immediate) {
+        applyAnchors();
         scheduleRender();
         return;
       }
       scheduleRender();
       requestAnimationFrame(() => {
-        const rh1 = rowH();
-        const newTop = (globalGrid.maxKey - keyAtCenter) * rh1 - sc.clientHeight / 2 + HEAD_H;
-        sc.scrollTop = Math.max(0, newTop);
+        applyAnchors();
         scheduleRender();
       });
       return;
     }
-    updateZoomLabel();
     scheduleRender();
   }
 
-  function zoomBy(factor) {
-    setZoom(zoom * factor);
+  /** Linked / both-axes convenience (old setZoom). */
+  function setZoom(z, opts) {
+    setZoomXY(z, z, opts);
   }
 
-  /** +/- step: 5% normally; 2% when current zoom ≤ 10%. */
-  function zoomStep(dir) {
-    const pct = Math.round(zoom * 100);
-    const step = pct <= 10 ? 2 : 5;
+  function zoomBy(factor, axis, opts) {
+    opts = opts || {};
+    axis = axis || (linkAxes ? "both" : "y");
+    if (axis === "x") setZoomXY(zoomX * factor, null, opts);
+    else if (axis === "y") setZoomXY(null, zoomY * factor, opts);
+    else setZoomXY(zoomX * factor, zoomY * factor, opts);
+  }
+
+  /** +/- step: 5% normally; 2% when current axis ≤ 10%. axis: both|x|y */
+  function zoomStep(dir, axis) {
+    axis = axis || (linkAxes ? "both" : "y");
     const minPct = Math.round(ZOOM_MIN * 100);
     const maxPct = Math.round(ZOOM_MAX * 100);
-    const next = Math.max(minPct, Math.min(maxPct, pct + dir * step));
-    setZoom(next / 100);
+    function stepOne(cur) {
+      const pct = Math.round(cur * 100);
+      const step = pct <= 10 ? 2 : 5;
+      return Math.max(minPct, Math.min(maxPct, pct + dir * step)) / 100;
+    }
+    if (axis === "x") setZoomXY(stepOne(zoomX), null);
+    else if (axis === "y") setZoomXY(null, stepOne(zoomY));
+    else {
+      const n = stepOne(zoomX);
+      setZoomXY(n, n);
+    }
+  }
+
+  function setLinkAxes(on) {
+    linkAxes = !!on;
+    if (linkAxes) {
+      // Snap to shared value (geometric mean of current) so link feels intentional
+      const z = clampZoom(Math.sqrt(Math.max(zoomX, 1e-6) * Math.max(zoomY, 1e-6)));
+      zoomX = z;
+      zoomY = z;
+    }
+    updateZoomLabel();
+    scheduleRender();
   }
 
   // Natural (zoom=1) total width of a slice of days, from max TPO prints
@@ -2137,7 +2250,9 @@
     return Math.max(1, sum);
   }
 
-  function zoomFitAll() {
+  /** mode: both | x | y — Fit 闊／高／Both */
+  function zoomFitAll(mode) {
+    mode = mode || (($("fitAxisSelect") && $("fitAxisSelect").value) || "both");
     if (!wantAlign()) {
       $("alignPrices").checked = true;
     }
@@ -2150,13 +2265,22 @@
     const viewH = Math.max(120, sc.clientHeight - HEAD_H - 8);
     const viewW = Math.max(160, sc.clientWidth - AXIS_W - 8 - RIGHT_EDGE_PAD);
     const natW = naturalWidthForRange(0, sessionIds.length - 1);
-    const zoomX = viewW / natW;
-    const zoomY = globalGrid
-      ? viewH / (globalGrid.nBins * BASE_ROW_H)
-      : 1;
-    // Fit both axes so all days + full price range are on screen
-    const z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.min(zoomX, zoomY)));
-    zoom = z;
+    const fitX = clampZoom(viewW / natW);
+    const fitY = clampZoom(
+      globalGrid ? viewH / (globalGrid.nBins * BASE_ROW_H) : 1
+    );
+    if (mode === "x") {
+      zoomX = fitX;
+      if (linkAxes) zoomY = fitX;
+    } else if (mode === "y") {
+      zoomY = fitY;
+      if (linkAxes) zoomX = fitY;
+    } else {
+      // Fit both axes so all days + full price range are on screen
+      const z = Math.min(fitX, fitY);
+      zoomX = z;
+      zoomY = z;
+    }
     updateZoomLabel();
     scheduleRender();
     requestAnimationFrame(() => {
@@ -2167,15 +2291,15 @@
   }
 
   function sliceWidthAtZoom(z, fromIdx, toIdx) {
-    const prev = zoom;
-    zoom = z;
+    const prev = zoomX;
+    zoomX = z;
     let sum = 0;
     const gap = colGap();
     for (let i = fromIdx; i <= toIdx; i++) {
       const p = profileById.get(sessionIds[i]);
       sum += (p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + gap;
     }
-    zoom = prev;
+    zoomX = prev;
     return sum;
   }
 
@@ -2220,6 +2344,7 @@
   }
 
   // Fit day columns [fromIdx..toIdx] into the viewport (day HG geometry).
+  // Primarily an X fit; when linked, Y follows the same value (old behavior).
   function zoomFitDayRange(fromIdx, toIdx, opts) {
     opts = opts || {};
     if (!wantAlign()) {
@@ -2246,11 +2371,13 @@
       else hi = mid;
     }
     // Prefer fitting; optional floor so a single day stays letter-readable
-    zoom = Math.max(zMin, Math.min(zMax, lo));
+    let z = Math.max(zMin, Math.min(zMax, lo));
     // If even ZOOM_MIN is wider than view, stay at searched lo (may H-scroll)
     if (lo < zMin && sliceWidthAtZoom(zMin, fromIdx, toIdx) > viewW * 1.35) {
-      zoom = lo;
+      z = lo;
     }
+    zoomX = z;
+    if (linkAxes) zoomY = z;
     updateZoomLabel();
     scheduleRender();
     requestAnimationFrame(() => {
@@ -3022,14 +3149,29 @@
     }
   });
 
-  $("btnZoomIn").addEventListener("click", () => zoomStep(1));
-  $("btnZoomOut").addEventListener("click", () => zoomStep(-1));
+  function zoomStepAxisFromEvent(ev) {
+    if (linkAxes) return "both";
+    return ev && ev.shiftKey ? "x" : "y";
+  }
+  $("btnZoomIn").addEventListener("click", (ev) => zoomStep(1, zoomStepAxisFromEvent(ev)));
+  $("btnZoomOut").addEventListener("click", (ev) => zoomStep(-1, zoomStepAxisFromEvent(ev)));
   $("btnZoomFit").addEventListener("click", () => zoomFitAll());
+  const fitSel = $("fitAxisSelect");
+  if (fitSel) {
+    fitSel.addEventListener("change", () => {
+      /* selection only; Fit button applies */
+    });
+  }
+  const linkBtn = $("btnLinkAxes");
+  if (linkBtn) {
+    linkBtn.addEventListener("click", () => setLinkAxes(!linkAxes));
+  }
   const zoomSel = $("zoomSelect");
   if (zoomSel) {
     zoomSel.addEventListener("change", () => {
       const pct = parseInt(zoomSel.value, 10);
       if (!Number.isFinite(pct) || pct <= 0) return;
+      // Preset = one-shot both axes (even when unlinked)
       setZoom(pct / 100);
     });
   }
@@ -3040,45 +3182,75 @@
   const btnLatest = $("btnLatestDay");
   if (btnLatest) btnLatest.addEventListener("click", () => jumpToLatestTradingDay());
 
-  // Ctrl/Cmd + wheel zoom
+  // Wheel: Ctrl/Cmd = both axes; Shift = X only (auto-unlink)
   $("profilesScroll").addEventListener(
     "wheel",
     (ev) => {
-      if (!(ev.ctrlKey || ev.metaKey)) return;
+      const ctrl = ev.ctrlKey || ev.metaKey;
+      const shift = ev.shiftKey;
+      if (!ctrl && !shift) return;
       ev.preventDefault();
       const factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
-      setZoom(zoom * factor);
+      const anchor = { clientX: ev.clientX, clientY: ev.clientY };
+      if (ctrl) {
+        // Overall zoom — both axes
+        setZoomXY(zoomX * factor, zoomY * factor, anchor);
+      } else {
+        // Shift+wheel → X; unlink so Y stays put
+        setZoomXY(zoomX * factor, null, Object.assign({ unlink: true }, anchor));
+      }
     },
     { passive: false }
   );
 
-  // Mobile pinch-zoom (2-finger) — syncs with zoom%; single-finger scroll untouched
+  // Mobile pinch-zoom (2-finger) — P1+P2: keep linked (both axes same); P4 may split
   (function bindPinchZoom() {
     const sc = $("profilesScroll");
     if (!sc) return;
     const PINCH_SENS = 1.85; // >1 ⇒ same finger travel = larger zoom change
-    let pinch = null; // { dist0, zoom0, gesture? }
+    let pinch = null; // { dist0, zoom0, midX, midY, gesture? }
     let lastApplied = 0;
     function distOf(t0, t1) {
       const dx = t0.clientX - t1.clientX;
       const dy = t0.clientY - t1.clientY;
       return Math.sqrt(dx * dx + dy * dy);
     }
+    function midOf(t0, t1) {
+      return {
+        clientX: (t0.clientX + t1.clientX) / 2,
+        clientY: (t0.clientY + t1.clientY) / 2,
+      };
+    }
     function applyPinchScale(rawRatio) {
-      if (!(rawRatio > 0) || !isFinite(rawRatio)) return;
+      if (!(rawRatio > 0) || !isFinite(rawRatio) || !pinch) return;
       const boosted = Math.pow(rawRatio, PINCH_SENS);
       const next = pinch.zoom0 * boosted;
       // Skip tiny no-ops to cut wasted renders, but stay responsive (~every frame)
-      if (Math.abs(next - zoom) / Math.max(zoom, 1e-6) < 0.004) return;
+      const ref = Math.max(zoomX, 1e-6);
+      if (Math.abs(next - zoomX) / ref < 0.004 && Math.abs(next - zoomY) / Math.max(zoomY, 1e-6) < 0.004) {
+        return;
+      }
       lastApplied = next;
-      setZoom(next, { immediate: true });
+      setZoomXY(next, next, {
+        immediate: true,
+        clientX: pinch.midX,
+        clientY: pinch.midY,
+      });
     }
     sc.addEventListener(
       "touchstart",
       (ev) => {
         if (ev.touches.length === 2) {
-          pinch = { dist0: distOf(ev.touches[0], ev.touches[1]), zoom0: zoom };
-          lastApplied = zoom;
+          const m = midOf(ev.touches[0], ev.touches[1]);
+          // Linked pinch uses geometric mean as start so both axes move together
+          const z0 = Math.sqrt(Math.max(zoomX, 1e-6) * Math.max(zoomY, 1e-6));
+          pinch = {
+            dist0: distOf(ev.touches[0], ev.touches[1]),
+            zoom0: z0,
+            midX: m.clientX,
+            midY: m.clientY,
+          };
+          lastApplied = z0;
           // Pinch supersedes price-drag / pinned crosshair
           if (chDrag) endChDrag(null);
           if (crosshair.visible) hideCrosshair();
@@ -3095,6 +3267,9 @@
         const d0 = pinch.dist0;
         if (!(d0 > 8)) return;
         ev.preventDefault();
+        const m = midOf(ev.touches[0], ev.touches[1]);
+        pinch.midX = m.clientX;
+        pinch.midY = m.clientY;
         const d1 = distOf(ev.touches[0], ev.touches[1]);
         applyPinchScale(d1 / d0);
       },
@@ -3110,8 +3285,9 @@
       "gesturestart",
       (ev) => {
         try { ev.preventDefault(); } catch (_) {}
-        pinch = { dist0: 1, zoom0: zoom, gesture: true };
-        lastApplied = zoom;
+        const z0 = Math.sqrt(Math.max(zoomX, 1e-6) * Math.max(zoomY, 1e-6));
+        pinch = { dist0: 1, zoom0: z0, midX: null, midY: null, gesture: true };
+        lastApplied = z0;
       },
       { passive: false }
     );

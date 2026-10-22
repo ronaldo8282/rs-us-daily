@@ -332,8 +332,14 @@
   const COL_MIN_BAR = 10;
 
 
+  function finiteNum(v) {
+    if (v == null || v === "") return null;
+    const n = +v;
+    return isFinite(n) ? n : null;
+  }
+
   function sessionMid(profile) {
-    // Session mid (H+L)/2 from profile price rows (no true close in TPO cache)
+    // Session mid (H+L)/2 from profile price rows. Live prints use lastClose.
     if (!profile || !profile.rows || !profile.rows.length) {
       return profile && profile.poc ? profile.poc.price : null;
     }
@@ -349,11 +355,34 @@
     return (hi + lo) / 2;
   }
 
+  /** Close of the last 30m bar in this session, when the bake wrote it. */
+  function profileLastClose(profile) {
+    return profile ? finiteNum(profile.lastClose) : null;
+  }
+
+  function newestSessionId() {
+    return sessionIds.length ? sessionIds[sessionIds.length - 1] : null;
+  }
+
   function sessionTrendPrice(profile) {
-    // Prefer mid; fall back to POC
+    // Mid, then POC. Used for historical trend points and old snapshots
+    // that have no lastClose.
     const mid = sessionMid(profile);
     if (mid != null) return mid;
     return profile && profile.poc ? profile.poc.price : null;
+  }
+
+  /**
+   * Trend point for one session. Older days stay on mid.
+   * The newest session prefers lastClose so the footer tracks the live bar.
+   */
+  function trendPriceForSid(profile, sid) {
+    if (!profile) return null;
+    if (sid && sid === newestSessionId()) {
+      const closePx = profileLastClose(profile);
+      if (closePx != null) return closePx;
+    }
+    return sessionTrendPrice(profile);
   }
 
   /** Actual session/composite high & low from price rows (for trend Y scale). */
@@ -373,14 +402,15 @@
     return { hi: mid, lo: mid };
   }
 
-  /** Week/month trend point: last trading-day mid (close proxy) so amplitude is real. */
+  /** Week/month trend point: last trading day (lastClose if that day is newest). */
   function groupTrendPrice(group) {
     if (!group) return null;
     if (group.sids && group.sids.length) {
       for (let i = group.sids.length - 1; i >= 0; i--) {
-        const p = profileById.get(group.sids[i]);
-        const mid = p ? sessionTrendPrice(p) : null;
-        if (mid != null) return mid;
+        const sid = group.sids[i];
+        const p = profileById.get(sid);
+        const px = trendPriceForSid(p, sid);
+        if (px != null) return px;
       }
     }
     return group.profile ? sessionTrendPrice(group.profile) : null;
@@ -881,14 +911,24 @@
   }
 
   function latestLivePrice() {
-    // Newest loaded session mid (H+L)/2; fall back to its POC.
+    // Newest session with a finite lastClose (last 30m bar). Mid/POC only
+    // when that field is missing (snapshots baked before lastClose).
     if (!sessionIds.length) return null;
+    const stepOf = (p) => p.step || (globalGrid && globalGrid.step) || 5;
+    for (let i = sessionIds.length - 1; i >= 0; i--) {
+      const p = profileById.get(sessionIds[i]);
+      if (!p) continue;
+      const closePx = profileLastClose(p);
+      if (closePx != null) {
+        return { price: closePx, sid: sessionIds[i], step: stepOf(p), source: "close" };
+      }
+    }
     for (let i = sessionIds.length - 1; i >= 0; i--) {
       const p = profileById.get(sessionIds[i]);
       if (!p) continue;
       const price = sessionTrendPrice(p);
       if (price != null && isFinite(price)) {
-        return { price, sid: sessionIds[i], step: p.step || (globalGrid && globalGrid.step) || 5 };
+        return { price, sid: sessionIds[i], step: stepOf(p), source: "mid" };
       }
     }
     return null;
@@ -928,7 +968,7 @@
       );
     }
 
-    // Live / latest index mark on left axis (mid of newest session)
+    // Live mark: last 30m close of the newest session (mid only if lastClose missing).
     let liveHtml = "";
     const live = latestLivePrice();
     if (live && live.price != null && step > 0) {
@@ -936,8 +976,12 @@
       if (liveKey >= grid.minKey - 0.5 && liveKey <= grid.maxKey + 0.5) {
         const top = (grid.maxKey - liveKey) * rh;
         const liveStr = fmtPrice(live.price, step);
+        const liveTitle =
+          live.source === "close"
+            ? `最新收市／last 30m close（${live.sid || ""}）`
+            : `最新市價（${live.sid || ""} mid）`;
         liveHtml =
-          `<div class="axis-live" style="top:${top}px" title="最新市價（${escapeHtml(live.sid || "")} mid）">` +
+          `<div class="axis-live" style="top:${top}px" title="${escapeHtml(liveTitle)}">` +
           `<span class="axis-live-line" aria-hidden="true"></span>` +
           `<span class="axis-live-tag">${liveStr}</span>` +
           `</div>`;
@@ -3135,7 +3179,7 @@
         if (vc.type === "merge") continue;
         sid = vc.sid || sessionIds[vc.dayIdx];
         const p = profileById.get(sid);
-        price = p ? sessionTrendPrice(p) : null;
+        price = trendPriceForSid(p, sid);
         const hl = profileHiLo(p);
         if (hl) {
           hi = hl.hi;
@@ -3143,7 +3187,7 @@
         }
       } else {
         const p = profileById.get(sessionIds[i]);
-        price = p ? sessionTrendPrice(p) : null;
+        price = trendPriceForSid(p, sessionIds[i]);
         const hl = profileHiLo(p);
         if (hl) {
           hi = hl.hi;
@@ -3283,12 +3327,13 @@
           if (vc.type === "merge" && vc.group) {
             price = groupTrendPrice(vc.group);
           } else {
-            const p = profileById.get(vc.sid || sessionIds[vc.dayIdx]);
-            price = p ? sessionTrendPrice(p) : null;
+            const daySid = vc.sid || sessionIds[vc.dayIdx];
+            const p = profileById.get(daySid);
+            price = trendPriceForSid(p, daySid);
           }
         } else {
           const p = profileById.get(sessionIds[i]);
-          price = p ? sessionTrendPrice(p) : null;
+          price = trendPriceForSid(p, sessionIds[i]);
         }
         ctx.strokeStyle = "#93c5fd99";
         ctx.lineWidth = 1;

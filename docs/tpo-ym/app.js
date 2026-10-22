@@ -386,6 +386,40 @@
     return Math.max(4, Math.round(prints * ch + pad));
   }
 
+  // Measured advance of one TPO glyph at the current letter-mode font.
+  // Column px and CSS `ch` must agree or the wall clips (overflow:hidden).
+  let tpoCharCanvas = null;
+  let tpoCharCache = { key: "", px: 0 };
+  function tpoCharPx() {
+    const fp = fontPx();
+    const key = String(Math.round(fp * 100));
+    if (tpoCharCache.key === key && tpoCharCache.px > 0) return tpoCharCache.px;
+    let px = fp * 0.62;
+    try {
+      if (!tpoCharCanvas) tpoCharCanvas = document.createElement("canvas");
+      const ctx = tpoCharCanvas.getContext("2d");
+      if (ctx) {
+        ctx.font =
+          fp + 'px ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace';
+        const w = ctx.measureText("0000000000").width / 10;
+        if (w > 1) px = w;
+      }
+    } catch (err) {
+      /* ratio fallback */
+    }
+    px = Math.max(3.5, px);
+    tpoCharCache = { key, px };
+    return px;
+  }
+
+  /** Letter-mode column wide enough for `prints` monospace glyphs (no soft cap). */
+  function lettersColW(prints) {
+    const n = Math.max(1, prints || 1);
+    // Slack vs canvas-vs-CSS ch, plus composite border (box-sizing: border-box).
+    const pad = 14;
+    return Math.max(8, Math.ceil(n * tpoCharPx() * 1.08 + pad));
+  }
+
   function dayColW(profile) {
     return dayColWFromPrints(maxPrintsOf(profile));
   }
@@ -1101,17 +1135,36 @@
     return [];
   }
 
-  /** Width for a merged HG column (month stays narrow density; week wider for letters/POC/VA). */
+  /**
+   * Width for a merged HG column.
+   * Month stays a narrow density strip.
+   * Week overview (bar mode) stays denser than a row of days.
+   * Week letter mode and manual multi-day merge use the aggregated print
+   * count — never a day-presence cap, and never thinner than the busiest
+   * source day at this zoom.
+   */
   function compositeColW(profile, kind) {
     if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS);
-    const w = dayColW(profile);
-    // Soft caps so multi-month / multi-week walls stay scannable
-    if (kind === "month") return Math.min(w, Math.max(28, Math.round(80 * Math.max(zoomX, 0.12))));
-    if (kind === "week") {
-      // Week HG: enough width for letter cells + readable POC/VA head (not ultra-narrow bars)
-      return Math.min(w, Math.max(56, Math.round(168 * Math.max(zoomX, 0.18))));
+    const prints = Math.max(COL_MIN_PRINTS, maxPrintsOf(profile));
+    const full = dayColWFromPrints(prints);
+    const dayFloor = dayColWFromPrints(
+      Math.max(COL_MIN_PRINTS, profile.maxDayPrints || 0)
+    );
+    if (kind === "month") {
+      return Math.min(full, Math.max(28, Math.round(80 * Math.max(zoomX, 0.12))));
     }
-    return Math.min(w, Math.max(36, Math.round(100 * Math.max(zoomX, 0.15))));
+    if (!isBarMode() && (kind === "week" || kind === "range")) {
+      return Math.max(lettersColW(prints), dayFloor);
+    }
+    if (kind === "range") {
+      // Bar silhouette ∝ summed prints; floor so A is never thinner than a source day.
+      return Math.max(full, dayFloor);
+    }
+    if (kind === "week") {
+      const cap = Math.max(56, Math.round(168 * Math.max(zoomX, 0.18)));
+      return Math.max(dayFloor, Math.min(full, Math.max(cap, dayFloor)));
+    }
+    return Math.min(full, Math.max(36, Math.round(100 * Math.max(zoomX, 0.15))));
   }
 
   function buildGroupGeometry(groups) {
@@ -1203,7 +1256,12 @@
     return isFinite(v) ? v : 70;
   }
 
-  /** Merge day profiles: one letter per day (presence); also sum intraday prints as density for HG bars. */
+  /**
+   * Merge day profiles into one TPO wall.
+   * Each price keeps the concatenated intraday letter strings (all prints),
+   * not one char per day. density matches that print count for bar mode.
+   * maxDayPrints is the widest source day so the column can floor against it.
+   */
   function mergeDayProfiles(sids, label) {
     const cacheKey =
       (label || "merge") +
@@ -1229,23 +1287,33 @@
     }
 
     const step = loaded[0].profile.step || parseFloat($("points").value) || 5;
-    const binMap = new Map(); // key -> letter string chars (1 per day presence)
-    const densityMap = new Map(); // key -> sum of intraday TPO prints (HG silhouette)
+    const presenceMap = new Map(); // key -> one letter per day (kept for reference)
+    const tpoMap = new Map(); // key -> intraday letter strings, day order
+    const densityMap = new Map(); // key -> sum of intraday TPO prints
+    let maxDayPrints = COL_MIN_PRINTS;
     let ibHi = null;
     let ibLo = null;
     for (const item of loaded) {
+      maxDayPrints = Math.max(maxDayPrints, maxPrintsOf(item.profile));
       const keys = new Set();
       for (const r of item.profile.rows) {
         const n = printCountOf(r);
         if (n > 0) {
           keys.add(r.key);
           densityMap.set(r.key, (densityMap.get(r.key) || 0) + n);
+          const piece =
+            r.letters && r.letters.length
+              ? r.letters
+              : (item.letter || "A").repeat(n);
+          const parts = tpoMap.get(r.key);
+          if (parts) parts.push(piece);
+          else tpoMap.set(r.key, [piece]);
         }
       }
       for (const k of keys) {
-        const arr = binMap.get(k) || [];
+        const arr = presenceMap.get(k) || [];
         arr.push(item.letter);
-        binMap.set(k, arr);
+        presenceMap.set(k, arr);
       }
       if (item.profile.ibHi != null) {
         ibHi = ibHi == null ? item.profile.ibHi : Math.max(ibHi, item.profile.ibHi);
@@ -1253,16 +1321,18 @@
       }
     }
 
-    const keys = Array.from(binMap.keys()).sort((a, b) => b - a);
+    const keys = Array.from(tpoMap.keys()).sort((a, b) => b - a);
     const rows = keys.map((k) => {
-      const letters = binMap.get(k).join("");
-      // count = day-presence (POC/VA/letters); density = true prints for bar silhouette
+      const letters = (tpoMap.get(k) || []).join("");
+      const presence = (presenceMap.get(k) || []).join("");
+      const density = densityMap.get(k) || letters.length || presence.length;
       return {
         key: k,
         price: k * step,
         letters,
-        count: letters.length,
-        density: densityMap.get(k) || letters.length,
+        presence,
+        count: letters.length || density,
+        density,
       };
     });
     if (!rows.length) {
@@ -1340,6 +1410,7 @@
       letterCount: loaded.length,
       composite: true,
       dayCount: loaded.length,
+      maxDayPrints,
     };
     compositeCache.set(cacheKey, result);
     return result;
@@ -1461,8 +1532,10 @@
     const bodyH = grid.nBins * rh;
     const vaHi = Math.max(vah.key, val.key);
     const vaLo = Math.min(vah.key, val.key);
-    // forceLetters only when not in bar mode (high zoom); at fit-all use bar silhouette
-    const barMode = forceLetters ? false : isBarMode();
+    // Month stays a density silhouette at every zoom (narrow columns).
+    // Week / manual merge: letters when readable; fit-all / low zoom stays bars.
+    const kindName = group.kind || "";
+    const barMode = kindName === "month" ? true : forceLetters ? false : isBarMode();
     // Density silhouette uses summed intraday prints (not day-presence letters)
     const maxPrints = Math.max(1, maxPrintsOf(result));
     const cellH = barMode ? Math.max(rh, 1.5) + (rh < 3 ? 0.35 : 0) : rh;
@@ -1493,13 +1566,12 @@
         const barW = densityBarWidthPx(n, maxPrints, innerW);
         style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
       } else {
-        text = escapeHtml(r.letters || "");
-        // Wide merge overlays: size by density so extremes stay jagged, not full-width color slabs
-        const dn = densityCountOf(r);
-        const densW = densityBarWidthPx(dn, maxPrints, innerW);
-        const letterW = Math.max(2, Math.round((nLettersRow || 1) * Math.max(4, fp * 0.62)));
-        const barW = Math.max(densW, letterW);
-        style += `;width:${barW}px;min-width:2px;left:0;right:auto`;
+        // Full intraday string. Width in `ch` so every glyph is inside the cell
+        // (a density bar here used to paint a silhouette with ~5 day letters on the edge).
+        const raw = r.letters || "";
+        text = escapeHtml(raw);
+        const nCh = Math.max(1, raw.length || nLettersRow || 1);
+        style += `;width:${nCh}ch;min-width:${nCh}ch;letter-spacing:0;left:0;right:auto;padding:0`;
       }
       const titleBits = [group.label, fmtPrice(r.price, step) + " pts"];
       if (r.letters) titleBits.push(r.letters);
@@ -1992,8 +2064,8 @@
         renderCompositeColumnHtml(groups[i], grid, 0, widths[i], rh, fp, hh, {
           flow: true,
           faded: false,
-          // Week: letters when readable; at fit-all / low zoom use density silhouette (same as day merge)
-          // Month stays density bars always
+          // Week: full letter wall when readable; low zoom keeps the density silhouette.
+          // Month is forced to bars inside the renderer (narrow column).
           forceLetters: kind === "week" && !isBarMode(),
         })
       );

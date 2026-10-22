@@ -24,6 +24,27 @@
   const ZOOM_MAX = 2.5;
   const RIGHT_EDGE_PAD = 260; // blank space after newest day so latest HG is readable
 
+  // Candle gutter is painted by app.js so YM/NQ stay in sync via pack_us_pages
+  // (the packer copies app.js, not each page's <style>).
+  function installHgCandleCss() {
+    if (typeof document === "undefined" || document.getElementById("hg-candle-css")) return;
+    const style = document.createElement("style");
+    style.id = "hg-candle-css";
+    style.textContent = [
+      ".hg-split{display:flex;align-items:flex-start}",
+      ".hg-candle-pane{position:relative;flex:0 0 auto;overflow:hidden;pointer-events:none}",
+      ".hg-candle{position:absolute;left:0;top:0;bottom:0;pointer-events:none;z-index:1}",
+      ".hg-candle-wick{position:absolute;width:2px;margin-left:-1px;background:#fff}",
+      ".hg-candle-body{position:absolute;box-sizing:border-box}",
+      ".hg-candle-body.up{background:#22c55e}",
+      ".hg-candle-body.down{background:#ef4444}",
+      ".hg-candle-open{position:absolute;height:2px;margin-top:-1px;background:#f97316;z-index:2}",
+      ".composite-col>.day-head,.composite-col .composite-head{margin:0}",
+    ].join("");
+    (document.head || document.documentElement).appendChild(style);
+  }
+  installHgCandleCss();
+
   // Static GitHub Pages mode: load bundled data/profiles.json (no Flask).
   const STATIC_MODE =
     !!(typeof window !== "undefined" && window.TPO_STATIC) ||
@@ -360,6 +381,145 @@
     return profile ? finiteNum(profile.lastClose) : null;
   }
 
+  /**
+   * Narrow gutter reserved on the LEFT of an HG column for one OHLC candle.
+   * Added on top of the letter/density width so TPO glyphs are not squeezed.
+   * Width tracks zoomX a little, with a floor so overview mode stays readable.
+   */
+  function hgCandleMetrics() {
+    const z = Math.max(0.55, Math.min(zoomX, 1.45));
+    const body = Math.max(8, Math.round(10 * z));
+    const gap = 3;
+    return { body: body, gap: gap, gutter: body + gap };
+  }
+
+  function hgCandleGutter() {
+    return hgCandleMetrics().gutter;
+  }
+
+  let sessionIndexArr = null;
+  let sessionIndexOf = null;
+  function sessionIndex(sid) {
+    if (sessionIndexArr !== sessionIds) {
+      sessionIndexArr = sessionIds;
+      sessionIndexOf = new Map();
+      for (let i = 0; i < sessionIds.length; i++) sessionIndexOf.set(sessionIds[i], i);
+    }
+    if (!sid || !sessionIndexOf) return -1;
+    const v = sessionIndexOf.get(sid);
+    return v == null ? -1 : v;
+  }
+
+  /**
+   * Session OHLC. Prefer baked open/high/low + lastClose (hist 30m window).
+   * High/low fall back to price-row extremes when a snapshot has no bake.
+   * Open is required — a candle without the orange open line is omitted.
+   */
+  function profileOhlc(profile) {
+    if (!profile) return null;
+    const close = profileLastClose(profile);
+    let open = finiteNum(profile.open);
+    let high = finiteNum(profile.high);
+    let low = finiteNum(profile.low);
+    if ((high == null || low == null) && profile.rows && profile.rows.length) {
+      let hi = -Infinity;
+      let lo = Infinity;
+      for (let i = 0; i < profile.rows.length; i++) {
+        const px = profile.rows[i].price;
+        if (px > hi) hi = px;
+        if (px < lo) lo = px;
+      }
+      if (high == null && isFinite(hi)) high = hi;
+      if (low == null && isFinite(lo)) low = lo;
+    }
+    if (open == null || high == null || low == null || close == null) return null;
+    if (!(low <= high)) return null;
+    return {
+      open: open,
+      high: Math.max(high, open, close),
+      low: Math.min(low, open, close),
+      close: close,
+    };
+  }
+
+  /** Period OHLC: first member open, max high, min low, last member close. */
+  function ohlcForSids(sids) {
+    if (!sids || !sids.length) return null;
+    let open = null;
+    let high = -Infinity;
+    let low = Infinity;
+    let close = null;
+    let saw = false;
+    for (let i = 0; i < sids.length; i++) {
+      const o = profileOhlc(profileById.get(sids[i]));
+      if (!o) continue;
+      if (!saw) open = o.open;
+      saw = true;
+      if (o.high > high) high = o.high;
+      if (o.low < low) low = o.low;
+      close = o.close;
+    }
+    if (!saw || open == null || close == null || !(low <= high)) return null;
+    return { open: open, high: high, low: low, close: close };
+  }
+
+  /**
+   * Previous close of the same period unit.
+   * Day: prior trading day's close.
+   * Week/month/merge: those groups partition (or span) sessions, so the
+   * prior unit's close is the lastClose of the session immediately before
+   * the group's first day.
+   */
+  function periodPrevClose(sids) {
+    if (!sids || !sids.length) return null;
+    const i = sessionIndex(sids[0]);
+    if (i <= 0) return null;
+    const prev = profileOhlc(profileById.get(sessionIds[i - 1]));
+    return prev ? prev.close : null;
+  }
+
+  /** Up (green) when this close is at or above the previous period close. */
+  function candleIsUp(ohlc, prevClose) {
+    if (!ohlc) return true;
+    if (prevClose != null && isFinite(prevClose)) return ohlc.close >= prevClose;
+    return ohlc.close >= ohlc.open;
+  }
+
+  /**
+   * One OHLC candle in the column gutter. Y uses the same bin scale as TPO
+   * rows and the price axis: y = (maxKey - price/step) * rh.
+   * Body is solid green/red. Wicks are white. Open is an orange tick
+   * across the candle width.
+   */
+  function renderHgCandleHtml(ohlc, prevClose, grid, rh, step) {
+    if (!ohlc || !grid || !(rh > 0)) return "";
+    const m = hgCandleMetrics();
+    const st = step > 0 ? step : grid.step || 1;
+    if (!(st > 0)) return "";
+    const yOf = (px) => (grid.maxKey - px / st) * rh;
+    const yHi = yOf(ohlc.high);
+    const yLo = yOf(ohlc.low);
+    const yO = yOf(ohlc.open);
+    const yC = yOf(ohlc.close);
+    if (![yHi, yLo, yO, yC].every((v) => isFinite(v))) return "";
+    const wickTop = Math.min(yHi, yLo);
+    const wickH = Math.max(1, Math.abs(yLo - yHi));
+    const bodyTop = Math.min(yO, yC);
+    const bodyH = Math.max(1, Math.abs(yC - yO));
+    const up = candleIsUp(ohlc, prevClose);
+    const dir = up ? "up" : "down";
+    const cx = m.body / 2;
+    return (
+      `<div class="hg-candle" style="width:${m.gutter}px" data-candle-dir="${dir}"` +
+      ` data-candle-o="${ohlc.open}" data-candle-h="${ohlc.high}" data-candle-l="${ohlc.low}" data-candle-c="${ohlc.close}"` +
+      ` aria-hidden="true">` +
+      `<div class="hg-candle-wick" style="top:${wickTop}px;height:${wickH}px;left:${cx}px"></div>` +
+      `<div class="hg-candle-body ${dir}" style="top:${bodyTop}px;height:${bodyH}px;left:0;width:${m.body}px"></div>` +
+      `<div class="hg-candle-open" style="top:${yO}px;left:0;width:${m.body}px"></div>` +
+      `</div>`
+    );
+  }
+
   function newestSessionId() {
     return sessionIds.length ? sessionIds[sessionIds.length - 1] : null;
   }
@@ -513,13 +673,14 @@
       !weekHgOn &&
       !monthHgOn &&
       completedRangeGroups().length > 0;
+    const candleExtra = opts.plain ? 0 : hgCandleGutter();
     if (!useGhostMerges) {
       const widths = new Array(sessionIds.length);
       const offsets = new Array(sessionIds.length + 1);
       offsets[0] = 0;
       for (let i = 0; i < sessionIds.length; i++) {
         const p = profileById.get(sessionIds[i]);
-        const w = p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS);
+        const w = (p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + candleExtra;
         widths[i] = w;
         offsets[i + 1] = offsets[i] + w + gap;
       }
@@ -570,14 +731,14 @@
             group: g,
             sid: sessionIds[j],
           });
-          widths.push(p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS));
+          widths.push((p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + candleExtra);
         }
         continue;
       }
       if (covered.has(i)) continue;
       const p = profileById.get(sessionIds[i]);
       visualCols.push({ type: "day", dayIdx: i, sid: sessionIds[i] });
-      widths.push(p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS));
+      widths.push((p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + candleExtra);
     }
 
     const offsets = new Array(widths.length + 1);
@@ -822,6 +983,8 @@
     const vaLo = Math.min(vah.key, val.key);
     const thin = w < 48 || zoomX < 0.4;
     const barMode = isBarMode();
+    const gutter = hgCandleGutter();
+    const letterW = Math.max(4, w - gutter);
     const maxPrints = Math.max(1, maxPrintsOf(result));
     // Compact date label for thin cols: MM-DD
     let label = sessionId;
@@ -833,7 +996,7 @@
 
     // Full cell height in bar mode (tiny overlap hides hairline gaps between bins)
     const cellH = barMode ? Math.max(rh, 1.5) + (rh < 3 ? 0.35 : 0) : rh;
-    const innerW = Math.max(4, w - (barMode ? 0 : 2));
+    const innerW = Math.max(4, letterW - (barMode ? 0 : 2));
 
     const cells = [];
     for (let i = 0; i < rows.length; i++) {
@@ -889,6 +1052,14 @@
     const headTitle = (isGhost
       ? "合併組內原日（半透明） · " + sessionId
       : "撳選合併範圍 · " + sessionId) + " · " + tipF.title;
+    const dayOhlc = profileOhlc(result);
+    const candleHtml = renderHgCandleHtml(
+      dayOhlc,
+      periodPrevClose([sessionId]),
+      grid,
+      rh,
+      step
+    );
     const head = `<div class="${headCls}" style="height:${hh}px" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" title="${escapeHtml(headTitle)}"><b title="${escapeHtml(sessionId + " · " + tipF.title)}">${escapeHtml(
       label
     )}</b>${meta}</div>`;
@@ -903,9 +1074,12 @@
     const weekCls = " week-band-" + weekBand;
     return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${ghostCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" data-hg-label="${escapeHtml(sessionId)}" data-hg-poc="${escapeHtml(tipF.poc)}" data-hg-va="${escapeHtml(tipF.va)}" data-hg-tpo="${escapeHtml(tipF.tpo)}" style="width:${w}px;min-width:0">
       ${head}
-      <div class="day-body" style="height:${bodyH}px;position:relative">
-        <div class="poc-line" style="top:${pocTop}px"></div>
-        ${cells.join("")}
+      <div class="hg-split">
+        <div class="hg-candle-pane" style="width:${gutter}px;height:${bodyH}px">${candleHtml}</div>
+        <div class="day-body" style="height:${bodyH}px;position:relative;flex:1 1 auto;min-width:0">
+          <div class="poc-line" style="top:${pocTop}px"></div>
+          ${cells.join("")}
+        </div>
       </div>
     </div>`;
   }
@@ -1198,27 +1372,30 @@
    * source day at this zoom.
    */
   function compositeColW(profile, kind) {
-    if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS);
+    // Gutter sits left of the letter/density strip; it is not subtracted
+    // from the print budget below.
+    const gutter = hgCandleGutter();
+    if (!profile) return dayColWFromPrints(PLACEHOLDER_PRINTS) + gutter;
     const prints = Math.max(COL_MIN_PRINTS, maxPrintsOf(profile));
     const full = dayColWFromPrints(prints);
     const dayFloor = dayColWFromPrints(
       Math.max(COL_MIN_PRINTS, profile.maxDayPrints || 0)
     );
+    let letterW;
     if (kind === "month") {
-      return Math.min(full, Math.max(28, Math.round(80 * Math.max(zoomX, 0.12))));
-    }
-    if (!isBarMode() && (kind === "week" || kind === "range")) {
-      return Math.max(lettersColW(prints), dayFloor);
-    }
-    if (kind === "range") {
+      letterW = Math.min(full, Math.max(28, Math.round(80 * Math.max(zoomX, 0.12))));
+    } else if (!isBarMode() && (kind === "week" || kind === "range")) {
+      letterW = Math.max(lettersColW(prints), dayFloor);
+    } else if (kind === "range") {
       // Bar silhouette ∝ summed prints; floor so A is never thinner than a source day.
-      return Math.max(full, dayFloor);
-    }
-    if (kind === "week") {
+      letterW = Math.max(full, dayFloor);
+    } else if (kind === "week") {
       const cap = Math.max(56, Math.round(168 * Math.max(zoomX, 0.18)));
-      return Math.max(dayFloor, Math.min(full, Math.max(cap, dayFloor)));
+      letterW = Math.max(dayFloor, Math.min(full, Math.max(cap, dayFloor)));
+    } else {
+      letterW = Math.min(full, Math.max(36, Math.round(100 * Math.max(zoomX, 0.15))));
     }
-    return Math.min(full, Math.max(36, Math.round(100 * Math.max(zoomX, 0.15))));
+    return letterW + gutter;
   }
 
   function buildGroupGeometry(groups) {
@@ -1593,7 +1770,9 @@
     // Density silhouette uses summed intraday prints (not day-presence letters)
     const maxPrints = Math.max(1, maxPrintsOf(result));
     const cellH = barMode ? Math.max(rh, 1.5) + (rh < 3 ? 0.35 : 0) : rh;
-    const innerW = Math.max(4, width - (barMode ? 0 : 4));
+    const gutter = hgCandleGutter();
+    const letterW = Math.max(4, width - gutter);
+    const innerW = Math.max(4, letterW - (barMode ? 0 : 4));
     const nLetters = letterCount != null ? letterCount : 0;
 
     const cells = [];
@@ -1665,6 +1844,14 @@
     const leftStyle = opts.flow ? "" : `left:${left}px;`;
     const tipF = hgTipFields(result);
     const headTitle = group.label + " · " + tipF.title;
+    const groupOhlc = ohlcForSids(group.sids || []);
+    const candleHtml = renderHgCandleHtml(
+      groupOhlc,
+      periodPrevClose(group.sids || []),
+      grid,
+      rh,
+      step
+    );
     return (
       `<div class="composite-col${kindCls}${fadeCls}${flowCls}${lettersCls}${colorCls}" data-kind="${escapeHtml(group.kind || "")}" data-gid="${group.id != null ? group.id : ""}"` +
       ` data-hg-label="${escapeHtml(group.label)}" data-hg-poc="${escapeHtml(tipF.poc)}" data-hg-va="${escapeHtml(tipF.va)}" data-hg-tpo="${escapeHtml(tipF.tpo)}"` +
@@ -1672,10 +1859,14 @@
       `<div class="day-head composite-head" style="height:${hh}px" title="${escapeHtml(headTitle)}"><b title="${escapeHtml(
         headTitle
       )}">${escapeHtml(group.label)}</b>${meta}</div>` +
-      `<div class="day-body" style="height:${bodyH}px;position:relative">` +
+      `<div class="hg-split">` +
+      `<div class="hg-candle-pane" style="width:${gutter}px;height:${bodyH}px">` +
+      candleHtml +
+      `</div>` +
+      `<div class="day-body" style="height:${bodyH}px;position:relative;flex:1 1 auto;min-width:0">` +
       `<div class="poc-line" style="top:${pocTop}px"></div>` +
       cells.join("") +
-      `</div></div>`
+      `</div></div></div>`
     );
   }
 
@@ -2631,7 +2822,7 @@
     }
     for (let i = fromIdx; i <= toIdx; i++) {
       const p = profileById.get(sessionIds[i]);
-      sum += (p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + gap;
+      sum += (p ? dayColW(p) : dayColWFromPrints(PLACEHOLDER_PRINTS)) + hgCandleGutter() + gap;
     }
     zoomX = prev;
     return sum;

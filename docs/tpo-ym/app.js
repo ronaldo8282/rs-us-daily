@@ -34,7 +34,7 @@
 
   function staticProfilesUrl() {
     try {
-      return new URL("data/profiles.json?v=hist-180-1", document.baseURI || location.href).href;
+      return new URL("data/profiles.json", document.baseURI || location.href).href;
     } catch (_) {
       return "data/profiles.json";
     }
@@ -426,9 +426,25 @@
     return globalGrid;
   }
 
+  const ZOOM_PRESETS = [10, 25, 50, 75, 100];
+
   function updateZoomLabel() {
-    const el = $("zoomLabel");
-    if (el) el.textContent = Math.round(zoom * 100) + "%";
+    const sel = $("zoomSelect");
+    if (!sel) return;
+    const pct = Math.round(zoom * 100);
+    // Drop prior custom (non-preset) option
+    const custom = sel.querySelector("option[data-custom]");
+    if (custom) custom.remove();
+    if (ZOOM_PRESETS.includes(pct)) {
+      sel.value = String(pct);
+      return;
+    }
+    const opt = document.createElement("option");
+    opt.value = String(pct);
+    opt.textContent = pct + "%";
+    opt.dataset.custom = "1";
+    opt.selected = true;
+    sel.insertBefore(opt, sel.firstChild);
   }
 
   // ---- CSV fallback ----
@@ -2099,6 +2115,16 @@
     setZoom(zoom * factor);
   }
 
+  /** +/- step: 5% normally; 2% when current zoom ≤ 10%. */
+  function zoomStep(dir) {
+    const pct = Math.round(zoom * 100);
+    const step = pct <= 10 ? 2 : 5;
+    const minPct = Math.round(ZOOM_MIN * 100);
+    const maxPct = Math.round(ZOOM_MAX * 100);
+    const next = Math.max(minPct, Math.min(maxPct, pct + dir * step));
+    setZoom(next / 100);
+  }
+
   // Natural (zoom=1) total width of a slice of days, from max TPO prints
   function naturalWidthForRange(fromIdx, toIdx) {
     const gap1 = 2;
@@ -2996,10 +3022,17 @@
     }
   });
 
-  $("btnZoomIn").addEventListener("click", () => zoomBy(1.25));
-  $("btnZoomOut").addEventListener("click", () => zoomBy(1 / 1.25));
+  $("btnZoomIn").addEventListener("click", () => zoomStep(1));
+  $("btnZoomOut").addEventListener("click", () => zoomStep(-1));
   $("btnZoomFit").addEventListener("click", () => zoomFitAll());
-  $("btnZoom100").addEventListener("click", () => zoomReset());
+  const zoomSel = $("zoomSelect");
+  if (zoomSel) {
+    zoomSel.addEventListener("change", () => {
+      const pct = parseInt(zoomSel.value, 10);
+      if (!Number.isFinite(pct) || pct <= 0) return;
+      setZoom(pct / 100);
+    });
+  }
   const btn30 = $("btnView30");
   const btn60 = $("btnView60");
   if (btn30) btn30.addEventListener("click", () => zoomFitDays(30));

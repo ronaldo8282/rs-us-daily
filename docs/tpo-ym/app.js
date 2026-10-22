@@ -34,7 +34,7 @@
 
   function staticProfilesUrl() {
     try {
-      return new URL("data/profiles.json", document.baseURI || location.href).href;
+      return new URL("data/profiles.json?v=hist-180-1", document.baseURI || location.href).href;
     } catch (_) {
       return "data/profiles.json";
     }

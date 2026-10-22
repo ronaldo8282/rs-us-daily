@@ -206,6 +206,68 @@
       .replace(/>/g, "&gt;");
   }
 
+  /** POC / VA / TPO strings for HG column hover tip. */
+  function hgTipFields(result) {
+    if (!result) return { poc: "—", va: "—", tpo: "—", title: "" };
+    const step = result.step || 5;
+    const poc =
+      result.poc && result.poc.price != null ? fmtPrice(result.poc.price, step) : "—";
+    const vaLo =
+      result.val && result.val.price != null ? fmtPrice(result.val.price, step) : "—";
+    const vaHi =
+      result.vah && result.vah.price != null ? fmtPrice(result.vah.price, step) : "—";
+    const nLetters = result.letterCount != null ? result.letterCount : 0;
+    let totalTpo = result.totalTpo != null ? result.totalTpo : 0;
+    if (!totalTpo && result.rows && result.rows.length) {
+      totalTpo = result.rows.reduce((s, r) => s + (printCountOf(r) || 0), 0);
+    }
+    const tpo = nLetters + "L / " + totalTpo + "p";
+    const va = vaLo + "–" + vaHi;
+    return {
+      poc,
+      va,
+      tpo,
+      title: "POC " + poc + " · VA " + va + " · " + tpo,
+    };
+  }
+
+  function hideHgColTip() {
+    const tip = $("hgColTip");
+    if (tip) {
+      tip.classList.remove("show");
+      tip.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function showHgColTip(col, clientX, clientY) {
+    const tip = $("hgColTip");
+    const wrap = $("hgWrap");
+    if (!tip || !wrap || !col) return;
+    const label = col.getAttribute("data-hg-label") || col.getAttribute("data-sid") || "—";
+    const poc = col.getAttribute("data-hg-poc") || "—";
+    const va = col.getAttribute("data-hg-va") || "—";
+    const tpo = col.getAttribute("data-hg-tpo") || "—";
+    tip.innerHTML =
+      `<span class="hg-tip-label">${escapeHtml(label)}</span>` +
+      `<span class="hg-tip-sep">·</span>` +
+      `<span class="hg-tip-poc"><b>POC</b> ${escapeHtml(poc)}</span>` +
+      `<span class="hg-tip-sep">·</span>` +
+      `<span class="hg-tip-va"><b>VA</b> ${escapeHtml(va)}</span>` +
+      `<span class="hg-tip-sep">·</span>` +
+      `<span class="hg-tip-tpo"><b>TPO</b> ${escapeHtml(tpo)}</span>`;
+    tip.classList.add("show");
+    tip.setAttribute("aria-hidden", "false");
+    const rect = wrap.getBoundingClientRect();
+    let x = clientX - rect.left + 14;
+    let y = clientY - rect.top + 14;
+    // measure after show
+    const tw = tip.offsetWidth || 280;
+    const th = tip.offsetHeight || 36;
+    if (x + tw > rect.width - 8) x = clientX - rect.left - tw - 8;
+    if (y + th > rect.height - 8) y = clientY - rect.top - th - 8;
+    tip.style.transform = `translate(${Math.max(4, x)}px, ${Math.max(4, y)}px)`;
+  }
+
   // Per-day width from max TPO letter string length; zoom scales ch + padding.
   const CHAR_W0 = 7.2; // monospace px at zoom=1 (~11px font)
   const COL_PAD0 = 10; // left+right padding inside column at zoom=1
@@ -743,16 +805,17 @@
     }
 
     const pocTop = (grid.maxKey - poc.key) * rh + rh / 2;
+    const tipF = hgTipFields(result);
     const meta = thin
       ? ""
       : `<div class="day-meta">${fmtPrice(poc.price, step)} · ${nLetters}L</div>`;
     const isGhost = !!colOpts.ghost;
     const selectable = colOpts.selectable !== false && !isGhost;
     const headCls = selectable ? "day-head day-head-select" : "day-head";
-    const headTitle = isGhost
+    const headTitle = (isGhost
       ? "合併組內原日（半透明） · " + sessionId
-      : "撳選合併範圍 · " + sessionId;
-    const head = `<div class="${headCls}" style="height:${hh}px" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" title="${escapeHtml(headTitle)}"><b title="${sessionId}">${escapeHtml(
+      : "撳選合併範圍 · " + sessionId) + " · " + tipF.title;
+    const head = `<div class="${headCls}" style="height:${hh}px" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" title="${escapeHtml(headTitle)}"><b title="${escapeHtml(sessionId + " · " + tipF.title)}">${escapeHtml(
       label
     )}</b>${meta}</div>`;
     const thinCls = thin ? " thin" : "";
@@ -764,7 +827,7 @@
     const weekKey = weekStartKey(sessionId);
     const weekBand = weekBandOf(sessionId);
     const weekCls = " week-band-" + weekBand;
-    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${ghostCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" style="width:${w}px;min-width:0">
+    return `<div class="day-col aligned${thinCls}${barCls}${fadeCls}${ghostCls}${selCls}${anchorCls}${weekCls}" data-sid="${sessionId}" data-date="${escapeHtml(sessionId)}" data-week="${escapeHtml(weekKey)}" data-week-band="${weekBand}" data-idx="${colOpts.idx != null ? colOpts.idx : ""}" data-hg-label="${escapeHtml(sessionId)}" data-hg-poc="${escapeHtml(tipF.poc)}" data-hg-va="${escapeHtml(tipF.va)}" data-hg-tpo="${escapeHtml(tipF.tpo)}" style="width:${w}px;min-width:0">
       ${head}
       <div class="day-body" style="height:${bodyH}px;position:relative">
         <div class="poc-line" style="top:${pocTop}px"></div>
@@ -1474,11 +1537,14 @@
     const colorCls =
       (group.kind || "") === "range" ? " merge-c" + (colorIdx % RANGE_COLOR_N) : "";
     const leftStyle = opts.flow ? "" : `left:${left}px;`;
+    const tipF = hgTipFields(result);
+    const headTitle = group.label + " · " + tipF.title;
     return (
       `<div class="composite-col${kindCls}${fadeCls}${flowCls}${lettersCls}${colorCls}" data-kind="${escapeHtml(group.kind || "")}" data-gid="${group.id != null ? group.id : ""}"` +
+      ` data-hg-label="${escapeHtml(group.label)}" data-hg-poc="${escapeHtml(tipF.poc)}" data-hg-va="${escapeHtml(tipF.va)}" data-hg-tpo="${escapeHtml(tipF.tpo)}"` +
       ` style="${leftStyle}width:${width}px;min-width:${width}px">` +
-      `<div class="day-head composite-head" style="height:${hh}px"><b title="${escapeHtml(
-        group.label
+      `<div class="day-head composite-head" style="height:${hh}px" title="${escapeHtml(headTitle)}"><b title="${escapeHtml(
+        headTitle
       )}">${escapeHtml(group.label)}</b>${meta}</div>` +
       `<div class="day-body" style="height:${bodyH}px;position:relative">` +
       `<div class="poc-line" style="top:${pocTop}px"></div>` +
@@ -1872,6 +1938,7 @@
     updateTrendChart();
     hideCrosshair();
     hideSinglePinTip();
+    hideHgColTip();
     singlePinSegments = [];
     updateStats(null);
   }
@@ -1982,6 +2049,7 @@
     updateTrendChart();
     hideCrosshair();
     hideSinglePinTip();
+    hideHgColTip();
     syncCompositeButtons();
     updateStats(null);
     const ms = (performance.now() - tRender0).toFixed(0);
@@ -3534,6 +3602,7 @@
         if (chDrag) endChDrag(null);
         hideCrosshair();
         hideSinglePinTip();
+        hideHgColTip();
         yAxisDrag = {
           pointerId: ev.pointerId,
           startY: ev.clientY,
@@ -3624,6 +3693,7 @@
       if (crosshair.visible && !(chDrag && chDrag.mode === "price")) {
         hideCrosshair();
       }
+      hideHgColTip();
       scheduleRender();
       syncTimelineScroll();
       updateTrendChart();
@@ -3726,6 +3796,7 @@
         if (ev.pointerType === "mouse" && !chDrag) {
           hideCrosshair();
           hideSinglePinTip();
+          hideHgColTip();
         }
       },
       { passive: true }
@@ -3742,9 +3813,68 @@
     scEl.addEventListener(
       "mousemove",
       (ev) => {
-        const bar = ev.target && ev.target.closest && ev.target.closest(".single-pin-bar");
-        if (bar) showSinglePinTip(bar, ev.clientX, ev.clientY);
-        else hideSinglePinTip();
+        const t = ev.target;
+        const bar = t && t.closest && t.closest(".single-pin-bar");
+        if (bar) {
+          hideHgColTip();
+          showSinglePinTip(bar, ev.clientX, ev.clientY);
+          return;
+        }
+        hideSinglePinTip();
+        hideHgColTip();
+        if (t && t.closest && t.closest(".price-axis")) {
+          hideHgColTip();
+          return;
+        }
+        const col =
+          t &&
+          t.closest &&
+          (t.closest(".day-col.aligned[data-hg-poc]") ||
+            t.closest(".composite-col[data-hg-poc]"));
+        if (col) showHgColTip(col, ev.clientX, ev.clientY);
+        else hideHgColTip();
+      },
+      { passive: true }
+    );
+
+    // Optional touch long-press (~450ms) for HG tip
+    let hgLongPress = null;
+    scEl.addEventListener(
+      "pointerdown",
+      (ev) => {
+        if (ev.pointerType !== "touch" && ev.pointerType !== "pen") return;
+        const t = ev.target;
+        if (!t || !t.closest) return;
+        if (t.closest(".price-axis") || t.closest(".day-head-select")) return;
+        const col =
+          t.closest(".day-col.aligned[data-hg-poc]") ||
+          t.closest(".composite-col[data-hg-poc]");
+        if (!col) return;
+        const x0 = ev.clientX;
+        const y0 = ev.clientY;
+        const pid = ev.pointerId;
+        clearTimeout(hgLongPress);
+        hgLongPress = setTimeout(() => {
+          hgLongPress = null;
+          showHgColTip(col, x0, y0);
+        }, 450);
+        const cancel = (e) => {
+          if (e.pointerId !== pid) return;
+          if (hgLongPress) {
+            clearTimeout(hgLongPress);
+            hgLongPress = null;
+          }
+          scEl.removeEventListener("pointerup", cancel, true);
+          scEl.removeEventListener("pointercancel", cancel, true);
+          scEl.removeEventListener("pointermove", move, true);
+        };
+        const move = (e) => {
+          if (e.pointerId !== pid) return;
+          if (Math.abs(e.clientX - x0) > 10 || Math.abs(e.clientY - y0) > 10) cancel(e);
+        };
+        scEl.addEventListener("pointerup", cancel, true);
+        scEl.addEventListener("pointercancel", cancel, true);
+        scEl.addEventListener("pointermove", move, true);
       },
       { passive: true }
     );

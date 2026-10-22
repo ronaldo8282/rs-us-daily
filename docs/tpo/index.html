@@ -1179,6 +1179,35 @@
     .single-pin-tip .sp-date { color: #c4b5fd; }
     .single-pin-tip .sp-sep { color: #8b9bb4; margin: 0 0.35rem; }
 
+    .hg-col-tip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 43;
+      display: none;
+      background: #0f1a28f2;
+      border: 1px solid #3b82f6aa;
+      color: #e7ecf3;
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px #000a;
+      pointer-events: none;
+      max-width: min(92vw, 420px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hg-col-tip.show { display: block; }
+    .hg-col-tip .hg-tip-label { color: #93c5fd; }
+    .hg-col-tip .hg-tip-poc { color: #fbbf24; }
+    .hg-col-tip .hg-tip-va { color: #4ade80; }
+    .hg-col-tip .hg-tip-tpo { color: #e7ecf3; }
+    .hg-col-tip .hg-tip-sep { color: #8b9bb4; margin: 0 0.3rem; }
+    .hg-col-tip b { font-weight: 700; opacity: 0.85; margin-right: 0.15rem; }
+
 
     /* Settings collapse (mobile priority; works on desktop too) */
     aside#settingsPane {
@@ -1581,6 +1610,7 @@
           <div class="single-pin-tip" id="singlePinTip" aria-hidden="true">
             <span class="sp-pts">—</span><span class="sp-sep">·</span><span class="sp-date">—</span>
           </div>
+          <div class="hg-col-tip" id="hgColTip" role="tooltip" aria-hidden="true"></div>
 
         </div>
         <div class="timeline" id="timeline">
@@ -1595,6 +1625,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=merge-ghost-1"></script>
+  <script src="app.js?v=hg-hover-1"></script>
 </body>
 </html>

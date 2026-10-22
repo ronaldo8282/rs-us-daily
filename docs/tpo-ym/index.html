@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <script>window.TPO_STATIC=true;</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TPO Letter Hourglass · 道指期貨 YM</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #8b9bb4;
+      --accent: #3b82f6;
+      --poc: #f59e0b;
+      --va: #22c55e;
+      --ib: #a855f7;
+      --spike: #ef4444;
+      --dual: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-shrink: 0;
+      padding: 0.75rem 5.5rem 0.75rem 1.25rem; /* right room for 設定/收起 FAB */
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 2px 12px #0006;
+    }
+    header h1 { margin: 0 0 0.15rem; font-size: 1.05rem; font-weight: 600; }
+    header p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(180px, 40vh) 1fr;
+      }
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      align-self: stretch;
+      z-index: 150;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 1rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: 100%;
+      height: 100%;
+      box-shadow: 4px 0 16px #0005;
+    }
+    main {
+      padding: 0.75rem 1.25rem 1rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+    .main-chrome {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, var(--bg) 85%, transparent);
+      padding-bottom: 0.25rem;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 0.65rem 0 0.25rem;
+    }
+    input, select, textarea, button {
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.55rem;
+      width: 100%;
+    }
+    textarea {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      min-height: 90px;
+      resize: vertical;
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.85rem;
+    }
+    button {
+      cursor: pointer;
+      width: auto;
+      background: var(--accent);
+      border-color: transparent;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    button.secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    button:hover { filter: brightness(1.08); }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .stats span b { color: var(--muted); font-weight: 500; margin-right: 0.25rem; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+    .legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    .range-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+    .range-btn {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      width: auto;
+      font-weight: 600;
+    }
+    .range-btn.active {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff;
+    }
+    .profiles-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #0a0e14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      /* pan only — pinch handled in JS so iOS page-zoom doesn't steal it */
+      touch-action: pan-x pan-y;
+    }
+    .profiles-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.35rem;
+      width: max-content;
+      min-height: 100%;
+    }
+    .day-col {
+      flex: 0 0 auto;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #0c1118;
+      padding: 0.35rem 0.4rem 0.5rem;
+    }
+    .day-col.single { min-width: 18rem; }
+    .day-head {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .day-head b { color: var(--text); font-weight: 600; display: block; font-size: 0.8rem; }
+    .day-meta { font-size: 0.65rem; color: var(--muted); margin-top: 0.15rem; }
+    pre.profile {
+      margin: 0;
+      font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.28;
+      letter-spacing: 0.02em;
+      white-space: pre;
+    }
+    .price {
+      color: var(--muted);
+      display: inline-block;
+      min-width: 5.5ch;
+      text-align: right;
+      margin-right: 0.4rem;
+      user-select: none;
+    }
+    .day-col.single .price { min-width: 7ch; margin-right: 0.75rem; }
+    .letters { color: #c8d4e8; }
+    .row-poc .letters { color: var(--poc); font-weight: 700; }
+    .row-va .letters { color: #86efac; }
+    .row-spike .letters { color: var(--spike); }
+    .row-dual .letters { color: var(--dual); }
+    .row-ib .price { color: var(--ib); }
+    .row-empty .letters { color: transparent; }
+    .tag {
+      font-size: 0.65rem;
+      margin-left: 0.35rem;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+    .tag.poc { color: var(--poc); }
+    .tag.vah, .tag.val { color: var(--va); }
+    .tag.ib { color: var(--ib); }
+    .err {
+      color: #fca5a5;
+      background: #3f1d1d;
+      border: 1px solid #7f1d1d;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      display: none;
+      flex-shrink: 0;
+    }
+    .err.show { display: block; }
+    .oknote {
+      color: #bbf7d0;
+      background: #14532d55;
+      border: 1px solid #166534;
+      padding: 0.45rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    .oknote.show { display: block; }
+    details.fallback {
+      margin-top: 1rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 0.75rem;
+    }
+    details.fallback summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+    .chip {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      width: auto;
+    }
+    .chip:hover { color: var(--text); border-color: var(--accent); }
+
+    .day-placeholder { opacity: 0.45; }
+    .day-placeholder .day-meta { color: var(--muted); }
+    .virt-spacer { flex: 0 0 auto; pointer-events: none; }
+
+    /* Shared-price aligned layout (TV-style TPO) */
+    .profiles-aligned {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: max-content;
+      min-height: 100%;
+    }
+    .price-axis {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      flex: 0 0 auto;
+      background: #0a0e14;
+      border-right: 1px solid var(--border);
+      box-shadow: 4px 0 12px #0008;
+    }
+    .axis-head b { font-size: 0.72rem; }
+    .axis-label {
+      position: absolute;
+      left: 0;
+      right: 2px;
+      text-align: right;
+      color: var(--muted);
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      padding-right: 4px;
+      pointer-events: none;
+      white-space: nowrap;
+      border-top: 1px solid #1a233255;
+    }
+    .day-col.aligned {
+      padding: 0;
+      /* visible so .day-head position:sticky can pin to HG scroll top */
+      overflow: visible;
+      min-width: 0 !important;
+      border-radius: 2px;
+    }
+    .day-col.aligned.thin .day-meta { display: none; }
+    .day-col.aligned.thin .day-head {
+      padding: 0.1rem 0.05rem;
+      font-size: 0.55rem;
+    }
+    .day-col.aligned.thin .day-head b {
+      font-size: 0.55rem;
+      letter-spacing: -0.02em;
+    }
+    .day-col.aligned .day-head {
+      padding: 0.25rem 0.3rem;
+      margin: 0;
+      position: sticky;
+      top: 0;
+      z-index: 12;
+      background: #0c1118f5;
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+      box-shadow: 0 2px 8px #000a;
+    }
+    .price-axis .day-head,
+    .price-axis .axis-head {
+      position: sticky;
+      top: 0;
+      z-index: 14;
+      background: #0a0e14f5;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 8px #000a;
+      margin: 0;
+      padding: 0.25rem 0.3rem;
+      overflow: hidden;
+    }
+    .day-col.aligned .day-head b {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Alternating trading-week background (Mon-start) — subtle, letters stay primary */
+    .day-col.aligned.week-band-0 {
+      background: #0c1118;
+    }
+    .day-col.aligned.week-band-1 {
+      background: #141c2c;
+      box-shadow: inset 0 0 0 1px #24345044;
+    }
+    .day-col.aligned.week-band-0 .day-head {
+      background: #0c1118f5;
+    }
+    .day-col.aligned.week-band-1 .day-head {
+      background: #141c2cf5;
+    }
+    .day-col.aligned.week-band-1.day-range-sel .day-head,
+    .day-col.aligned.week-band-0.day-range-sel .day-head {
+      /* range selection keeps its own head tint (see .day-range-sel) */
+    }
+    /* Density bars: width set inline ∝ TPO count — keeps bell/hourglass at low zoom */
+    .tpo-cell.bar-only {
+      left: 1px;
+      right: auto;
+      color: transparent !important;
+      background: #5b7fb0cc;
+      border-radius: 1px;
+      min-width: 2px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .tpo-cell.bar-only.row-poc { background: #f59e0bdd; }
+    .tpo-cell.bar-only.row-va { background: #22c55e99; }
+    .tpo-cell.bar-only.row-spike { background: #ef4444aa; }
+    .tpo-cell.bar-only.row-dual { background: #38bdf8aa; }
+    .tpo-cell.bar-only.row-ib { box-shadow: inset 2px 0 0 var(--ib); }
+    .day-body {
+      position: relative;
+      overflow: hidden;
+    }
+    .tpo-cell {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      color: #c8d4e8;
+      box-sizing: border-box;
+    }
+    .tpo-cell.row-poc { color: var(--poc); font-weight: 700; background: #f59e0b22; }
+    .tpo-cell.row-va { color: #86efac; }
+    .tpo-cell.row-spike { color: var(--spike); }
+    .tpo-cell.row-dual { color: var(--dual); }
+    .tpo-cell.row-ib { box-shadow: inset 2px 0 0 var(--ib); }
+    .poc-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #f59e0b88;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .day-col.day-jump-flash {
+      box-shadow: 0 0 0 2px #38bdf8, 0 0 14px #38bdf866;
+      transition: box-shadow 0.2s ease;
+    }
+    .day-col.day-jump-flash .day-head {
+      background: #1e3a5f !important;
+      color: #e0f2fe;
+    }
+    .zoom-bar button.btn-latest-day {
+      border-color: #38bdf888;
+      color: #7dd3fc;
+    }
+    .zoom-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.35rem;
+      flex-shrink: 0;
+    }
+    .zoom-bar button {
+      width: auto;
+      font-size: 0.75rem;
+      padding: 0.28rem 0.55rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .zoom-bar button:hover { border-color: var(--accent); }
+    .zoom-bar .zoom-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-width: 3.5rem;
+      text-align: center;
+    }
+    .zoom-bar .hint-inline {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-left: 0.35rem;
+    }
+
+    /* Chart stage: scroll + overlay crosshair + sticky timeline */
+    .chart-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .hg-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .hg-wrap .profiles-scroll {
+      flex: 1;
+      min-height: 0;
+      border-radius: 8px 8px 0 0;
+      border-bottom: none;
+    }
+    .crosshair-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 40;
+      overflow: hidden;
+      display: none;
+    }
+    .crosshair-overlay.show { display: block; }
+    .ch-v, .ch-h {
+      position: absolute;
+      background: #93c5fd88;
+      pointer-events: none;
+    }
+    .ch-v {
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      left: 0;
+    }
+    .ch-h {
+      left: 0;
+      right: 0;
+      height: 1px;
+      top: 0;
+    }
+    .ch-hud {
+      position: absolute;
+      z-index: 41;
+      transform: translate(12px, 12px);
+      background: #0f1720ee;
+      border: 1px solid #3b82f6aa;
+      color: #e7ecf3;
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px #000a;
+      pointer-events: none;
+    }
+    .ch-hud .ch-date { color: #93c5fd; }
+    .ch-hud .ch-pts { color: #fbbf24; }
+    .ch-hud .ch-sep { color: #8b9bb4; margin: 0 0.35rem; }
+
+    .timeline {
+      flex-shrink: 0;
+      height: 28px;
+      background: #0c1118;
+      border: 1px solid var(--border);
+      border-top: 1px solid #2d3a4f;
+      border-radius: 0;
+      border-bottom: none;
+      overflow: hidden;
+      position: relative;
+      z-index: 45;
+    }
+    .timeline-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      will-change: transform;
+    }
+    .tl-tick {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-left: 1px solid #2d3a4f88;
+      padding-left: 3px;
+      font-size: 10px;
+      line-height: 28px;
+      color: var(--muted);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .tl-tick.active {
+      color: #93c5fd;
+      border-left-color: #3b82f6;
+      font-weight: 700;
+    }
+    .tl-readout {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      color: #e7ecf3;
+      background: #0f1720cc;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .tl-readout b { color: #fbbf24; font-weight: 700; }
+
+    /* Stronger HG silhouette at low zoom */
+    .tpo-cell.bar-only {
+      left: 0 !important;
+      right: auto !important;
+      color: transparent !important;
+      background: #6b8fc4ee;
+      border-radius: 0;
+      min-width: 2px !important;
+      padding: 0 !important;
+      overflow: hidden;
+      box-shadow: none;
+      border-top: none;
+    }
+    .tpo-cell.bar-only.row-poc { background: #f59e0bff; }
+    .tpo-cell.bar-only.row-va { background: #22c55ecc; }
+    .tpo-cell.bar-only.row-spike { background: #ef4444dd; }
+    .tpo-cell.bar-only.row-dual { background: #38bdf8dd; }
+    .tpo-cell.bar-only.row-ib { box-shadow: inset 2px 0 0 #a855f7; }
+    .day-col.aligned.bar-mode .day-body {
+      background: linear-gradient(90deg, #0a0e14 0%, #0d1219 100%);
+    }
+    .day-col.aligned.bar-mode {
+      border-color: #1e293b;
+    }
+
+    .trend-pane {
+      flex-shrink: 0;
+      height: 120px; /* desktop: slightly taller mid trend */
+      background: #0a0e14;
+      border: 1px solid var(--border);
+      border-top: 1px solid #2d3a4f;
+      border-radius: 0 0 8px 8px;
+      position: relative;
+      z-index: 45;
+      overflow: hidden;
+    }
+    .trend-pane canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .trend-badge {
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      pointer-events: none;
+      z-index: 2;
+      background: #0a0e14cc;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+
+
+    /* Composite HG overlays (week / month / range) */
+    .composite-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 4;
+      overflow: visible;
+    }
+    .composite-col {
+      position: absolute;
+      top: 0;
+      box-sizing: border-box;
+      border: 1px solid #3b82f688;
+      border-radius: 3px;
+      background: #0c121acc;
+      box-shadow: 0 0 0 1px #0006, 0 4px 18px #0008;
+      /* visible so composite date head can sticky with day heads */
+      overflow: visible;
+      pointer-events: none;
+    }
+    .composite-col.composite-week { border-color: #38bdf888; }
+    .composite-col.composite-month { border-color: #f59e0b88; z-index: 5; }
+    .composite-col.composite-range {
+      border-color: #a855f788;
+      z-index: 6;
+      background: #1a102855;
+    }
+    .composite-col.composite-range .day-body { background: #120a1c44; }
+    .composite-col.composite-range .tpo-cell.bar-only {
+      background: #6b8fc4ee;
+      min-height: 2px;
+    }
+    .composite-col.composite-range .tpo-cell.bar-only.row-va { background: #22c55ecc; }
+    .composite-col.composite-range .tpo-cell.bar-only.row-poc { background: #f59e0bff; }
+    .composite-col.composite-range .tpo-cell.bar-only.row-spike { background: #ef4444dd; }
+    .composite-col.composite-range .tpo-cell.bar-only.row-dual { background: #38bdf8dd; }
+    .composite-col.composite-faded {
+      opacity: 0.32;
+      filter: saturate(0.7);
+      z-index: 4;
+    }
+    .composite-col .composite-head {
+      position: sticky;
+      top: 0;
+      z-index: 13;
+      background: #132033f5;
+      border-bottom: 1px solid #2d3a4f;
+      box-shadow: 0 2px 8px #000a;
+      overflow: hidden;
+    }
+    .composite-col.composite-month .composite-head { background: #2a1f0eee; }
+    .composite-col.composite-week .composite-head { background: #0e1a24ee; }
+    .composite-col.composite-range .composite-head { background: #1a1028ee; }
+    .composite-col.composite-flow {
+      position: relative;
+      flex: 0 0 auto;
+      display: block;
+      background: #0c121af0;
+      pointer-events: auto;
+    }
+    .composite-col.composite-flow .day-body {
+      background: transparent;
+    }
+    /* Keep merged HG silhouette readable — softer VA fill */
+    .composite-col .tpo-cell.bar-only.row-va { background: #22c55eaa; }
+    .composite-col .tpo-cell.bar-only.row-spike { background: #ef4444bb; }
+    .composite-col .tpo-cell.bar-only.row-poc { background: #f59e0bff; }
+    .composite-col .tpo-cell.bar-only { background: #6b8fc4cc; }
+    /* Week letter HG: make POC / VA / spike / dual match legend clearly */
+    .composite-col.composite-letters .tpo-cell.row-poc {
+      color: var(--poc);
+      font-weight: 700;
+      background: #f59e0b33;
+    }
+    .composite-col.composite-letters .tpo-cell.row-va {
+      color: #86efac;
+      background: #22c55e22;
+    }
+    .composite-col.composite-letters .tpo-cell.row-spike {
+      color: var(--spike);
+      background: #ef444433;
+    }
+    .composite-col.composite-letters .tpo-cell.row-dual {
+      color: var(--dual);
+      background: #38bdf833;
+    }
+    .composite-col.composite-week .composite-head .day-meta {
+      color: #93c5fd;
+      font-size: 0.62rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .day-col.day-faded {
+      opacity: 0.3;
+      filter: saturate(0.65);
+    }
+    .day-col.day-faded .day-head { opacity: 0.95; }
+    .day-head-select { cursor: pointer; }
+    .day-head-select:hover { outline: 1px solid var(--accent); outline-offset: -1px; }
+    .day-col.day-range-sel .day-head {
+      background: #3b2a55cc !important;
+      box-shadow: inset 0 -2px 0 #a855f7;
+    }
+    .day-col.day-range-anchor .day-head {
+      background: #1e3a5fcc !important;
+      box-shadow: inset 0 -2px 0 #3b82f6;
+    }
+    .zoom-bar button.comp-btn.active {
+      background: #1d4ed8;
+      border-color: #60a5fa;
+      color: #fff;
+    }
+    .zoom-bar button.comp-btn-clear {
+      border-color: #7f1d1d;
+      color: #fca5a5;
+    }
+    .zoom-bar .composite-hint {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-left: 0.25rem;
+      max-width: 14rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Multi day-merge panel (toggle via 合併資訊; default collapsed) */
+    .zoom-bar button.merge-info-btn.active {
+      background: #5b21b6;
+      border-color: #c4b5fd;
+      color: #fff;
+    }
+    .merge-panel {
+      display: none;
+      margin: 0.2rem 0.5rem 0.35rem;
+      border: 1px solid #2d3a4f;
+      border-radius: 6px;
+      background: #0e1520ee;
+      max-width: 36rem;
+      box-shadow: 0 8px 28px #000a;
+    }
+    .merge-panel.is-open {
+      display: block;
+    }
+    .merge-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.35rem 0.55rem 0.25rem;
+    }
+    .merge-panel-title {
+      font-size: 0.72rem;
+      color: #c4b5fd;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .merge-panel .merge-count {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+    .merge-panel-collapse {
+      flex: 0 0 auto;
+      font-size: 0.68rem;
+      padding: 0.22rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid #7f1d1d;
+      background: #1f1218;
+      color: #fca5a5;
+      cursor: pointer;
+      touch-action: manipulation;
+      min-height: 1.75rem;
+    }
+    .merge-panel-collapse:hover { filter: brightness(1.1); }
+    .merge-panel-body {
+      padding: 0 0.55rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .merge-group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      max-height: 12rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .merge-empty {
+      font-size: 0.68rem;
+      color: var(--muted);
+      padding: 0.15rem 0;
+    }
+    .merge-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      padding: 0.32rem 0.35rem;
+      border-radius: 4px;
+      background: #121a26;
+    }
+    .merge-swatch {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 2px;
+      flex: 0 0 auto;
+      margin-top: 0.2rem;
+    }
+    .merge-lab-wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+    .merge-lab {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    .merge-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      color: #e2e8f0;
+      line-height: 1.4;
+      word-break: break-word;
+      margin-top: 0.1rem;
+    }
+    .merge-stat {
+      white-space: nowrap;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 3px;
+      padding: 0.08rem 0.35rem;
+    }
+    .merge-stats b {
+      color: #a5b4fc;
+      font-weight: 700;
+      margin-right: 0.15rem;
+    }
+    .axis-live {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 0;
+      z-index: 6;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+    .axis-live-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      border-top: 1.5px dashed #38bdf8;
+      opacity: 0.95;
+    }
+    .axis-live-tag {
+      position: absolute;
+      right: 2px;
+      top: 0;
+      transform: translateY(-50%);
+      background: #0ea5e9;
+      color: #0b1220;
+      font-weight: 800;
+      font-size: 10px;
+      line-height: 1.2;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      box-shadow: 0 0 0 1px #0284c7, 0 2px 6px #000a;
+      white-space: nowrap;
+    }
+    .merge-x {
+      flex: 0 0 auto;
+      border: 1px solid #4c1d3a;
+      background: #1f1218;
+      color: #fca5a5;
+      border-radius: 4px;
+      width: 1.65rem;
+      height: 1.65rem;
+      line-height: 1;
+      font-size: 0.95rem;
+      cursor: pointer;
+      padding: 0;
+      touch-action: manipulation;
+    }
+    .merge-x:hover { filter: brightness(1.15); }
+    .merge-panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .merge-panel-actions button {
+      font-size: 0.68rem;
+      padding: 0.28rem 0.55rem;
+      border-radius: 4px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      cursor: pointer;
+      touch-action: manipulation;
+      min-height: 1.85rem;
+    }
+    .merge-panel-actions button:hover { border-color: #60a5fa; }
+    .merge-panel-actions #btnClearDayMerges {
+      border-color: #7f1d1d;
+      color: #fca5a5;
+    }
+    .merge-panel-hint {
+      margin: 0;
+      font-size: 0.65rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .merge-c0 { --merge-accent: #a855f7; }
+    .merge-c1 { --merge-accent: #14b8a6; }
+    .merge-c2 { --merge-accent: #f43f5e; }
+    .merge-c3 { --merge-accent: #f59e0b; }
+    .merge-c4 { --merge-accent: #38bdf8; }
+    .merge-swatch.merge-c0 { background: #a855f7; }
+    .merge-swatch.merge-c1 { background: #14b8a6; }
+    .merge-swatch.merge-c2 { background: #f43f5e; }
+    .merge-swatch.merge-c3 { background: #f59e0b; }
+    .merge-swatch.merge-c4 { background: #38bdf8; }
+    .composite-col.composite-range.merge-c0 { border-color: #a855f788; }
+    .composite-col.composite-range.merge-c1 { border-color: #14b8a688; }
+    .composite-col.composite-range.merge-c2 { border-color: #f43f5e88; }
+    .composite-col.composite-range.merge-c3 { border-color: #f59e0b88; }
+    .composite-col.composite-range.merge-c4 { border-color: #38bdf888; }
+    .composite-col.composite-range.merge-c0 .composite-head { background: #1a1028ee; }
+    .composite-col.composite-range.merge-c1 .composite-head { background: #0a1f1cee; }
+    .composite-col.composite-range.merge-c2 .composite-head { background: #1f1014ee; }
+    .composite-col.composite-range.merge-c3 .composite-head { background: #1f180aee; }
+    .composite-col.composite-range.merge-c4 .composite-head { background: #0a1824ee; }
+    @media (max-width: 720px) {
+      .merge-panel { max-width: none; margin-left: 0.35rem; margin-right: 0.35rem; }
+      .zoom-bar .composite-hint { max-width: 9rem; }
+    }
+
+    /* Single-pin (isolated single-print) orphan highlights */
+    .profiles-row {
+      position: relative;
+    }
+    .single-pin-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 3;
+      overflow: visible;
+    }
+    .single-pin-bar {
+      position: absolute;
+      background: rgba(186, 150, 220, 0.35);
+      border: 1px solid rgba(186, 150, 220, 0.55);
+      border-radius: 1px;
+      box-sizing: border-box;
+      pointer-events: auto;
+      cursor: help;
+      z-index: 3;
+    }
+    .single-pin-bar:hover {
+      background: rgba(186, 150, 220, 0.55);
+      border-color: rgba(210, 180, 240, 0.9);
+    }
+    .single-pin-tip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 42;
+      display: none;
+      background: #1a1028ee;
+      border: 1px solid #c4a0e0aa;
+      color: #e7ecf3;
+      font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px #000a;
+      pointer-events: none;
+    }
+    .single-pin-tip.show { display: block; }
+    .single-pin-tip .sp-pts { color: #e9d5ff; }
+    .single-pin-tip .sp-date { color: #c4b5fd; }
+    .single-pin-tip .sp-sep { color: #8b9bb4; margin: 0 0.35rem; }
+
+
+    /* Settings collapse (mobile priority; works on desktop too) */
+    aside#settingsPane {
+      padding: 0; /* head sticks flush; body has its own padding */
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .settings-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      margin: 0;
+      padding: 0.7rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 6px 16px #0007;
+    }
+    .settings-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+    .settings-toggle {
+      width: auto;
+      flex-shrink: 0;
+      min-height: 2.5rem;
+      min-width: 4.2rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.88rem;
+      border-radius: 999px;
+      background: var(--accent);
+      border: 1px solid transparent;
+      color: #fff;
+      font-weight: 700;
+      touch-action: manipulation;
+      box-shadow: 0 2px 10px #0006;
+    }
+    .settings-toggle:hover {
+      filter: brightness(1.1);
+      color: #fff;
+    }
+    .settings-body {
+      padding: 0.35rem 1rem 1.1rem;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .settings-fab {
+      position: fixed;
+      z-index: 1000;
+      left: auto;
+      right: max(0.65rem, env(safe-area-inset-right));
+      bottom: auto;
+      top: max(0.65rem, env(safe-area-inset-top));
+      width: auto;
+      min-width: 3.6rem;
+      min-height: 2.75rem;
+      padding: 0.6rem 1.05rem;
+      border-radius: 999px;
+      background: var(--accent);
+      border: 1px solid transparent;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 6px 24px #000a, 0 0 0 1px #ffffff18 inset;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      touch-action: manipulation;
+      pointer-events: auto;
+    }
+    .settings-fab:hover { filter: brightness(1.1); }
+    .settings-fab.show {
+      display: inline-flex;
+    }
+    /* Expanded: FAB stays as always-reachable 「收起」 (esp. mobile) */
+    .settings-fab.is-collapse {
+      background: #b91c1c;
+      border-color: #fca5a5;
+      box-shadow: 0 6px 24px #000c, 0 0 0 1px #ffffff22 inset;
+    }
+    .layout.settings-collapsed aside {
+      display: none !important;
+    }
+    /* First paint / open: keep FAB above chart chrome */
+    .settings-fab.show {
+      z-index: 1000;
+      pointer-events: auto;
+    }
+    @media (max-width: 900px) {
+      .layout.settings-collapsed {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+      }
+      /* On phone, give settings more room so head+controls fit */
+      .layout:not(.settings-collapsed) {
+        grid-template-rows: minmax(220px, 48vh) 1fr;
+      }
+    }
+    @media (min-width: 901px) {
+      .layout.settings-collapsed {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    /* Legend info tips (POC / VA / Dual / Spike / IB / Single pin) */
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      cursor: help;
+      border-radius: 4px;
+      padding: 0.1rem 0.2rem;
+      margin: -0.1rem -0.2rem;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .legend-item:hover,
+    .legend-item:focus-visible,
+    .legend-item.is-tip-open {
+      color: var(--text);
+      background: #ffffff12;
+    }
+    .legend-item:focus-visible {
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .legend-tip {
+      position: fixed;
+      z-index: 500;
+      display: none;
+      max-width: min(22rem, calc(100vw - 1.5rem));
+      background: #0f1720f2;
+      border: 1px solid #3b82f6aa;
+      color: #e7ecf3;
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1.4;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px #000a;
+      pointer-events: none;
+      white-space: normal;
+    }
+    .legend-tip.show { display: block; }
+    .legend-tip .lt-name {
+      display: block;
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-bottom: 0.2rem;
+      color: #93c5fd;
+    }
+    .legend-tip .lt-body { color: #e7ecf3; }
+
+    .trend-badge b { color: #38bdf8; font-weight: 700; }
+
+    /*
+     * Mobile: unlock vertical scroll so users can swipe down to the trend pane.
+     * Root cause was body/layout locking to 100vh + 84px trend squeezed under HG.
+     * Keep HG ~first-screen tall; trend tall below; main scrolls. H-drag / pinch /
+     * sticky day-heads (inside profiles-scroll) / settings collapse unchanged.
+     */
+    @media (max-width: 900px) {
+      main {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+      }
+      .chart-stage {
+        flex: 0 0 auto;
+        min-height: auto;
+      }
+      .hg-wrap {
+        flex: 0 0 auto;
+        /* Fill most of the first screen; trend sits below the fold */
+        height: calc(100dvh - 10.5rem);
+        min-height: 58vh;
+        max-height: none;
+      }
+      .hg-wrap .profiles-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+      }
+      .trend-pane {
+        /* Usable amplitude when user scrolls down to it */
+        height: min(42vh, 280px);
+        min-height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TPO Letter Hourglass · 道指期貨 YM</h1>
+    <p>TV-style aligned TPO letter walls · Points=10 · Globex session <b>1700→1600</b> CT · CBOT_MINI:YM1!</p>
+  </header>
+  <div class="layout settings-collapsed" id="appLayout">
+    <aside id="settingsPane" aria-label="設定">
+      <div class="settings-head">
+        <span class="settings-title">設定</span>
+        <button type="button" id="btnCollapseSettings" class="settings-toggle" aria-expanded="true" title="收起設定" aria-controls="settingsPane">收起</button>
+      </div>
+      <div class="settings-body">
+      <label>Data source</label>
+      <select id="source">
+        <option value="auto" selected>Auto (Futu → TV → Yahoo)</option>
+        <option value="futu">Futu OpenD (HSIF)</option>
+        <option value="tv" selected>TradingView (CBOT_MINI:YM1!)</option>
+        <option value="yahoo">Yahoo (spot / US test)</option>
+      </select>
+
+      <label>Ticker / code</label>
+      <input id="symbol" value="YM1!" list="symbolHints" placeholder="CBOT_MINI:YM1!" />
+      <datalist id="symbolHints">
+        <option value="YM1!"></option>
+        <option value="CBOT_MINI:YM1!"></option>
+        <option value="^HSI"></option>
+        <option value="AAPL"></option>
+      </datalist>
+      <div class="chip-row">
+        <button type="button" class="chip" data-sym="YM1!" data-src="tv">YM</button>
+        <button type="button" class="chip" data-sym="CBOT_MINI:YM1!" data-src="tv">TV YM</button>
+        <button type="button" class="chip" data-sym="^HSI" data-src="yahoo">^HSI spot</button>
+      </div>
+
+      <label>Range (side-by-side · 12M / 6M / 3M / 1M)</label>
+      <div class="range-row" id="rangeRow">
+        <button type="button" class="range-btn" data-range="12m" title="~252 sessions">12M</button>
+        <button type="button" class="range-btn active" data-range="6m" title="~126 sessions">6M</button>
+        <button type="button" class="range-btn" data-range="3m" title="~63 sessions">3M</button>
+        <button type="button" class="range-btn" data-range="1m" title="~21 sessions">1M</button>
+      </div>
+      <input type="hidden" id="rangeMode" value="6m" />
+
+      <label>Session date (optional — Day mode / anchor)</label>
+      <input id="sessDate" type="date" />
+
+      <div class="row2">
+        <div>
+          <label>Session open (HHmm)</label>
+          <input id="sessOpen" value="1700" maxlength="4" />
+        </div>
+        <div>
+          <label>Session close (HHmm)</label>
+          <input id="sessClose" value="1600" maxlength="4" />
+        </div>
+      </div>
+      <label>Timezone</label>
+      <select id="tz">
+        <option value="Asia/Hong_Kong">Asia/Hong_Kong</option>
+        <option value="America/New_York">America/New_York</option>
+        <option value="America/Chicago" selected>America/Chicago</option>
+        <option value="UTC">UTC</option>
+        <option value="Exchange">Exchange / local</option>
+      </select>
+
+      <div class="row2">
+        <div>
+          <label>Points per level</label>
+          <input id="points" type="number" value="10" min="0.01" step="0.01" />
+        </div>
+        <div>
+          <label>TPO block (min)</label>
+          <input id="blockMin" type="number" value="30" min="5" max="120" step="5" />
+        </div>
+      </div>
+
+      <label>Alphabet</label>
+      <select id="alphabet">
+        <option value="hk" selected>HK-style (skip J/K, start D)</option>
+        <option value="classic">Classic A…Z a…z</option>
+      </select>
+      <label>First letter (HK)</label>
+      <input id="firstLetter" value="D" maxlength="1" />
+
+      <label>Value Area %</label>
+      <input id="vaPct" type="number" value="70" min="50" max="95" step="1" />
+
+      <label><input type="checkbox" id="alignPrices" checked style="width:auto;margin-right:0.35rem" /> Align price scale (TV-style shared bins — on for 12M/6M/3M/1M)</label>
+
+      <div class="btn-row">
+        <button type="button" id="btnFetch">Fetch &amp; build</button>
+        <button type="button" id="btnBuild" class="secondary">Rebuild</button>
+      </div>
+      <div id="srcNote" class="oknote"></div>
+      <p class="hint">
+        道指期貨 overnight Globex <b>1700→1600</b> CT（美中時間）。
+        <b>Shared price scale</b>: same Points=10 row across all days (like TV TPO).
+        Column width = that day’s max TPO prints. Zoom / Fit-all / <b>30d·60d</b>. &lt;50% = density HG silhouette. Crosshair/timeline = date + pts · bottom mid trend · right pad for latest. Virtualized.
+        Futu OpenD <code>127.0.0.1:11111</code> · TV cache / bridge / inbox.
+      </p>
+
+      <details class="fallback">
+        <summary>Fallback only — sample / upload / paste</summary>
+        <div class="btn-row" style="margin-top:0.5rem">
+          <button type="button" id="btnSample" class="secondary">Load sample CSV</button>
+          <button type="button" id="btnFile" class="secondary">Upload CSV…</button>
+          <input type="file" id="fileInput" accept=".csv,text/csv,text/plain" hidden />
+        </div>
+        <label>Paste CSV (last resort)</label>
+        <textarea id="csvText" placeholder="datetime,high,low&#10;..."></textarea>
+      </details>
+      </div><!-- /.settings-body -->
+    </aside>
+    <main>
+      <div class="main-chrome">
+      <div id="err" class="err"></div>
+      <div class="stats" id="stats"></div>
+      <div class="legend" id="legendBar" role="list">
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="poc"><i style="background:#f59e0b"></i>POC</span>
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="va"><i style="background:#22c55e"></i>Value Area</span>
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="ib"><i style="background:#a855f7"></i>IB range</span>
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="dual"><i style="background:#38bdf8"></i>Dual</span>
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="spike"><i style="background:#ef4444"></i>Spike</span>
+        <span class="legend-item" role="listitem" tabindex="0" data-tip-key="singlepin"><i style="background:rgba(186,150,220,0.85)"></i>Single pin</span>
+        <span>Same price = same row across days · scroll H/V</span>
+      </div>
+      <div class="legend-tip" id="legendTip" role="tooltip" aria-hidden="true">
+        <span class="lt-name"></span>
+        <span class="lt-body"></span>
+      </div>
+      <div class="zoom-bar" id="zoomBar">
+        <button type="button" id="btnZoomOut" title="Zoom out">−</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+        <button type="button" id="btnZoomIn" title="Zoom in">+</button>
+        <button type="button" id="btnZoomFit" title="Fit all loaded days &amp; price range">Fit all</button>
+        <button type="button" id="btnView30" title="Fit ~30 day columns in view">30d</button>
+        <button type="button" id="btnView60" title="Fit ~60 day columns in view">60d</button>
+        <button type="button" id="btnZoom100" title="Reset zoom">100%</button>
+        <button type="button" id="btnLatestDay" class="btn-latest-day" title="跳到最近一個交易日（保持當前 zoom）">最近日</button>
+        <button type="button" id="btnWeekHg" class="comp-btn" aria-pressed="false" title="週 TPO：合併當週交易日，日 HG 淡底">週 HG</button>
+        <button type="button" id="btnMonthHg" class="comp-btn" aria-pressed="false" title="月 TPO：合併當月全日，週淡底／日更淡">月 HG</button>
+        <button type="button" id="btnMergeInfo" class="comp-btn merge-info-btn" aria-pressed="false" title="顯示／收起日合併資訊（TPO／VA／POC）">合併資訊</button>
+        <button type="button" id="btnClearMerge" class="comp-btn-clear" hidden disabled title="清除週／月／手選合併">清除合併</button>
+        <span class="composite-hint" id="compositeHint">撳日期頭可合併連續日 · 可加多組</span>
+        <span class="hint-inline">Ctrl+wheel · 雙指縮放 · 30d/60d</span>
+      </div>
+      <div class="merge-panel" id="mergePanel" hidden>
+        <div class="merge-panel-head">
+          <span class="merge-panel-title">日合併 <span class="merge-count" id="mergeCount"></span></span>
+          <button type="button" id="btnCollapseMergePanel" class="merge-panel-collapse" title="收起合併資訊">收起</button>
+        </div>
+        <div class="merge-panel-body">
+          <div class="merge-group-list" id="mergeGroupList">
+            <div class="merge-empty">未有日合併組 · 撳兩個日期頭</div>
+          </div>
+          <div class="merge-panel-actions">
+            <button type="button" id="btnAddMergeGroup" title="開始選下一組連續日">加新組</button>
+            <button type="button" id="btnClearDayMerges" title="只清手選日合併（保留週／月）">清全部日合併</button>
+          </div>
+          <p class="merge-panel-hint" id="mergePanelHint">撳兩個日期頭選連續日；可加多組互唔重疊範圍</p>
+        </div>
+      </div>
+      </div>
+      <div class="chart-stage" id="chartStage">
+        <div class="hg-wrap" id="hgWrap">
+          <div class="profiles-scroll" id="profilesScroll">
+            <div class="profiles-row" id="profilesRow">
+              <div class="day-col single"><pre class="profile">Loading YM static snapshot…</pre></div>
+            </div>
+          </div>
+          <div class="crosshair-overlay" id="crosshairOverlay" aria-hidden="true">
+            <div class="ch-v" id="chV"></div>
+            <div class="ch-h" id="chH"></div>
+            <div class="ch-hud" id="chHud"><span class="ch-date">—</span><span class="ch-sep">·</span><span class="ch-pts">—</span></div>
+          </div>
+          <div class="single-pin-tip" id="singlePinTip" aria-hidden="true">
+            <span class="sp-pts">—</span><span class="sp-sep">·</span><span class="sp-date">—</span>
+          </div>
+
+        </div>
+        <div class="timeline" id="timeline">
+          <div class="timeline-inner" id="timelineInner"></div>
+          <div class="tl-readout" id="tlReadout">Date · <b>Pts</b></div>
+        </div>
+        <div class="trend-pane" id="trendPane" title="Session mid (H+L)/2">
+          <div class="trend-badge">Trend · <b>mid</b> (H+L)/2</div>
+          <canvas id="trendCanvas"></canvas>
+        </div>
+      </div>
+    </main>
+  </div>
+  <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
+  <script src="app.js?v=merge-panel-stats-2"></script>
+</body>
+</html>

@@ -477,11 +477,22 @@
       font-weight: 600;
     }
     .zoom-bar button:hover { border-color: var(--accent); }
-    .zoom-bar .zoom-label {
+    .zoom-bar .zoom-select {
+      width: auto;
+      min-width: 4.5rem;
       font-size: 0.75rem;
-      color: var(--muted);
-      min-width: 3.5rem;
-      text-align: center;
+      padding: 0.28rem 0.4rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .zoom-bar .zoom-select:hover { border-color: var(--accent); }
+    .zoom-bar .zoom-select:focus {
+      outline: none;
+      border-color: var(--accent);
     }
     .zoom-bar .hint-inline {
       font-size: 0.7rem;
@@ -1401,13 +1412,18 @@
         <span class="lt-body"></span>
       </div>
       <div class="zoom-bar" id="zoomBar">
-        <button type="button" id="btnZoomOut" title="Zoom out">−</button>
-        <span class="zoom-label" id="zoomLabel">100%</span>
-        <button type="button" id="btnZoomIn" title="Zoom in">+</button>
+        <button type="button" id="btnZoomOut" title="Zoom out (−5% / ≤10% 時 −2%）">−</button>
+        <select id="zoomSelect" class="zoom-select" title="Zoom preset" aria-label="Zoom">
+          <option value="10">10%</option>
+          <option value="25">25%</option>
+          <option value="50">50%</option>
+          <option value="75">75%</option>
+          <option value="100" selected>100%</option>
+        </select>
+        <button type="button" id="btnZoomIn" title="Zoom in (+5% / ≤10% 時 +2%）">+</button>
         <button type="button" id="btnZoomFit" title="Fit all loaded days &amp; price range">Fit all</button>
         <button type="button" id="btnView30" title="Fit ~30 day columns in view">30d</button>
         <button type="button" id="btnView60" title="Fit ~60 day columns in view">60d</button>
-        <button type="button" id="btnZoom100" title="Reset zoom">100%</button>
         <button type="button" id="btnLatestDay" class="btn-latest-day" title="跳到最近一個交易日（保持當前 zoom）">最近日</button>
         <button type="button" id="btnWeekHg" class="comp-btn" aria-pressed="false" title="週 TPO：合併當週交易日，日 HG 淡底">週 HG</button>
         <button type="button" id="btnMonthHg" class="comp-btn" aria-pressed="false" title="月 TPO：合併當月全日，週淡底／日更淡">月 HG</button>
@@ -1462,6 +1478,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=hist-180-1"></script>
+  <script src="app.js?v=zoom-select-1"></script>
 </body>
 </html>

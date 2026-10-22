@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
-"""Write lastClose onto baked TPO session profiles.
+"""Write session OHLC onto baked TPO profiles.
 
 lastClose is the close of the last 30m bar in that session — the same bar
 lastBarT already points at. The Pages price-axis tag and the newest-day
-trend footer read this field. Rows, POC, VA, and the hist CSV OHLC are
-left unchanged.
+trend footer read this field.
+
+open / high / low feed the letter-wall candle left of each HG column.
+The session window is the `barCount` bars ending at lastBarT (inclusive):
+that is the TPO session itself. On HSIF the CSV also contains a pre-open
+print just before the first 30m bar; barCount stops that print from
+becoming the session open. Open is the first bar's open, high/low are the
+window extremes, close is the last bar (stored as lastClose).
+
+Rows, POC, and VA are left unchanged. The hist CSV is not rewritten.
 
 Shared by the HSIF live 30m bake and the YM/NQ pages (same engine, different
 session clock and CSV timestamp column).
@@ -55,46 +63,83 @@ def bar_epoch_ms(stamp: str, tz: ZoneInfo) -> int:
     return int(t.timestamp() * 1000)
 
 
-def load_closes(hist: Path, time_col: str, tz_name: str) -> dict[int, float]:
+def load_bars(hist: Path, time_col: str, tz_name: str) -> list[dict]:
     tz = ZoneInfo(tz_name)
-    closes: dict[int, float] = {}
+    bars: list[dict] = []
     with hist.open(newline="") as f:
         for row in csv.DictReader(f):
-            closes[bar_epoch_ms(row[time_col], tz)] = float(row["close"])
-    return closes
+            bars.append(
+                {
+                    "ms": bar_epoch_ms(row[time_col], tz),
+                    "open": float(row["open"]),
+                    "high": float(row["high"]),
+                    "low": float(row["low"]),
+                    "close": float(row["close"]),
+                }
+            )
+    bars.sort(key=lambda b: b["ms"])
+    return bars
 
 
-def attach_last_close(profile: dict, close: float) -> None:
-    """Set lastClose beside lastBarT. Other profile fields stay put."""
+def session_ohlc(bars: list[dict], index_by_ms: dict[int, int], profile: dict) -> dict | None:
+    """OHLC of the TPO session: `barCount` bars ending at lastBarT."""
+    last = profile.get("lastBarT")
+    n = profile.get("barCount")
+    if not isinstance(n, int) or n < 1 or last not in index_by_ms:
+        return None
+    end = index_by_ms[last]
+    start = end - n + 1
+    if start < 0:
+        return None
+    window = bars[start : end + 1]
+    if len(window) != n or window[-1]["ms"] != last:
+        return None
+    high = max(b["high"] for b in window)
+    low = min(b["low"] for b in window)
+    open_ = window[0]["open"]
+    close = window[-1]["close"]
+    if not (low <= open_ <= high and low <= close <= high):
+        return None
+    return {"open": open_, "high": high, "low": low, "close": close}
+
+
+def attach_session_ohlc(profile: dict, ohlc: dict) -> None:
+    """Set open/high/low/lastClose beside lastBarT. Other fields stay put."""
     rebuilt: dict = {}
     for key, value in profile.items():
-        if key == "lastClose":
+        if key in ("open", "high", "low", "lastClose"):
             continue
         rebuilt[key] = value
         if key == "lastBarT":
-            rebuilt["lastClose"] = close
+            rebuilt["open"] = ohlc["open"]
+            rebuilt["high"] = ohlc["high"]
+            rebuilt["low"] = ohlc["low"]
+            rebuilt["lastClose"] = ohlc["close"]
     if "lastClose" not in rebuilt:
-        rebuilt["lastClose"] = close
+        rebuilt["open"] = ohlc["open"]
+        rebuilt["high"] = ohlc["high"]
+        rebuilt["low"] = ohlc["low"]
+        rebuilt["lastClose"] = ohlc["close"]
     profile.clear()
     profile.update(rebuilt)
 
 
 def bake_file(profiles_path: Path, hist_path: Path, time_col: str, tz_name: str) -> tuple[int, str, float]:
-    closes = load_closes(hist_path, time_col, tz_name)
+    bars = load_bars(hist_path, time_col, tz_name)
+    index_by_ms = {b["ms"]: i for i, b in enumerate(bars)}
     raw = profiles_path.read_text()
     data = json.loads(raw)
     profiles = data.get("profiles") or []
     missing = []
     for profile in profiles:
-        ms = profile.get("lastBarT")
-        close = closes.get(ms)
-        if close is None:
+        ohlc = session_ohlc(bars, index_by_ms, profile)
+        if ohlc is None:
             missing.append(str(profile.get("sessionId")))
             continue
-        attach_last_close(profile, close)
+        attach_session_ohlc(profile, ohlc)
     if missing:
         raise SystemExit(
-            f"{profiles_path}: no hist bar for lastBarT on {len(missing)} session(s): "
+            f"{profiles_path}: no session OHLC for {len(missing)} session(s): "
             + ", ".join(missing[:8])
         )
     text = json.dumps(data, ensure_ascii=True, separators=(",", ":"))
@@ -118,7 +163,10 @@ def main(argv: list[str]) -> None:
     for name in names:
         spec = PRESETS[name]
         n, sid, close = bake_file(spec["profiles"], spec["hist"], spec["time_col"], spec["tz"])
-        print(f"{name}: {n} sessions, {sid} lastClose={close} ({spec['profiles'].relative_to(ROOT)})")
+        print(
+            f"{name}: {n} sessions, {sid} lastClose={close} "
+            f"({spec['profiles'].relative_to(ROOT)})"
+        )
 
 
 if __name__ == "__main__":

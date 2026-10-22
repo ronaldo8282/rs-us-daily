@@ -143,6 +143,8 @@
   let crosshair = { sid: null, price: null, key: null, localX: 0, localY: 0, visible: false, step: 5, colIdx: null };
   // Press-drag on HG: vertical → adjust price level; horizontal pan → clear. Scroll also clears.
   let chDrag = null; // { pointerId, startX, startY, mode:'price'|'pan'|'track'|null, lockColIdx, lockSid, lockLocalX }
+  // P3: drag left price axis → zoomY only (TV-style). Auto-unlinks.
+  let yAxisDrag = null; // { pointerId, startY, zoomY0, anchorX, anchorY }
   let singlePinSegments = []; // { startIdx, endIdx, key, price, sid, step, extendsToPad }
 
   // Composite HG overlays: Day → Week → Month; custom multi-range exclusive with week/month
@@ -337,8 +339,12 @@
   }
 
   function fontPx() {
-    // Letter height follows Y; X drives column width separately
-    return Math.max(2, Math.min(13, 11 * zoomY));
+    // Letter height follows Y; X drives column width separately.
+    // No hard 13px ceiling (that froze visual stretch above ~118% zoomY).
+    // Keep slightly under rowH so glyphs sit inside the bin.
+    const rh = BASE_ROW_H * zoomY;
+    const target = 11 * zoomY;
+    return Math.max(2, Math.min(target, rh * 0.92));
   }
 
   function headH() {
@@ -2270,11 +2276,13 @@
       globalGrid ? viewH / (globalGrid.nBins * BASE_ROW_H) : 1
     );
     if (mode === "x") {
+      // Fit 闊 = X only; auto-unlink so height stays put
+      linkAxes = false;
       zoomX = fitX;
-      if (linkAxes) zoomY = fitX;
     } else if (mode === "y") {
+      // Fit 高 = Y only; auto-unlink so day column width stays put
+      linkAxes = false;
       zoomY = fitY;
-      if (linkAxes) zoomX = fitY;
     } else {
       // Fit both axes so all days + full price range are on screen
       const z = Math.min(fitX, fitY);
@@ -3182,22 +3190,30 @@
   const btnLatest = $("btnLatestDay");
   if (btnLatest) btnLatest.addEventListener("click", () => jumpToLatestTradingDay());
 
-  // Wheel: Ctrl/Cmd = both axes; Shift = X only (auto-unlink)
+  // Wheel: Ctrl/Cmd = both axes; Shift = X only (auto-unlink);
+  // bare wheel over left price axis = Y only (auto-unlink)
   $("profilesScroll").addEventListener(
     "wheel",
     (ev) => {
       const ctrl = ev.ctrlKey || ev.metaKey;
       const shift = ev.shiftKey;
-      if (!ctrl && !shift) return;
+      const onAxis =
+        ev.target &&
+        ev.target.closest &&
+        ev.target.closest(".price-axis");
+      if (!ctrl && !shift && !onAxis) return;
       ev.preventDefault();
       const factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
       const anchor = { clientX: ev.clientX, clientY: ev.clientY };
       if (ctrl) {
         // Overall zoom — both axes
         setZoomXY(zoomX * factor, zoomY * factor, anchor);
-      } else {
+      } else if (shift) {
         // Shift+wheel → X; unlink so Y stays put
         setZoomXY(zoomX * factor, null, Object.assign({ unlink: true }, anchor));
+      } else {
+        // Wheel on price axis → Y only (TV price-scale feel)
+        setZoomXY(null, zoomY * factor, Object.assign({ unlink: true }, anchor));
       }
     },
     { passive: false }
@@ -3310,6 +3326,84 @@
     );
   })();
 
+  // ---- P3: drag left price axis → continuous zoomY (TV-style) ----
+  // Convention (TradingView price scale):
+  //   drag UP on axis → expand price range on screen → smaller zoomY (壓扁 / denser bins)
+  //   drag DOWN on axis → enlarge bins → larger zoomY (拉長)
+  // Price under pointer stays anchored via setZoomXY clientY.
+  (function bindPriceAxisZoomY() {
+    const sc = $("profilesScroll");
+    if (!sc) return;
+    const SENS = 0.0075; // ln(zoom) per px; ~half-viewport drag ≈ 2× zoomY
+
+    function endYAxisDrag(ev) {
+      if (!yAxisDrag) return;
+      if (ev && ev.pointerId != null && yAxisDrag.pointerId !== ev.pointerId) return;
+      const el = sc.querySelector(".price-axis");
+      if (el && yAxisDrag.pointerId != null) {
+        try { el.releasePointerCapture(yAxisDrag.pointerId); } catch (_) {}
+        el.classList.remove("y-axis-dragging");
+      }
+      yAxisDrag = null;
+    }
+
+    sc.addEventListener(
+      "pointerdown",
+      (ev) => {
+        if (ev.pointerType === "mouse" && ev.button !== 0) return;
+        if (ev.isPrimary === false) return;
+        const ax =
+          ev.target && ev.target.closest && ev.target.closest(".price-axis");
+        if (!ax) return;
+        // Own the gesture — do not start crosshair / day-merge drag
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (chDrag) endChDrag(null);
+        hideCrosshair();
+        hideSinglePinTip();
+        yAxisDrag = {
+          pointerId: ev.pointerId,
+          startY: ev.clientY,
+          zoomY0: zoomY,
+          anchorX: ev.clientX,
+          anchorY: ev.clientY,
+        };
+        ax.classList.add("y-axis-dragging");
+        try { ax.setPointerCapture(ev.pointerId); } catch (_) {}
+      },
+      { passive: false, capture: true }
+    );
+
+    sc.addEventListener(
+      "pointermove",
+      (ev) => {
+        if (!yAxisDrag || ev.pointerId !== yAxisDrag.pointerId) return;
+        ev.preventDefault();
+        // dy > 0 (finger down) → larger zoomY (拉長); dy < 0 → 壓扁
+        const dy = ev.clientY - yAxisDrag.startY;
+        const next = yAxisDrag.zoomY0 * Math.exp(dy * SENS);
+        setZoomXY(null, next, {
+          unlink: true,
+          immediate: true,
+          clientX: yAxisDrag.anchorX,
+          clientY: yAxisDrag.anchorY,
+        });
+      },
+      { passive: false, capture: true }
+    );
+
+    sc.addEventListener("pointerup", endYAxisDrag, { capture: true, passive: true });
+    sc.addEventListener("pointercancel", endYAxisDrag, { capture: true, passive: true });
+
+    sc.addEventListener(
+      "touchmove",
+      (ev) => {
+        if (yAxisDrag && ev.cancelable) ev.preventDefault();
+      },
+      { passive: false }
+    );
+  })();
+
   $("fileInput").addEventListener("change", async (ev) => {
     const f = ev.target.files && ev.target.files[0];
     if (!f) return;
@@ -3374,6 +3468,7 @@
         if (ev.pointerType === "mouse" && ev.button !== 0) return;
         const t = ev.target;
         if (t && t.closest) {
+          if (t.closest(".price-axis")) return; // P3 Y-axis zoom owns this hit
           if (t.closest(".day-head-select")) return; // day-merge head taps
           if (t.closest("button, a, input, select, label, .merge-panel")) return;
         }

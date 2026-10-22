@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <script>window.TPO_STATIC=true;</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TPO Letter Hourglass MVP · HSIF</title>
@@ -325,6 +324,16 @@
       background: #0a0e14;
       border-right: 1px solid var(--border);
       box-shadow: 4px 0 12px #0008;
+      cursor: ns-resize;
+      touch-action: none; /* P3: vertical drag zooms Y, don't scroll */
+      user-select: none;
+    }
+    .price-axis.y-axis-dragging {
+      cursor: ns-resize;
+      background: #0c121c;
+    }
+    .price-axis .axis-body {
+      cursor: ns-resize;
     }
     .axis-head b { font-size: 0.72rem; }
     .axis-label {
@@ -1466,7 +1475,7 @@
         <button type="button" id="btnMergeInfo" class="comp-btn merge-info-btn" aria-pressed="false" title="顯示／收起日合併資訊（TPO／VA／POC）">合併資訊</button>
         <button type="button" id="btnClearMerge" class="comp-btn-clear" hidden disabled title="清除週／月／手選合併">清除合併</button>
         <span class="composite-hint" id="compositeHint">撳日期頭可合併連續日 · 可加多組</span>
-        <span class="hint-inline">Ctrl+wheel 整體 · Shift+wheel 闊 · 分軸時 +/-＝高 · 雙指縮放</span>
+        <span class="hint-inline">拖價軸＝高 · Ctrl+wheel 整體 · Shift+wheel 闊 · 分軸時 +/-＝高 · 雙指縮放</span>
       </div>
       <div class="merge-panel" id="mergePanel" hidden>
         <div class="merge-panel-head">
@@ -1514,6 +1523,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=zoom-xy-1"></script>
+  <script src="app.js?v=zoom-xy-2"></script>
 </body>
 </html>

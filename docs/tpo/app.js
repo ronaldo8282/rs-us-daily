@@ -39,6 +39,10 @@
       ".hg-candle-body.up{background:#22c55e}",
       ".hg-candle-body.down{background:#ef4444}",
       ".hg-candle-open{position:absolute;height:2px;margin-top:-1px;background:#f97316;z-index:2}",
+      ".hg-candle-open.down{background:#fde047}",
+      ".zoom-bar button.btn-candle{white-space:nowrap}",
+      ".zoom-bar button.btn-candle.active{border-color:#f97316;color:#fdba74;background:rgba(249,115,22,.14)}",
+      ".zoom-bar button.btn-candle[aria-pressed='false']{color:#94a3b8;border-color:#475569}",
       ".composite-col>.day-head,.composite-col .composite-head{margin:0}",
     ].join("");
     (document.head || document.documentElement).appendChild(style);
@@ -171,6 +175,24 @@
   // Composite HG overlays: Day → Week → Month; custom multi-range exclusive with week/month
   let weekHgOn = false;
   let monthHgOn = false;
+  // OHLC candle gutter left of each day/week/month HG. Default on; persisted
+  // like the other chrome toggles. "0" = hidden.
+  const HG_CANDLE_VIS_KEY = "tpo-hg-candle-visible";
+  function readStoredShowHgCandles() {
+    try {
+      const v = localStorage.getItem(HG_CANDLE_VIS_KEY);
+      if (v === "0") return false;
+      if (v === "1") return true;
+    } catch (_) {}
+    return true;
+  }
+  let showHgCandles = readStoredShowHgCandles();
+  // Load applies Fit-all + jump-to-latest once. Later zoom edits in this
+  // session must not be replaced by that default.
+  let userAdjustedZoom = false;
+  let initialViewApplied = false;
+  let initialViewTries = 0;
+  let initialJumpGen = 0;
   let rangeGroups = []; // [{ id, startIdx, endIdx }] completed day merges (non-overlapping)
   let rangeAnchorIdx = null; // first tap while selecting next group
   let rangeDraft = null; // { startIdx, endIdx } while selecting (may be single day)
@@ -394,6 +416,7 @@
   }
 
   function hgCandleGutter() {
+    if (!showHgCandles) return 0;
     return hgCandleMetrics().gutter;
   }
 
@@ -413,7 +436,8 @@
   /**
    * Session OHLC. Prefer baked open/high/low + lastClose (hist 30m window).
    * High/low fall back to price-row extremes when a snapshot has no bake.
-   * Open is required — a candle without the orange open line is omitted.
+   * Open is required — a candle without the open tick is omitted.
+   * Up candles keep an orange open tick; down candles use yellow.
    */
   function profileOhlc(profile) {
     if (!profile) return null;
@@ -488,11 +512,11 @@
   /**
    * One OHLC candle in the column gutter. Y uses the same bin scale as TPO
    * rows and the price axis: y = (maxKey - price/step) * rh.
-   * Body is solid green/red. Wicks are white. Open is an orange tick
-   * across the candle width.
+   * Body is solid green/red. Wicks are white. Open is an orange tick on
+   * green (up) candles and a yellow tick on red (down) candles.
    */
   function renderHgCandleHtml(ohlc, prevClose, grid, rh, step) {
-    if (!ohlc || !grid || !(rh > 0)) return "";
+    if (!showHgCandles || !ohlc || !grid || !(rh > 0)) return "";
     const m = hgCandleMetrics();
     const st = step > 0 ? step : grid.step || 1;
     if (!(st > 0)) return "";
@@ -508,6 +532,8 @@
     const bodyH = Math.max(1, Math.abs(yC - yO));
     const up = candleIsUp(ohlc, prevClose);
     const dir = up ? "up" : "down";
+    // Green candle: existing orange open. Red candle: yellow, not orange.
+    const openColor = up ? "#f97316" : "#fde047";
     const cx = m.body / 2;
     return (
       `<div class="hg-candle" style="width:${m.gutter}px" data-candle-dir="${dir}"` +
@@ -515,7 +541,7 @@
       ` aria-hidden="true">` +
       `<div class="hg-candle-wick" style="top:${wickTop}px;height:${wickH}px;left:${cx}px"></div>` +
       `<div class="hg-candle-body ${dir}" style="top:${bodyTop}px;height:${bodyH}px;left:0;width:${m.body}px"></div>` +
-      `<div class="hg-candle-open" style="top:${yO}px;left:0;width:${m.body}px"></div>` +
+      `<div class="hg-candle-open ${dir}" style="top:${yO}px;left:0;width:${m.body}px;background:${openColor}"></div>` +
       `</div>`
     );
   }
@@ -2611,6 +2637,9 @@
     const nextY = ny != null && isFinite(ny) ? clampZoom(ny) : zoomY;
     const changedX = Math.abs(nextX - prevX) > 1e-9;
     const changedY = Math.abs(nextY - prevY) > 1e-9;
+    // User zoom (buttons, wheel, pinch, axis drag, presets). The load-time
+    // Fit-all path writes zoomX/zoomY itself and does not come through here.
+    if ((changedX || changedY) && !opts.fromInitialView) userAdjustedZoom = true;
     if (!changedX && !changedY) {
       updateZoomLabel();
       return;
@@ -2715,6 +2744,7 @@
   }
 
   function setLinkAxes(on) {
+    userAdjustedZoom = true;
     linkAxes = !!on;
     if (linkAxes) {
       // Snap to shared value (geometric mean of current) so link feels intentional
@@ -2738,8 +2768,13 @@
     return Math.max(1, sum);
   }
 
-  /** mode: both | x | y — Fit 闊／高／Both */
-  function zoomFitAll(mode) {
+  /** mode: both | x | y — Fit 闊／高／Both
+   *  opts.initial: load default — does not count as a user zoom change.
+   *  opts.keepScroll: leave scroll for the caller (initial view then jumps).
+   *  opts.after: invoked on the frame after zoom is applied.
+   */
+  function zoomFitAll(mode, opts) {
+    opts = opts || {};
     mode = mode || (($("fitAxisSelect") && $("fitAxisSelect").value) || "both");
     if (!wantAlign()) {
       $("alignPrices").checked = true;
@@ -2750,6 +2785,7 @@
       scheduleRender();
       return;
     }
+    if (!opts.initial) userAdjustedZoom = true;
     const viewH = Math.max(120, sc.clientHeight - HEAD_H - 8);
     const viewW = Math.max(160, sc.clientWidth - AXIS_W - 8 - RIGHT_EDGE_PAD);
     const natW = naturalWidthForRange(0, sessionIds.length - 1);
@@ -2774,9 +2810,12 @@
     updateZoomLabel();
     scheduleRender();
     requestAnimationFrame(() => {
-      sc.scrollTop = 0;
-      sc.scrollLeft = 0;
+      if (!opts.keepScroll) {
+        sc.scrollTop = 0;
+        sc.scrollLeft = 0;
+      }
       scheduleRender();
+      if (typeof opts.after === "function") opts.after();
     });
   }
 
@@ -2881,6 +2920,7 @@
       scheduleRender();
       return;
     }
+    if (!opts.initial) userAdjustedZoom = true;
     fromIdx = Math.max(0, Math.min(fromIdx, sessionIds.length - 1));
     toIdx = Math.max(fromIdx, Math.min(toIdx, sessionIds.length - 1));
     // Reserve right-edge breathing room so newest columns aren't flush
@@ -2946,7 +2986,7 @@
     zoomFitDayRange(fromIdx, toIdx);
   }
 
-  /** Default load: day HG for the latest trading week (not Fit-all / not 60d). */
+  /** Fit the latest trading week. Not the load default (that is Fit-all + 最近日). */
   function zoomFitRecentWeek() {
     const range = latestWeekDayRange();
     if (!range) {
@@ -3002,6 +3042,36 @@
       }
       scheduleRender();
       requestAnimationFrame(() => flashDayColumn(sid));
+    });
+  }
+
+  /**
+   * Initial view, once per session: Fit-all scale (same as the Fit control,
+   * both axes) and then the same scroll as 「最近日」. Skipped once the user
+   * has changed zoom, so a later fetch/range change does not snap back.
+   */
+  function maybeApplyInitialView() {
+    if (initialViewApplied) return;
+    if (userAdjustedZoom) {
+      initialViewApplied = true;
+      return;
+    }
+    if (!sessionIds.length || profileById.size < sessionIds.length) return;
+    const sc = $("profilesScroll");
+    if (!sc || sc.clientWidth < 40 || sc.clientHeight < 40) {
+      if (initialViewTries++ < 90) requestAnimationFrame(() => maybeApplyInitialView());
+      return;
+    }
+    initialViewTries = 0;
+    initialViewApplied = true;
+    const jumpGen = initialJumpGen;
+    zoomFitAll("both", {
+      initial: true,
+      keepScroll: true,
+      after: () => {
+        if (userAdjustedZoom || jumpGen !== initialJumpGen) return;
+        jumpToLatestTradingDay();
+      },
     });
   }
 
@@ -3100,6 +3170,7 @@
         }, 16);
         return;
       }
+      maybeApplyInitialView();
     } catch (e) {
       console.error(e);
       showErr("Background fill: " + (e.message || e));
@@ -3110,6 +3181,13 @@
 
   async function fetchAndBuild(opts) {
     opts = opts || {};
+    // New data load may take the Fit-all + latest-day default again, until
+    // the user has changed zoom in this session.
+    if (!userAdjustedZoom) {
+      initialJumpGen++;
+      initialViewApplied = false;
+      initialViewTries = 0;
+    }
     showErr("");
     showSrcNote(STATIC_MODE ? "Loading static snapshot…" : "Loading…");
     const btn = $("btnFetch");
@@ -3178,8 +3256,8 @@
           .join(" · ")
       );
       scheduleRender();
-      // After first paint: day HG of the latest trading week (not Fit-all)
-      requestAnimationFrame(() => zoomFitRecentWeek());
+      // First load: Fit-all, then jump to the latest trading day.
+      requestAnimationFrame(() => maybeApplyInitialView());
 
       if (profileById.size < sessionIds.length) {
         setTimeout(fillOlder, 30);
@@ -3716,6 +3794,49 @@
     }
   });
 
+  function syncCandleToggleBtn() {
+    const btn = $("btnToggleCandle");
+    if (!btn) return;
+    const on = !!showHgCandles;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "藏蠟燭" : "顯蠟燭";
+    btn.title = on
+      ? "蠟燭顯示中 · 撳一下隱藏每欄左邊 OHLC 蠟燭（日／週／月）"
+      : "蠟燭已隱藏 · 撳一下顯示每欄左邊 OHLC 蠟燭（日／週／月）";
+    btn.setAttribute("aria-label", btn.title);
+    try {
+      document.documentElement.setAttribute("data-hg-candles", on ? "on" : "off");
+    } catch (_) {}
+  }
+
+  function setShowHgCandles(on) {
+    showHgCandles = !!on;
+    try {
+      localStorage.setItem(HG_CANDLE_VIS_KEY, showHgCandles ? "1" : "0");
+    } catch (_) {}
+    syncCandleToggleBtn();
+    scheduleRender();
+  }
+
+  function installCandleToggle() {
+    const bar = $("zoomBar");
+    if (!bar || $("btnToggleCandle")) {
+      syncCandleToggleBtn();
+      return;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "btnToggleCandle";
+    btn.className = "btn-candle";
+    const anchor = $("btnZoomFit");
+    if (anchor && anchor.parentElement === bar) anchor.insertAdjacentElement("afterend", btn);
+    else bar.insertBefore(btn, bar.firstChild);
+    btn.addEventListener("click", () => setShowHgCandles(!showHgCandles));
+    syncCandleToggleBtn();
+  }
+  installCandleToggle();
+
   function zoomStepAxisFromEvent(ev) {
     if (linkAxes) return "both";
     return ev && ev.shiftKey ? "x" : "y";
@@ -3816,6 +3937,7 @@
       "touchstart",
       (ev) => {
         if (ev.touches.length === 2) {
+          userAdjustedZoom = true;
           const m = midOf(ev.touches[0], ev.touches[1]);
           // Linked pinch uses geometric mean as start so both axes move together
           const z0 = Math.sqrt(Math.max(zoomX, 1e-6) * Math.max(zoomY, 1e-6));
@@ -3914,6 +4036,7 @@
         const ax =
           ev.target && ev.target.closest && ev.target.closest(".price-axis");
         if (!ax) return;
+        userAdjustedZoom = true;
         // Own the gesture — do not start crosshair / day-merge drag
         ev.preventDefault();
         ev.stopPropagation();
@@ -4207,6 +4330,9 @@
     }
   }
   window.addEventListener("resize", () => updateTrendChart(), { passive: true });
+  window.addEventListener("resize", () => {
+    if (!initialViewApplied) maybeApplyInitialView();
+  }, { passive: true });
 
 
 

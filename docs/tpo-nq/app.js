@@ -23,6 +23,8 @@
   const ZOOM_MIN = 0.02; // allow ~60 thin columns in a typical viewport
   const ZOOM_MAX = 2.5;
   const RIGHT_EDGE_PAD = 260; // blank space after newest day so latest HG is readable
+  // Reject a points-per-level that would build a multi-10k row price scale.
+  const MAX_POINT_BINS = 14000;
 
   // Candle gutter is painted by app.js so YM/NQ stay in sync via pack_us_pages
   // (the packer copies app.js, not each page's <style>).
@@ -48,6 +50,19 @@
     (document.head || document.documentElement).appendChild(style);
   }
   installHgCandleCss();
+  installCompactChromeCss();
+
+  // Stats stay one line; POC/VA chips stay visible when the info stack is collapsed.
+  function installCompactChromeCss() {
+    if (typeof document === "undefined" || document.getElementById("hg-stats-css")) return;
+    const style = document.createElement("style");
+    style.id = "hg-stats-css";
+    style.textContent = [
+      "#stats.stats{display:block;white-space:nowrap;overflow-x:auto;margin:0;padding:0.15rem 0;font-size:0.78rem;line-height:1.35;font-variant-numeric:tabular-nums}",
+      "#legendBar.legend-always{display:flex !important;margin-top:0.2rem}",
+    ].join("");
+    (document.head || document.documentElement).appendChild(style);
+  }
 
   // Static GitHub Pages mode: load bundled data/profiles.json (no Flask).
   const STATIC_MODE =
@@ -154,6 +169,10 @@
   // ---- state ----
   let sessionIds = []; // oldest → newest
   let profileById = new Map();
+  // Baked profiles (letter hi/lo). Points-per-level rebins from these, never from a previous step.
+  let sourceProfileById = new Map();
+  let appliedPointsStep = null;
+  let pointsApplyTimer = null;
   let lastMeta = null;
   let renderScheduled = false;
   let fillInFlight = false;
@@ -237,9 +256,18 @@
     if ($("alignPrices")) $("alignPrices").checked = true;
   }
 
+  function priceDecimals(step) {
+    const s = Math.abs(Number(step));
+    if (!(s > 0) || !isFinite(s)) return 0;
+    const scaled = Math.round(s * 10000) / 10000;
+    if (Math.abs(scaled - Math.round(scaled)) < 1e-9) return 0;
+    const text = String(scaled);
+    const dot = text.indexOf(".");
+    return dot < 0 ? 0 : Math.min(4, text.length - dot - 1);
+  }
+
   function fmtPrice(p, step) {
-    const decimals = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
-    return Number(p).toFixed(decimals);
+    return Number(p).toFixed(priceDecimals(step));
   }
 
   function escapeHtml(s) {
@@ -814,6 +842,277 @@
 
   function overscanCols(avgW) {
     return Math.max(OVERSCAN_MIN, Math.ceil(160 / Math.max(4, avgW || 40)));
+  }
+
+  // ---- points-per-level rebin (static bake + live profiles) ----
+  function stepsEqual(a, b) {
+    return Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b));
+  }
+
+  function currentPointsStep() {
+    const v = parseFloat($("points") && $("points").value);
+    if (isFinite(v) && v > 0) return v;
+    if (appliedPointsStep != null && appliedPointsStep > 0) return appliedPointsStep;
+    return 5;
+  }
+
+  function formatPt(step) {
+    const rounded = Math.round(Number(step) * 10000) / 10000;
+    if (!isFinite(rounded)) return "—";
+    return String(rounded);
+  }
+
+  function yymmddId(id) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(id || ""));
+    if (!m) return id ? String(id) : "—";
+    return m[1].slice(2) + m[2] + m[3];
+  }
+
+  function roundPriceKey(price, step) {
+    return Math.round(Number(price) / step);
+  }
+
+  function sessionExtremes(p) {
+    if (!p) return null;
+    let lo = Infinity;
+    let hi = -Infinity;
+    const low = finiteNum(p.low);
+    const high = finiteNum(p.high);
+    if (low != null) lo = low;
+    if (high != null) hi = high;
+    const letters = p.letters;
+    if (Array.isArray(letters)) {
+      for (let i = 0; i < letters.length; i++) {
+        const L = letters[i];
+        if (!L) continue;
+        if (L.lo != null && isFinite(L.lo) && L.lo < lo) lo = L.lo;
+        if (L.hi != null && isFinite(L.hi) && L.hi > hi) hi = L.hi;
+      }
+    }
+    if (!isFinite(lo) || !isFinite(hi)) return null;
+    return { lo: lo, hi: hi };
+  }
+
+  function estimateBinCount(step) {
+    if (!(step > 0) || !isFinite(step)) return Infinity;
+    let lo = Infinity;
+    let hi = -Infinity;
+    const ids = sessionIds.length ? sessionIds : Array.from(sourceProfileById.keys());
+    for (let i = 0; i < ids.length; i++) {
+      const p = sourceProfileById.get(ids[i]) || profileById.get(ids[i]);
+      const span = sessionExtremes(p);
+      if (!span) continue;
+      if (span.lo < lo) lo = span.lo;
+      if (span.hi > hi) hi = span.hi;
+    }
+    if (!isFinite(lo) || !isFinite(hi)) return 0;
+    return Math.abs(roundPriceKey(hi, step) - roundPriceKey(lo, step)) + 1 + 4;
+  }
+
+  function canRebinProfile(p) {
+    const letters = p && p.letters;
+    if (!Array.isArray(letters) || !letters.length) return false;
+    for (let i = 0; i < letters.length; i++) {
+      const L = letters[i];
+      if (L && L.letter && L.hi != null && L.lo != null && isFinite(L.hi) && isFinite(L.lo)) return true;
+    }
+    return false;
+  }
+
+  function summarizeTpoRows(rows) {
+    const maxC = Math.max.apply(
+      null,
+      rows.map((r) => r.count)
+    );
+    const mid = (rows[0].price + rows[rows.length - 1].price) / 2;
+    let poc = rows[0];
+    let bestDist = Infinity;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.count === maxC) {
+        const d = Math.abs(r.price - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          poc = r;
+        }
+      }
+    }
+    const totalTpo = rows.reduce((s, r) => s + r.count, 0);
+    const target = Math.ceil((totalTpo * vaPctValue()) / 100);
+    let pocIdx = rows.findIndex((r) => r.key === poc.key);
+    let vaTop = pocIdx;
+    let vaBot = pocIdx;
+    let acc = rows[pocIdx].count;
+    while (acc < target) {
+      const above = vaTop > 0 ? rows[vaTop - 1].count : -1;
+      const below = vaBot < rows.length - 1 ? rows[vaBot + 1].count : -1;
+      if (above < 0 && below < 0) break;
+      if (above >= below) {
+        vaTop -= 1;
+        acc += rows[vaTop].count;
+      } else {
+        vaBot += 1;
+        acc += rows[vaBot].count;
+      }
+    }
+    const dualKeys = [];
+    const threshold = Math.max(2, Math.floor(maxC * 0.7));
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (i === pocIdx || r.count < threshold) continue;
+      if (vaTop <= i && i <= vaBot) continue;
+      const lo = Math.min(i, pocIdx);
+      const hi = Math.max(i, pocIdx);
+      let minBetween = Infinity;
+      for (let j = lo + 1; j < hi; j++) minBetween = Math.min(minBetween, rows[j].count);
+      if (!isFinite(minBetween)) minBetween = 0;
+      if (minBetween < r.count * 0.6 && minBetween < maxC * 0.5) dualKeys.push(r.key);
+    }
+    const spikeKeys = [];
+    for (let i = 0; i < vaTop; i++) if (rows[i].count <= 2) spikeKeys.push(rows[i].key);
+    for (let i = vaBot + 1; i < rows.length; i++) if (rows[i].count <= 2) spikeKeys.push(rows[i].key);
+    return {
+      poc: poc,
+      vah: rows[vaTop],
+      val: rows[vaBot],
+      vaTop: vaTop,
+      vaBot: vaBot,
+      totalTpo: totalTpo,
+      dualKeys: dualKeys,
+      spikeKeys: spikeKeys,
+    };
+  }
+
+  /**
+   * Rebuild one session at `step` from each TPO letter's hi/lo.
+   * Same step as the bake returns the original object (OHLC and rows untouched).
+   * A new step places every letter on round(price/step) bins and recomputes POC/VA.
+   */
+  function profileForStep(source, step) {
+    if (!source || !(step > 0) || !isFinite(step)) return source;
+    const baked = Number(source.step);
+    if (isFinite(baked) && baked > 0 && stepsEqual(baked, step)) return source;
+    if (!canRebinProfile(source)) return source;
+    const byKey = new Map();
+    const letters = source.letters;
+    for (let i = 0; i < letters.length; i++) {
+      const L = letters[i];
+      if (!L || !L.letter || L.hi == null || L.lo == null) continue;
+      if (!isFinite(L.hi) || !isFinite(L.lo)) continue;
+      let k0 = roundPriceKey(L.lo, step);
+      let k1 = roundPriceKey(L.hi, step);
+      if (!isFinite(k0) || !isFinite(k1)) continue;
+      if (k0 > k1) {
+        const tmp = k0;
+        k0 = k1;
+        k1 = tmp;
+      }
+      if (k1 - k0 > MAX_POINT_BINS) k1 = k0 + MAX_POINT_BINS;
+      for (let k = k0; k <= k1; k++) {
+        let row = byKey.get(k);
+        if (!row) {
+          row = { key: k, price: k * step, letters: "", count: 0 };
+          byKey.set(k, row);
+        }
+        row.letters += L.letter;
+        row.count += 1;
+      }
+    }
+    const keys = Array.from(byKey.keys()).sort((a, b) => b - a);
+    const rows = keys.map((k) => byKey.get(k));
+    if (!rows.length) return source;
+    const stats = summarizeTpoRows(rows);
+    return Object.assign({}, source, stats, {
+      rows: rows,
+      step: step,
+      letterCount: letters.length,
+    });
+  }
+
+  function bakedStepFromSources() {
+    for (const src of sourceProfileById.values()) {
+      const baked = Number(src && src.step);
+      if (isFinite(baked) && baked > 0) return baked;
+    }
+    return null;
+  }
+
+  function clearPointsErr() {
+    const el = $("err");
+    if (!el) return;
+    const t = el.textContent || "";
+    if (t.indexOf("Points") >= 0 || t.indexOf("Pt =") >= 0) showErr("");
+  }
+
+  function rebindProfilesToStep(step) {
+    let stuck = 0;
+    const ids = sessionIds.length ? sessionIds : Array.from(sourceProfileById.keys());
+    for (let i = 0; i < ids.length; i++) {
+      const src = sourceProfileById.get(ids[i]);
+      if (!src) continue;
+      const baked = Number(src.step);
+      const same = isFinite(baked) && stepsEqual(baked, step);
+      if (!same && !canRebinProfile(src)) stuck++;
+      profileById.set(ids[i], profileForStep(src, step));
+    }
+    return stuck;
+  }
+
+  function applyPointsStep() {
+    const input = $("points");
+    if (!input) return;
+    const raw = parseFloat(input.value);
+    if (!isFinite(raw) || raw <= 0) {
+      showErr("Points per level 要係正數。");
+      if (appliedPointsStep != null) input.value = formatPt(appliedPointsStep);
+      return;
+    }
+    if (!sourceProfileById.size) {
+      appliedPointsStep = raw;
+      clearPointsErr();
+      return;
+    }
+    const bins = estimateBinCount(raw);
+    if (bins > MAX_POINT_BINS) {
+      showErr(
+        "Pt = " +
+          formatPt(raw) +
+          " 會有約 " +
+          bins +
+          " bins（上限 " +
+          MAX_POINT_BINS +
+          "）。請用大啲嘅 Points per level。"
+      );
+      if (appliedPointsStep != null) input.value = formatPt(appliedPointsStep);
+      return;
+    }
+    if (appliedPointsStep != null && stepsEqual(appliedPointsStep, raw) && profileById.size) {
+      clearPointsErr();
+      return;
+    }
+    const stuck = rebindProfilesToStep(raw);
+    if (stuck && stuck === sourceProfileById.size) {
+      showErr("呢個 snapshot 無 letter high/low，改唔到 Points per level。");
+      const back = appliedPointsStep != null ? appliedPointsStep : bakedStepFromSources();
+      if (back != null) {
+        input.value = formatPt(back);
+        rebindProfilesToStep(back);
+      }
+      return;
+    }
+    clearPointsErr();
+    appliedPointsStep = raw;
+    compositeCache.clear();
+    if (wantAlign() || compositeActive()) computeGlobalGrid();
+    scheduleRender();
+  }
+
+  function scheduleApplyPoints() {
+    if (pointsApplyTimer) clearTimeout(pointsApplyTimer);
+    pointsApplyTimer = setTimeout(() => {
+      pointsApplyTimer = null;
+      applyPointsStep();
+    }, 220);
   }
 
   // ---- shared price grid across loaded sessions ----
@@ -1529,7 +1828,9 @@
       "|" +
       (($("firstLetter") && $("firstLetter").value) || "D") +
       "|" +
-      vaPctValue();
+      vaPctValue() +
+      "|pt" +
+      currentPointsStep();
     if (compositeCache.has(cacheKey)) return compositeCache.get(cacheKey);
 
     const alphabet = buildAlphabetList();
@@ -2394,13 +2695,7 @@
     hideSinglePinTip();
     hideHgColTip();
     syncCompositeButtons();
-    updateStats(null);
-    const ms = (performance.now() - tRender0).toFixed(0);
-    const st = $("stats");
-    if (st) {
-      const extra = st.innerHTML ? " · " + st.innerHTML : "";
-      st.innerHTML = `${groups.length} ${kind === "month" ? "月" : "週"} HG · Render ${ms}ms${extra}`;
-    }
+    updateStats();
   }
 
   function virtualRenderAligned(tRender0) {
@@ -2574,36 +2869,36 @@
     updateStats(ms);
   }
 
-  function updateStats(renderMs) {
+  function updateStats() {
+    const el = $("stats");
+    if (!el) return;
     const loaded = profileById.size;
     const firstId = sessionIds[0] || "—";
     const lastId = sessionIds[sessionIds.length - 1] || "—";
     const lastP = profileById.get(lastId);
-    const step = lastP ? lastP.step : parseFloat($("points").value) || 5;
     const g = globalGrid;
-    $("stats").innerHTML = [
-      `<span><b>Days</b>${sessionIds.length}</span>`,
-      `<span><b>Loaded</b>${loaded}/${sessionIds.length}</span>`,
-      `<span><b>From</b>${firstId}</span>`,
-      `<span><b>To</b>${lastId}</span>`,
-      wantAlign() && g
-        ? `<span><b>Scale</b>${fmtPrice(g.minKey * g.step, step)}–${fmtPrice(
-            g.maxKey * g.step,
-            step
-          )} (${g.nBins} bins)</span>`
-        : `<span><b>Align</b>off</span>`,
-      linkAxes
-        ? `<span><b>Zoom</b>${Math.round(zoomX * 100)}%</span>`
-        : `<span><b>Zoom</b>闊${Math.round(zoomX * 100)}%·高${Math.round(zoomY * 100)}%</span>`,
-      lastP ? `<span><b>Latest POC</b>${fmtPrice(lastP.poc.price, step)}</span>` : "",
-      `<span><b>Points</b>${step}</span>`,
-      renderMs != null ? `<span><b>Render</b>${renderMs}ms</span>` : "",
-      lastMeta && lastMeta.timingMs
-        ? `<span><b>API</b>${lastMeta.timingMs.total}ms</span>`
-        : "",
-    ]
-      .filter(Boolean)
-      .join("");
+    const step = currentPointsStep();
+    const scaleStep = g && g.step ? g.step : step;
+    const parts = [
+      "From " + yymmddId(firstId) + " To " + yymmddId(lastId),
+      loaded + "/" + sessionIds.length,
+    ];
+    if (wantAlign() && g) {
+      parts.push(
+        "Scale " +
+          fmtPrice(g.minKey * scaleStep, scaleStep) +
+          "-" +
+          fmtPrice(g.maxKey * scaleStep, scaleStep) +
+          " (" +
+          g.nBins +
+          " bins)"
+      );
+    }
+    parts.push("Pt = " + formatPt(step));
+    if (lastP && lastP.poc && lastP.poc.price != null && isFinite(lastP.poc.price)) {
+      parts.push("Latest POC " + fmtPrice(lastP.poc.price, scaleStep));
+    }
+    el.textContent = parts.join(" ; ");
     updateZoomLabel();
   }
 
@@ -3112,8 +3407,22 @@
       sessionIds = payload.sessionIds.slice();
     }
     for (const p of payload.profiles || []) {
-      profileById.set(p.sessionId, p);
+      sourceProfileById.set(p.sessionId, p);
     }
+    let step = currentPointsStep();
+    const bins = estimateBinCount(step);
+    if (bins > MAX_POINT_BINS) {
+      const baked = bakedStepFromSources();
+      if (baked != null && !stepsEqual(baked, step)) {
+        step = baked;
+        if ($("points")) $("points").value = formatPt(baked);
+        showErr(
+          "Points per level 太細，已用返 snapshot 嘅 Pt = " + formatPt(baked) + "。"
+        );
+      }
+    }
+    rebindProfilesToStep(step);
+    appliedPointsStep = step;
     lastMeta = payload;
     if (wantAlign()) computeGlobalGrid();
   }
@@ -3196,6 +3505,7 @@
     try {
       profilesLoading = true;
       profileById = new Map();
+      sourceProfileById = new Map();
       compositeCache.clear();
       sessionIds = [];
       globalGrid = null;
@@ -4348,7 +4658,7 @@
     if (btnToggleChromeInfo) {
       btnToggleChromeInfo.setAttribute("aria-expanded", collapsed ? "false" : "true");
       btnToggleChromeInfo.textContent = collapsed ? "資訊" : "收起資訊";
-      btnToggleChromeInfo.title = collapsed ? "展開資訊（統計／圖例）" : "收起資訊";
+      btnToggleChromeInfo.title = collapsed ? "展開統計" : "收起統計";
     }
     if (persist) {
       try {
@@ -4686,6 +4996,30 @@
       if (compositeActive()) scheduleRender();
     });
   }
+  const pointsInput = $("points");
+  if (pointsInput) {
+    appliedPointsStep = currentPointsStep();
+    pointsInput.addEventListener("input", () => scheduleApplyPoints());
+    pointsInput.addEventListener("change", () => {
+      if (pointsApplyTimer) {
+        clearTimeout(pointsApplyTimer);
+        pointsApplyTimer = null;
+      }
+      applyPointsStep();
+    });
+  }
+
+  // POC / VA chips stay on screen when the stats strip is collapsed.
+  function pinLegendAlwaysVisible() {
+    const legend = $("legendBar");
+    const info = $("chromeInfo");
+    const tip = $("legendTip");
+    if (!legend || !info) return;
+    legend.classList.add("legend-always");
+    if (legend.parentElement === info) info.insertAdjacentElement("afterend", legend);
+    if (tip && tip.parentElement === info) legend.insertAdjacentElement("afterend", tip);
+  }
+  pinLegendAlwaysVisible();
 
   const scForSelect = $("profilesScroll");
   if (scForSelect) {

@@ -52,13 +52,16 @@
   installHgCandleCss();
   installCompactChromeCss();
 
-  // Stats stay one line; POC/VA chips stay visible when the info stack is collapsed.
+  // Stats are exactly two lines. POC/VA chips stay visible when the info stack is collapsed.
   function installCompactChromeCss() {
     if (typeof document === "undefined" || document.getElementById("hg-stats-css")) return;
     const style = document.createElement("style");
     style.id = "hg-stats-css";
     style.textContent = [
-      "#stats.stats{display:block;white-space:nowrap;overflow-x:auto;margin:0;padding:0.15rem 0;font-size:0.78rem;line-height:1.35;font-variant-numeric:tabular-nums}",
+      "#chromeInfo{min-width:0;max-width:100%}",
+      "#stats.stats{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0.08rem;width:100%;max-width:100%;min-width:0;margin:0;padding:0.12rem 0 0.18rem;font-size:0.78rem;line-height:1.35;font-variant-numeric:tabular-nums;white-space:normal;overflow:hidden}",
+      "#stats .stats-line{display:block;min-width:0;max-width:100%;line-height:1.35;overflow:hidden}",
+      "#stats .stats-line-text{display:inline-block;white-space:nowrap;line-height:1.35;max-width:none}",
       "#legendBar.legend-always{display:flex !important;margin-top:0.2rem}",
     ].join("");
     (document.head || document.documentElement).appendChild(style);
@@ -2879,12 +2882,12 @@
     const g = globalGrid;
     const step = currentPointsStep();
     const scaleStep = g && g.step ? g.step : step;
-    const parts = [
+    const line1 = [
       "From " + yymmddId(firstId) + " To " + yymmddId(lastId),
       loaded + "/" + sessionIds.length,
     ];
     if (wantAlign() && g) {
-      parts.push(
+      line1.push(
         "Scale " +
           fmtPrice(g.minKey * scaleStep, scaleStep) +
           "-" +
@@ -2894,12 +2897,95 @@
           " bins)"
       );
     }
-    parts.push("Pt = " + formatPt(step));
+    const line2 = ["Pt = " + formatPt(step)];
     if (lastP && lastP.poc && lastP.poc.price != null && isFinite(lastP.poc.price)) {
-      parts.push("Latest POC " + fmtPrice(lastP.poc.price, scaleStep));
+      line2.push("Latest POC " + fmtPrice(lastP.poc.price, scaleStep));
     }
-    el.textContent = parts.join(" ; ");
+    paintStatsLines(el, line1.join(" ; "), line2.join(" ; "));
     updateZoomLabel();
+  }
+
+  // Width of the strip the last time the two lines were fitted. -1 forces a fit.
+  let statsFitWidth = -1;
+
+  function paintStatsLines(el, rangeText, pointText) {
+    let rangeLine = el.querySelector(".stats-line-range");
+    let pointLine = el.querySelector(".stats-line-point");
+    if (!rangeLine || !pointLine) {
+      el.textContent = "";
+      rangeLine = document.createElement("div");
+      rangeLine.className = "stats-line stats-line-range";
+      const rangeSpan = document.createElement("span");
+      rangeSpan.className = "stats-line-text";
+      rangeLine.appendChild(rangeSpan);
+      pointLine = document.createElement("div");
+      pointLine.className = "stats-line stats-line-point";
+      const pointSpan = document.createElement("span");
+      pointSpan.className = "stats-line-text";
+      pointLine.appendChild(pointSpan);
+      el.appendChild(rangeLine);
+      el.appendChild(pointLine);
+    }
+    const rangeSpan = rangeLine.querySelector(".stats-line-text");
+    const pointSpan = pointLine.querySelector(".stats-line-text");
+    const changed = rangeSpan.textContent !== rangeText || pointSpan.textContent !== pointText;
+    if (changed) {
+      rangeSpan.textContent = rangeText;
+      pointSpan.textContent = pointText;
+    }
+    if (changed || statsFitWidth !== el.clientWidth) fitStatsLines();
+  }
+
+  // Keep each row on one line and fully visible. Both rows share one size.
+  function fitStatsLines() {
+    const root = $("stats");
+    if (!root) return;
+    const lines = root.querySelectorAll(".stats-line");
+    if (!lines.length) return;
+    if (root.clientWidth <= 0) {
+      statsFitWidth = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const span = lines[i].querySelector(".stats-line-text");
+        if (span) span.style.fontSize = "";
+      }
+      return;
+    }
+    const spans = [];
+    let ratio = 1;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const span = line.querySelector(".stats-line-text");
+      if (!span) continue;
+      span.style.fontSize = "";
+      const base = parseFloat(window.getComputedStyle(span).fontSize) || 12.5;
+      const avail = Math.max(0, line.clientWidth - 1);
+      const need = span.offsetWidth;
+      spans.push({ span: span, base: base });
+      if (avail > 0 && need > avail) ratio = Math.min(ratio, avail / need);
+    }
+    if (ratio < 1) {
+      for (let i = 0; i < spans.length; i++) {
+        const px = Math.max(6, spans[i].base * ratio);
+        spans[i].span.style.fontSize = (Math.round(px * 10) / 10) + "px";
+        spans[i].fitted = px;
+      }
+      let again = 1;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const span = line.querySelector(".stats-line-text");
+        if (!span) continue;
+        const avail = Math.max(0, line.clientWidth - 1);
+        const need = span.offsetWidth;
+        if (avail > 0 && need > avail + 0.5) again = Math.min(again, avail / need);
+      }
+      if (again < 1) {
+        for (let i = 0; i < spans.length; i++) {
+          const px = Math.max(6, (spans[i].fitted || spans[i].base) * again);
+          spans[i].span.style.fontSize = (Math.round(px * 10) / 10) + "px";
+        }
+      }
+    }
+    statsFitWidth = root.clientWidth;
   }
 
   function scrollToNewest() {
@@ -4643,6 +4729,7 @@
   window.addEventListener("resize", () => {
     if (!initialViewApplied) maybeApplyInitialView();
   }, { passive: true });
+  window.addEventListener("resize", () => fitStatsLines(), { passive: true });
 
 
 
@@ -4666,6 +4753,7 @@
       } catch (_) {}
     }
     requestAnimationFrame(() => {
+      try { fitStatsLines(); } catch (_) {}
       try { scheduleRender(); } catch (_) {}
       try { updateTrendChart(); } catch (_) {}
       try { window.dispatchEvent(new Event("resize")); } catch (_) {}

@@ -1534,23 +1534,23 @@
       <div id="err" class="err"></div>
       <div class="chrome-info-wrap info-collapsed" id="chromeInfoWrap">
         <div class="chrome-info-toolbar">
-          <button type="button" id="btnToggleChromeInfo" class="info-toggle" aria-expanded="false" aria-controls="chromeInfo" title="展開資訊（統計／圖例）">資訊</button>
+          <button type="button" id="btnToggleChromeInfo" class="info-toggle" aria-expanded="false" aria-controls="chromeInfo" title="展開統計">資訊</button>
         </div>
         <div class="chrome-info" id="chromeInfo">
           <div class="stats" id="stats"></div>
-          <div class="legend" id="legendBar" role="list">
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="poc"><i style="background:#f59e0b"></i>POC</span>
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="va"><i style="background:#22c55e"></i>Value Area</span>
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="ib"><i style="background:#a855f7"></i>IB range</span>
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="dual"><i style="background:#38bdf8"></i>Dual</span>
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="spike"><i style="background:#ef4444"></i>Spike</span>
-            <span class="legend-item" role="listitem" tabindex="0" data-tip-key="singlepin"><i style="background:rgba(186,150,220,0.85)"></i>Single pin</span>
-            <span>Same price = same row across days · scroll H/V</span>
-          </div>
-          <div class="legend-tip" id="legendTip" role="tooltip" aria-hidden="true">
-            <span class="lt-name"></span>
-            <span class="lt-body"></span>
-          </div>
+        </div>
+        <div class="legend legend-always" id="legendBar" role="list">
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="poc"><i style="background:#f59e0b"></i>POC</span>
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="va"><i style="background:#22c55e"></i>Value Area</span>
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="ib"><i style="background:#a855f7"></i>IB range</span>
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="dual"><i style="background:#38bdf8"></i>Dual</span>
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="spike"><i style="background:#ef4444"></i>Spike</span>
+          <span class="legend-item" role="listitem" tabindex="0" data-tip-key="singlepin"><i style="background:rgba(186,150,220,0.85)"></i>Single pin</span>
+          <span>Same price = same row across days · scroll H/V</span>
+        </div>
+        <div class="legend-tip" id="legendTip" role="tooltip" aria-hidden="true">
+          <span class="lt-name"></span>
+          <span class="lt-body"></span>
         </div>
       </div>
       <div class="zoom-bar" id="zoomBar">
@@ -1628,6 +1628,6 @@
     </main>
   </div>
   <button type="button" id="btnExpandSettings" class="settings-fab" aria-label="展開設定" title="展開設定">設定</button>
-  <script src="app.js?v=hg-candle-2"></script>
+  <script src="app.js?v=hg-stats-1"></script>
 </body>
 </html>

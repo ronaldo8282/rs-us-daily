@@ -69,9 +69,9 @@
         </div>
 
         <div class="flex items-center space-x-3">
-            <div class="hidden sm:flex items-center gap-2 text-xs font-mono bg-slate-800/80 px-3 py-1.5 rounded-md border border-borderCol text-slate-300">
+            <div class="flex items-center gap-2 text-xs font-mono bg-slate-800/80 px-3 py-1.5 rounded-md border border-borderCol text-slate-300">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>CFTC DATA: 2026 ACTIVE</span>
+                <span id="cftcDataStatus">CFTC DATA: LOADING</span>
             </div>
             <button id="openGithubModalBtn" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-900/40">
                 <i data-lucide="github" class="w-4 h-4"></i>
@@ -146,7 +146,7 @@
                             E-Mini S&P 500 (ES) - 持續部位歷史變化
                         </h2>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5">三方參與者連續 3 年真實合約淨部位 (Net Contracts) 與 0-100 COT 指標震盪器</p>
+                    <p class="text-xs text-slate-400 mt-0.5">官方 CFTC Legacy 期貨與選擇權合併報告的每週淨部位，以及 156 週 COT Index</p>
                 </div>
 
                 <!-- Contract Selector Dropdown -->
@@ -162,6 +162,8 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs" id="quickStatsRow">
                 <!-- Dynamic Chips -->
             </div>
+
+            <p id="seriesMissingNote" class="hidden text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2"></p>
 
             <!-- Upper Chart: Net Contracts (Hedgers vs Funds vs Retail) -->
             <div class="space-y-1">
@@ -180,7 +182,7 @@
             <div class="space-y-1 pt-2">
                 <div class="flex justify-between items-center text-xs font-semibold text-slate-300">
                     <span class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> 3-Year Rolling COT Index 震盪指標 (0 - 100)
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> 156 週 COT Index 震盪指標 (0 - 100)
                     </span>
                     <span class="text-[11px] text-amber-400 font-mono">紅虛線 ≥ 80 超買 | 綠虛線 ≤ 20 超賣</span>
                 </div>
@@ -194,7 +196,7 @@
 
     <!-- Footer -->
     <footer class="border-t border-borderCol bg-slate-900 px-4 py-4 text-center text-xs text-slate-500">
-        <p>CFTC Commitment of Traders (COT) Data Aggregator • Jason Shapiro CMR Methodology Implementation</p>
+        <p>CFTC Legacy Futures &amp; Options Combined • 156-week COT Index • Jason Shapiro CMR Methodology</p>
     </footer>
 
     <!-- GitHub Automation Instructions Modal -->
@@ -212,95 +214,28 @@
             </div>
 
             <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-300">
-                <!-- Step 1 -->
                 <div>
-                    <h4 class="font-bold text-blue-400 text-sm mb-1">步驟 1：建立 GitHub 儲存庫 (Repository)</h4>
-                    <p class="text-xs text-slate-400 mb-2">在 GitHub 建立一個名為 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">cot-market-report</code> 的公開 (Public) 專案。</p>
-                </div>
-
-                <!-- Step 2 -->
-                <div>
-                    <h4 class="font-bold text-blue-400 text-sm mb-1">步驟 2：建立自動抓取排程 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">.github/workflows/update_cot.yml</code></h4>
-                    <p class="text-xs text-slate-400 mb-2">CFTC 每週五下午公佈最新數據。此腳本將在每週六固定抓取並自動更新你的靜態網頁與數據 JSON：</p>
-                    <div class="relative">
-                        <pre class="bg-slate-950 p-3 rounded-lg text-xs font-mono overflow-x-auto text-emerald-400 border border-slate-800">
-name: Weekly CFTC COT Auto Update
-
-on:
-  schedule:
-    - cron: '0 8 * * 6' # 每週六 UTC 08:00 (台灣/香港 16:00)
-  workflow_dispatch:      # 支援手動一鍵執行
-
-permissions:
-  contents: write
-
-jobs:
-  update-cot:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Dependencies
-        run: |
-          pip install pandas requests
-
-      - name: Fetch CFTC Data & Regenerate JSON
-        run: |
-          python scripts/fetch_cftc.py
-
-      - name: Commit & Push Changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "actions@github.com"
-          git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated COT Data Update [skip ci]" && git push)
-                        </pre>
-                        <button onclick="copyToClipboard('yamlCode')" class="absolute top-2 right-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">複製 YAML</button>
-                    </div>
-                </div>
-
-                <!-- Step 3 -->
-                <div>
-                    <h4 class="font-bold text-blue-400 text-sm mb-1">步驟 3：下載官方數據的 Python 腳本 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">scripts/fetch_cftc.py</code></h4>
-                    <p class="text-xs text-slate-400 mb-2">使用官方公開文字檔案直接計算 156 週 (3年) COT 指標並輸出前端所讀取的 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">data/cot_data.json</code>：</p>
-                    <div class="relative">
-                        <pre class="bg-slate-950 p-3 rounded-lg text-xs font-mono overflow-x-auto text-sky-400 border border-slate-800">
-import urllib.request, zipfile, io, json, os
-import pandas as pd
-
-# CFTC 當年度綜合報告 (Futures & Options Combined)
-CFTC_URL = "https://www.cftc.gov/files/dea/history/com_fin_txt_2026.zip"
-
-def update():
-    resp = urllib.request.urlopen(CFTC_URL)
-    with zipfile.ZipFile(io.BytesIO(resp.read())) as z:
-        filename = z.namelist()[0]
-        with z.open(filename) as f:
-            df = pd.read_csv(f, low_memory=False)
-            
-    # 清洗資料 & 計算 156 週 Stochastic Index (0-100)
-    # 輸出成 index.html 可以直接 fetch 的 JSON 檔
-    os.makedirs("data", exist_ok=True)
-    print("COT Update Finished Successfully.")
-
-if __name__ == "__main__":
-    update()
-                        </pre>
-                    </div>
-                </div>
-
-                <!-- Step 4 -->
-                <div>
-                    <h4 class="font-bold text-blue-400 text-sm mb-1">步驟 4：啟用 GitHub Pages (全免費網頁託管)</h4>
+                    <h4 class="font-bold text-blue-400 text-sm mb-1">資料從哪裡來</h4>
                     <p class="text-xs text-slate-400 leading-relaxed">
-                        在你的 GitHub Repo 點擊 <strong>Settings → Pages</strong>，將 <em>Source</em> 設為 <strong>Deploy from a branch (main / root)</strong>。<br>
-                        你就可以獲得如 <code class="bg-slate-900 px-1 py-0.5 rounded text-emerald-400 font-mono">https://username.github.io/cot-market-report/</code> 的免費即時看板，每週自動保持最新狀態！
+                        本頁讀取 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">data/cot_history.json</code>。
+                        數字來自 CFTC 官網 Legacy「Futures and Options Combined」年度檔
+                        <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">deahistfoYYYY.zip</code>，
+                        由 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">scripts/fetch_cftc_cot.py</code> 計算 156 週 COT Index。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-blue-400 text-sm mb-1">每週六自動更新</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">.github/workflows/update_cot.yml</code>
+                        在每週六 08:00 UTC（週五 CFTC 公布之後）執行，也可用 workflow_dispatch 手動跑。
+                        工作流程只提交 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">docs/cot/data/</code>。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-blue-400 text-sm mb-1">頁面位置</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        GitHub Pages 從 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">docs/</code> 發布。
+                        這張看板在 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400 font-mono">/cot/</code>。
                     </p>
                 </div>
             </div>
@@ -315,127 +250,136 @@ if __name__ == "__main__":
 
     <!-- Data Generation & Interaction Logic -->
     <script>
-        // 1. Comprehensive Categories & Contracts Definition (Matching CMR Layout)
+        // Page layout only. Indexes and history come from data/cot_history.json.
         const CMR_DATA = {
             METALS: [
-                { id: 'COPPER', name: 'COPPER', ticker: 'HG', comm: 34, large: 68, small: 54 },
-                { id: 'GOLD', name: 'GOLD', ticker: 'GC', comm: 39, large: 60, small: 73 },
-                { id: 'PALLADIUM', name: 'PALLADIUM', ticker: 'PA', comm: 61, large: 39, small: 54 },
-                { id: 'PLATINUM', name: 'PLATINUM', ticker: 'PL', comm: 96, large: 31, small: 0 },
-                { id: 'SILVER', name: 'SILVER', ticker: 'SI', comm: 92, large: 7, small: 38 }
+                { id: 'COPPER', name: 'COPPER', ticker: 'HG' },
+                { id: 'GOLD', name: 'GOLD', ticker: 'GC' },
+                { id: 'PALLADIUM', name: 'PALLADIUM', ticker: 'PA' },
+                { id: 'PLATINUM', name: 'PLATINUM', ticker: 'PL' },
+                { id: 'SILVER', name: 'SILVER', ticker: 'SI' }
             ],
             GRAINS: [
-                { id: 'CORN', name: 'CORN', ticker: 'ZC', comm: 25, large: 72, small: 81 },
-                { id: 'SOYBEAN_MEAL', name: 'SOYBEAN MEAL', ticker: 'ZM', comm: 5, large: 95, small: 66 },
-                { id: 'SOYBEAN_OIL', name: 'SOYBEAN OIL', ticker: 'ZL', comm: 51, large: 46, small: 89 },
-                { id: 'SOYBEANS', name: 'SOYBEANS', ticker: 'ZS', comm: 6, large: 75, small: 34 },
-                { id: 'WHEAT', name: 'WHEAT', ticker: 'ZW', comm: 85, large: 13, small: 70 }
+                { id: 'CORN', name: 'CORN', ticker: 'ZC' },
+                { id: 'SOYBEAN_MEAL', name: 'SOYBEAN MEAL', ticker: 'ZM' },
+                { id: 'SOYBEAN_OIL', name: 'SOYBEAN OIL', ticker: 'ZL' },
+                { id: 'SOYBEANS', name: 'SOYBEANS', ticker: 'ZS' },
+                { id: 'WHEAT', name: 'WHEAT', ticker: 'ZW' }
             ],
             FIXED_INCOME: [
-                { id: '2Y_NOTES', name: '2-YEAR NOTES', ticker: 'ZT', comm: 11, large: 92, small: 22 },
-                { id: '5Y_NOTES', name: '5-YEAR NOTES', ticker: 'ZF', comm: 8, large: 92, small: 26 },
-                { id: '10Y_NOTES', name: '10-YEAR NOTES', ticker: 'ZN', comm: 84, large: 22, small: 26 },
-                { id: '30Y_BONDS', name: '30-YEAR BONDS', ticker: 'ZB', comm: 70, large: 41, small: 7 }
+                { id: '2Y_NOTES', name: '2-YEAR NOTES', ticker: 'ZT' },
+                { id: '5Y_NOTES', name: '5-YEAR NOTES', ticker: 'ZF' },
+                { id: '10Y_NOTES', name: '10-YEAR NOTES', ticker: 'ZN' },
+                { id: '30Y_BONDS', name: '30-YEAR BONDS', ticker: 'ZB' }
             ],
             EQUITIES: [
-                { id: 'DOW', name: 'DOW JONES', ticker: 'YM', comm: 41, large: 60, small: 23 },
-                { id: 'NASDAQ', name: 'NASDAQ 100', ticker: 'NQ', comm: 13, large: 85, small: 78 },
-                { id: 'RUSSELL', name: 'RUSSELL 2000', ticker: 'RTY', comm: 65, large: 30, small: 97 },
-                { id: 'SP500', name: 'S&P 500', ticker: 'ES', comm: 74, large: 30, small: 57 }
+                { id: 'DOW', name: 'DOW JONES', ticker: 'YM' },
+                { id: 'NASDAQ', name: 'NASDAQ 100', ticker: 'NQ' },
+                { id: 'RUSSELL', name: 'RUSSELL 2000', ticker: 'RTY' },
+                { id: 'SP500', name: 'S&P 500', ticker: 'ES' }
             ],
             ENERGIES: [
-                { id: 'CRUDE_OIL', name: 'CRUDE OIL (WTI)', ticker: 'CL', comm: 70, large: 26, small: 43 },
-                { id: 'HEATING_OIL', name: 'HEATING OIL', ticker: 'HO', comm: 46, large: 60, small: 50 },
-                { id: 'NATURAL_GAS', name: 'NATURAL GAS', ticker: 'NG', comm: 100, large: 0, small: 49 },
-                { id: 'UNLEADED_GAS', name: 'UNLEADED GAS', ticker: 'RB', comm: 41, large: 55, small: 74 }
+                { id: 'CRUDE_OIL', name: 'CRUDE OIL (WTI)', ticker: 'CL' },
+                { id: 'HEATING_OIL', name: 'HEATING OIL', ticker: 'HO' },
+                { id: 'NATURAL_GAS', name: 'NATURAL GAS', ticker: 'NG' },
+                { id: 'UNLEADED_GAS', name: 'UNLEADED GAS', ticker: 'RB' }
             ],
             CURRENCIES: [
-                { id: 'DOLLAR_INDEX', name: '$ DOLLAR INDEX', ticker: 'DX', comm: 24, large: 75, small: 71 },
-                { id: 'AUD', name: 'AUSTRALIAN DOLLAR', ticker: '6A', comm: 100, large: 0, small: 50 },
-                { id: 'GBP', name: 'BRITISH POUND', ticker: '6B', comm: 95, large: 4, small: 22 },
-                { id: 'CAD', name: 'CANADIAN DOLLAR', ticker: '6C', comm: 54, large: 52, small: 16 },
-                { id: 'EUR', name: 'EURO FX', ticker: '6E', comm: 98, large: 2, small: 22 },
-                { id: 'JPY', name: 'JAPANESE YEN', ticker: '6J', comm: 27, large: 75, small: 43 },
-                { id: 'NZD', name: 'NEW ZEALAND DOLLAR', ticker: '6N', comm: 75, large: 24, small: 35 },
-                { id: 'CHF', name: 'SWISS FRANC', ticker: '6S', comm: 23, large: 92, small: 20 }
+                { id: 'DOLLAR_INDEX', name: '$ DOLLAR INDEX', ticker: 'DX' },
+                { id: 'AUD', name: 'AUSTRALIAN DOLLAR', ticker: '6A' },
+                { id: 'GBP', name: 'BRITISH POUND', ticker: '6B' },
+                { id: 'CAD', name: 'CANADIAN DOLLAR', ticker: '6C' },
+                { id: 'EUR', name: 'EURO FX', ticker: '6E' },
+                { id: 'JPY', name: 'JAPANESE YEN', ticker: '6J' },
+                { id: 'NZD', name: 'NEW ZEALAND DOLLAR', ticker: '6N' },
+                { id: 'CHF', name: 'SWISS FRANC', ticker: '6S' }
             ]
         };
 
-        // 2. Synthetic 3-Year Weekly Time Series Generator for realistic look
-        function generateTimeSeriesData(contract) {
-            const weeks = 156; // 3 years of weekly CFTC data
-            const labels = [];
-            const commNet = [];
-            const largeNet = [];
-            const smallNet = [];
-            const commIdx = [];
-            const largeIdx = [];
-            const smallIdx = [];
+        let cotHistory = null;
+        let loadFailure = null;
 
-            // Base scale parameters dependent on asset
-            let baseContracts = 200000;
-            if (contract.id.includes('500') || contract.id.includes('10Y')) baseContracts = 500000;
-            if (contract.id.includes('GOLD') || contract.id.includes('CRUDE')) baseContracts = 350000;
+        function eachContract(fn) {
+            Object.keys(CMR_DATA).forEach(cat => CMR_DATA[cat].forEach(fn));
+        }
 
-            const now = new Date(2026, 10, 1); // Nov 2026
-            
-            // Random walk seed initialization
-            let cPos = (contract.comm - 50) * (baseContracts / 40);
-            let lPos = -cPos * 0.85;
-            let sPos = -(cPos + lPos);
+        function markMissing(item, reason) {
+            item.missing = true;
+            item.comm = null;
+            item.large = null;
+            item.small = null;
+            item.series = null;
+            item.missingReason = reason;
+        }
 
-            for (let i = weeks; i >= 0; i--) {
-                const d = new Date(now);
-                d.setDate(d.getDate() - (i * 7));
-                labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+        function markAllMissing(message) {
+            loadFailure = message;
+            eachContract(item => markMissing(item, message));
+            const status = document.getElementById('cftcDataStatus');
+            if (status) status.textContent = 'CFTC DATA: UNAVAILABLE';
+        }
 
-                // Smooth drift
-                cPos += (Math.random() - 0.5) * (baseContracts * 0.05);
-                lPos += (Math.random() - 0.49) * (baseContracts * 0.045);
-                sPos = -(cPos + lPos) * (0.85 + Math.random() * 0.3);
+        function seriesFromRow(row) {
+            if (!row || !row.matched || !row.latest || !Array.isArray(row.labels) || row.labels.length === 0) {
+                return null;
+            }
+            const series = {
+                labels: row.labels,
+                commNet: row.comm_net,
+                largeNet: row.large_net,
+                smallNet: row.small_net,
+                commIdx: row.comm_idx,
+                largeIdx: row.large_idx,
+                smallIdx: row.small_idx
+            };
+            const width = series.labels.length;
+            const arrays = [series.commNet, series.largeNet, series.smallNet, series.commIdx, series.largeIdx, series.smallIdx];
+            if (arrays.some(values => !Array.isArray(values) || values.length !== width)) return null;
+            const latest = row.latest;
+            if (latest.comm !== series.commIdx[width - 1] || latest.large !== series.largeIdx[width - 1] || latest.small !== series.smallIdx[width - 1]) {
+                return null;
+            }
+            return series;
+        }
 
-                // Near the end (latest), ensure values align smoothly towards target index
-                if (i <= 4) {
-                    const progress = (5 - i) / 5;
-                    const targetC = (contract.comm - 50) * (baseContracts / 40);
-                    const targetL = (contract.large - 50) * (baseContracts / 40);
-                    cPos = cPos * (1 - progress) + targetC * progress;
-                    lPos = lPos * (1 - progress) + targetL * progress;
-                    sPos = -(cPos + lPos);
+        function applyCotHistory(payload) {
+            cotHistory = payload;
+            loadFailure = null;
+            const contracts = payload.contracts || {};
+            eachContract(item => {
+                const row = contracts[item.id];
+                const series = seriesFromRow(row);
+                if (!series) {
+                    markMissing(item, (row && row.reason) || '無 CFTC 對應');
+                    return;
                 }
+                item.missing = false;
+                item.comm = row.latest.comm;
+                item.large = row.latest.large;
+                item.small = row.latest.small;
+                item.series = series;
+                item.missingReason = '';
+                item.cftcMarket = row.cftc_market || '';
+            });
+            const status = document.getElementById('cftcDataStatus');
+            if (status) status.textContent = `CFTC DATA: ${payload.as_of || 'LOADED'}`;
+        }
 
-                commNet.push(Math.round(cPos));
-                largeNet.push(Math.round(lPos));
-                smallNet.push(Math.round(sPos));
-            }
+        async function loadCotHistory() {
+            const response = await fetch('data/cot_history.json', { cache: 'no-cache' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            applyCotHistory(await response.json());
+        }
 
-            // Calculate rolling 156-week stochastic index for each series
-            for (let i = 0; i < weeks + 1; i++) {
-                const windowStart = Math.max(0, i - 156);
-                
-                const cSlice = commNet.slice(windowStart, i + 1);
-                const lSlice = largeNet.slice(windowStart, i + 1);
-                const sSlice = smallNet.slice(windowStart, i + 1);
+        function seriesFor(contract) {
+            if (!contract || contract.missing || !contract.series) return null;
+            return contract.series;
+        }
 
-                const cMin = Math.min(...cSlice);
-                const cMax = Math.max(...cSlice);
-                const lMin = Math.min(...lSlice);
-                const lMax = Math.max(...lSlice);
-                const sMin = Math.min(...sSlice);
-                const sMax = Math.max(...sSlice);
-
-                const calcIdx = (val, min, max, targetFinal) => {
-                    if (i === weeks) return targetFinal; // Exact match to snapshot
-                    if (max === min) return 50;
-                    return Math.max(0, Math.min(100, Math.round(((val - min) / (max - min)) * 100)));
-                };
-
-                commIdx.push(calcIdx(commNet[i], cMin, cMax, contract.comm));
-                largeIdx.push(calcIdx(largeNet[i], lMin, lMax, contract.large));
-                smallIdx.push(calcIdx(smallNet[i], sMin, sMax, contract.small));
-            }
-
-            return { labels, commNet, largeNet, smallNet, commIdx, largeIdx, smallIdx };
+        function crowding(comm, large) {
+            if (large >= 85) return { text: '投機極大多 (警戒)', cls: 'text-red-400', signal: '⚠️ 投機多頭過熱 (尋找做空突破)', signalCls: 'text-rose-400' };
+            if (comm >= 85) return { text: '避險極大多 (看多)', cls: 'text-emerald-400', signal: '🔥 商業巨頭吸籌 (尋找做多突破)', signalCls: 'text-emerald-400' };
+            return { text: '常態區間', cls: 'text-slate-300', signal: '⚖️ 籌碼結構均衡 (順勢跟隨)', signalCls: 'text-slate-300' };
         }
 
         // State Management
@@ -481,9 +425,19 @@ if __name__ == "__main__":
         }
 
         // Render CMR Snapshot Bar Charts (Faithful to Screenshot)
+        function barColumn(value, labelClass, barClass) {
+            const height = Math.max(0, Math.min(100, Number(value)));
+            return `
+                <div class="flex-1 flex flex-col items-center h-full justify-end">
+                    <span class="text-[10px] font-mono font-bold ${labelClass} mb-0.5 leading-none">${value}</span>
+                    <div class="w-full ${barClass} rounded-t-sm transition-all duration-500" style="height: ${height}%; min-height: ${value === 0 ? '2px' : '0'};"></div>
+                </div>`;
+        }
+
         function renderSnapshotBars(categoryKey) {
             const list = CMR_DATA[categoryKey];
-            document.getElementById('currentCategoryTitle').innerText = `SNAPSHOT: ${categoryKey.replace('_', ' ')}`;
+            const asOf = cotHistory && cotHistory.as_of ? ` · ${cotHistory.as_of}` : '';
+            document.getElementById('currentCategoryTitle').innerText = `SNAPSHOT: ${categoryKey.replace('_', ' ')}${asOf}`;
             const container = document.getElementById('snapshotBarContainer');
             container.innerHTML = '';
 
@@ -498,43 +452,27 @@ if __name__ == "__main__":
                     updateDetailedCharts(item);
                 };
 
-                // Vertical Bar Chart Display matching CMR
+                const missingLabel = loadFailure ? '資料未載入' : '無 CFTC 對應';
+                const bars = item.missing
+                    ? `<div class="h-32 w-full flex items-center justify-center border-b border-dashed border-slate-700 text-[11px] text-amber-200/90">${missingLabel}</div>`
+                    : `<div class="h-32 w-full flex items-end justify-around gap-1.5 pt-4 pb-1 border-b border-slate-800 relative">
+                        ${barColumn(item.comm, 'text-red-400', 'bg-cotRed shadow-sm shadow-red-900/50')}
+                        ${barColumn(item.large, 'text-blue-400', 'bg-cotBlue shadow-sm shadow-blue-900/50')}
+                        ${barColumn(item.small, 'text-yellow-400', 'bg-cotYellow shadow-sm shadow-yellow-900/50')}
+                    </div>`;
+                const mood = item.missing
+                    ? { text: missingLabel, cls: 'text-amber-200/90' }
+                    : crowding(item.comm, item.large);
+
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
                         <span class="font-bold text-xs text-white tracking-wide truncate">${item.name}</span>
                         <span class="font-mono text-[10px] text-slate-400 bg-slate-800 px-1 rounded">${item.ticker}</span>
                     </div>
-
-                    <!-- 3-Bar Cluster Area -->
-                    <div class="h-32 w-full flex items-end justify-around gap-1.5 pt-4 pb-1 border-b border-slate-800 relative">
-                        <!-- Red: Commercials -->
-                        <div class="flex-1 flex flex-col items-center h-full justify-end group/bar">
-                            <span class="text-[10px] font-mono font-bold text-red-400 mb-0.5 leading-none">${item.comm}</span>
-                            <div class="w-full bg-cotRed rounded-t-sm transition-all duration-500 shadow-sm shadow-red-900/50" style="height: ${Math.max(4, item.comm)}%;"></div>
-                        </div>
-
-                        <!-- Blue: Large Spec -->
-                        <div class="flex-1 flex flex-col items-center h-full justify-end group/bar">
-                            <span class="text-[10px] font-mono font-bold text-blue-400 mb-0.5 leading-none">${item.large}</span>
-                            <div class="w-full bg-cotBlue rounded-t-sm transition-all duration-500 shadow-sm shadow-blue-900/50" style="height: ${Math.max(4, item.large)}%;"></div>
-                        </div>
-
-                        <!-- Yellow: Small Spec -->
-                        <div class="flex-1 flex flex-col items-center h-full justify-end group/bar">
-                            <span class="text-[10px] font-mono font-bold text-yellow-400 mb-0.5 leading-none">${item.small}</span>
-                            <div class="w-full bg-cotYellow rounded-t-sm transition-all duration-500 shadow-sm shadow-yellow-900/50" style="height: ${Math.max(4, item.small)}%;"></div>
-                        </div>
-                    </div>
-
-                    <!-- Quick sentiment hint -->
+                    ${bars}
                     <div class="mt-2 text-[10px] flex justify-between items-center text-slate-400">
                         <span>擁擠判定:</span>
-                        <span class="font-semibold ${
-                            item.large >= 85 ? 'text-red-400' : 
-                            item.comm >= 85 ? 'text-emerald-400' : 'text-slate-300'
-                        }">
-                            ${item.large >= 85 ? '投機極大多 (警戒)' : item.comm >= 85 ? '避險極大多 (看多)' : '常態區間'}
-                        </span>
+                        <span class="font-semibold ${mood.cls}">${mood.text}</span>
                     </div>
                 `;
                 container.appendChild(card);
@@ -551,7 +489,9 @@ if __name__ == "__main__":
                 CMR_DATA[cat].forEach(item => {
                     const opt = document.createElement('option');
                     opt.value = item.id;
-                    opt.innerText = `${item.name} (${item.ticker})`;
+                    opt.innerText = item.missing
+                        ? `${item.name} (${item.ticker}) — 無資料`
+                        : `${item.name} (${item.ticker})`;
                     if (item.id === currentContract.id) opt.selected = true;
                     optGroup.appendChild(opt);
                 });
@@ -581,49 +521,70 @@ if __name__ == "__main__":
         }
 
         // Render Quick Stats Row
+        function statCard(label, indexClass, indexValue, netValue) {
+            return `
+                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-[10px] block">${label}</span>
+                    <span class="text-base font-bold font-mono ${indexClass}">${indexValue} <span class="text-xs font-normal text-slate-400">/ 100</span></span>
+                    <span class="block text-[10px] text-slate-400 mt-0.5">淨持倉: <span class="font-mono text-slate-200">${netValue}</span> 口</span>
+                </div>`;
+        }
+
         function renderQuickStats(contract, latestData) {
             const container = document.getElementById('quickStatsRow');
+            if (!latestData) {
+                const message = loadFailure || contract.missingReason || '無 CFTC 對應';
+                container.innerHTML = `
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 col-span-2 sm:col-span-4">
+                        <span class="text-slate-400 text-[10px] block">CFTC</span>
+                        <span class="text-sm font-semibold text-amber-200">${message}</span>
+                    </div>`;
+                return;
+            }
             const lastIdx = latestData.labels.length - 1;
-
-            const cNet = latestData.commNet[lastIdx].toLocaleString();
-            const lNet = latestData.largeNet[lastIdx].toLocaleString();
-            const sNet = latestData.smallNet[lastIdx].toLocaleString();
-
+            const comm = latestData.commIdx[lastIdx];
+            const large = latestData.largeIdx[lastIdx];
+            const small = latestData.smallIdx[lastIdx];
+            const mood = crowding(comm, large);
             container.innerHTML = `
-                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span class="text-slate-400 text-[10px] block">Commercials (避險商業)</span>
-                    <span class="text-base font-bold font-mono text-cotRed">${contract.comm} <span class="text-xs font-normal text-slate-400">/ 100</span></span>
-                    <span class="block text-[10px] text-slate-400 mt-0.5">淨持倉: <span class="font-mono text-slate-200">${cNet}</span> 口</span>
-                </div>
-                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span class="text-slate-400 text-[10px] block">Large Speculators (大機構)</span>
-                    <span class="text-base font-bold font-mono text-cotBlue">${contract.large} <span class="text-xs font-normal text-slate-400">/ 100</span></span>
-                    <span class="block text-[10px] text-slate-400 mt-0.5">淨持倉: <span class="font-mono text-slate-200">${lNet}</span> 口</span>
-                </div>
-                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span class="text-slate-400 text-[10px] block">Small Speculators (散戶)</span>
-                    <span class="text-base font-bold font-mono text-cotYellow">${contract.small} <span class="text-xs font-normal text-slate-400">/ 100</span></span>
-                    <span class="block text-[10px] text-slate-400 mt-0.5">淨持倉: <span class="font-mono text-slate-200">${sNet}</span> 口</span>
-                </div>
+                ${statCard('Commercials (避險商業)', 'text-cotRed', comm, latestData.commNet[lastIdx].toLocaleString())}
+                ${statCard('Large Speculators (大機構)', 'text-cotBlue', large, latestData.largeNet[lastIdx].toLocaleString())}
+                ${statCard('Small Speculators (散戶)', 'text-cotYellow', small, latestData.smallNet[lastIdx].toLocaleString())}
                 <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col justify-center">
                     <span class="text-slate-400 text-[10px] block">CMR 反轉信號</span>
-                    <div class="text-xs font-bold mt-1 ${
-                        contract.large >= 85 ? 'text-rose-400' :
-                        contract.comm >= 85 ? 'text-emerald-400' : 'text-slate-300'
-                    }">
-                        ${
-                            contract.large >= 85 ? '⚠️ 投機多頭過熱 (尋找做空突破)' :
-                            contract.comm >= 85 ? '🔥 商業巨頭吸籌 (尋找做多突破)' : '⚖️ 籌碼結構均衡 (順勢跟隨)'
-                        }
-                    </div>
+                    <div class="text-xs font-bold mt-1 ${mood.signalCls}">${mood.signal}</div>
                 </div>
             `;
         }
 
         // Update Charts
+        function clearCharts() {
+            if (netChartInstance) {
+                netChartInstance.destroy();
+                netChartInstance = null;
+            }
+            if (oscillatorChartInstance) {
+                oscillatorChartInstance.destroy();
+                oscillatorChartInstance = null;
+            }
+        }
+
         function updateDetailedCharts(contract) {
-            document.getElementById('selectedMarketTitle').innerText = `${contract.name} (${contract.ticker}) - 持續持倉變化走勢 (3-Year Weekly)`;
-            const ts = generateTimeSeriesData(contract);
+            const note = document.getElementById('seriesMissingNote');
+            const ts = seriesFor(contract);
+            if (!ts) {
+                document.getElementById('selectedMarketTitle').innerText = `${contract.name} (${contract.ticker}) — 無 CFTC 對應`;
+                note.textContent = loadFailure || '此商品沒有對上的官方 CFTC 合約，沒有淨部位或 COT Index。';
+                note.classList.remove('hidden');
+                renderQuickStats(contract, null);
+                clearCharts();
+                return;
+            }
+            note.classList.add('hidden');
+            note.textContent = '';
+            const first = ts.labels[0];
+            const last = ts.labels[ts.labels.length - 1];
+            document.getElementById('selectedMarketTitle').innerText = `${contract.name} (${contract.ticker}) — ${first} 至 ${last}`;
             renderQuickStats(contract, ts);
 
             // Chart Defaults
@@ -786,45 +747,16 @@ if __name__ == "__main__":
             };
         }
 
-        function copyToClipboard(elementId) {
-            const text = `name: Weekly CFTC COT Auto Update
-on:
-  schedule:
-    - cron: '0 8 * * 6'
-  workflow_dispatch:
-permissions:
-  contents: write
-jobs:
-  update-cot:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pandas requests
-      - run: python scripts/fetch_cftc.py
-      - run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "actions@github.com"
-          git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated COT Data Update [skip ci]" && git push)`;
-            
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = '已複製！';
-            setTimeout(() => { btn.innerText = originalText; }, 1800);
+        async function boot() {
+            try {
+                await loadCotHistory();
+            } catch (err) {
+                markAllMissing('CFTC 資料載入失敗');
+            }
+            initApp();
         }
 
-        // Start
-        window.onload = initApp;
+        window.onload = boot;
     </script>
 </body>
 </html>

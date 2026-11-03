@@ -49,6 +49,9 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
+        .chart-type-btn {
+            touch-action: manipulation;
+        }
     </style>
 </head>
 <body class="bg-darkBg text-slate-100 font-sans min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
@@ -167,28 +170,42 @@
 
             <!-- Upper Chart: Net Contracts (Hedgers vs Funds vs Retail) -->
             <div class="space-y-1">
-                <div class="flex justify-between items-center text-xs font-semibold text-slate-300">
+                <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 text-xs font-semibold text-slate-300">
                     <span class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> 淨部位走勢 (Net Positions = Long - Short)
+                        <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span> 淨部位走勢 (Net Positions = Long - Short)
                     </span>
-                    <span class="text-slate-500 font-mono text-[11px]">單位：口數 (Contracts)</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="netChartTypeToggle" class="inline-flex rounded-lg border border-slate-600 bg-slate-950 p-1" role="group" aria-label="淨部位走勢圖表型式">
+                            <button type="button" data-chart-type="line" class="chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold bg-blue-600 text-white" aria-pressed="true">Line</button>
+                            <button type="button" data-chart-type="bar" class="chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold text-slate-300" aria-pressed="false">Bar</button>
+                        </div>
+                        <span class="text-slate-500 font-mono text-[11px]">單位：口數 (Contracts)</span>
+                    </div>
                 </div>
                 <div class="h-64 w-full bg-slate-900/60 rounded-lg p-2 border border-slate-800">
                     <canvas id="netPositionChart"></canvas>
                 </div>
+                <p id="netPriceNote" class="hidden text-[11px] leading-snug"></p>
             </div>
 
             <!-- Lower Chart: 0-100 Normalized COT Index Oscillator -->
             <div class="space-y-1 pt-2">
-                <div class="flex justify-between items-center text-xs font-semibold text-slate-300">
+                <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 text-xs font-semibold text-slate-300">
                     <span class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> 156 週 COT Index 震盪指標 (0 - 100)
+                        <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span> 156 週 COT Index 震盪指標 (0 - 100)
                     </span>
-                    <span class="text-[11px] text-amber-400 font-mono">紅虛線 ≥ 80 超買 | 綠虛線 ≤ 20 超賣</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="indexChartTypeToggle" class="inline-flex rounded-lg border border-slate-600 bg-slate-950 p-1" role="group" aria-label="COT Index 圖表型式">
+                            <button type="button" data-chart-type="line" class="chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold bg-blue-600 text-white" aria-pressed="true">Line</button>
+                            <button type="button" data-chart-type="bar" class="chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold text-slate-300" aria-pressed="false">Bar</button>
+                        </div>
+                        <span class="text-[11px] text-amber-400 font-mono">紅虛線 ≥ 80 超買 | 綠虛線 ≤ 20 超賣</span>
+                    </div>
                 </div>
-                <div class="h-44 w-full bg-slate-900/60 rounded-lg p-2 border border-slate-800">
+                <div class="h-56 w-full bg-slate-900/60 rounded-lg p-2 border border-slate-800">
                     <canvas id="cotIndexChart"></canvas>
                 </div>
+                <p id="indexPriceNote" class="hidden text-[11px] leading-snug"></p>
             </div>
         </section>
 
@@ -221,6 +238,7 @@
                         數字來自 CFTC 官網 Legacy「Futures and Options Combined」年度檔
                         <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">deahistfoYYYY.zip</code>，
                         由 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">scripts/fetch_cftc_cot.py</code> 計算 156 週 COT Index。
+                        柱狀圖右軸的報價線讀取 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">data/price_history.json</code>（Yahoo Finance 公開收盤，對齊報告日）。沒有報價的商品不畫那條線。
                     </p>
                 </div>
                 <div>
@@ -298,6 +316,8 @@
 
         let cotHistory = null;
         let loadFailure = null;
+        let priceHistory = null;
+        let priceLoadFailure = null;
 
         function eachContract(fn) {
             Object.keys(CMR_DATA).forEach(cat => CMR_DATA[cat].forEach(fn));
@@ -371,6 +391,22 @@
             applyCotHistory(await response.json());
         }
 
+        async function loadPriceHistory() {
+            try {
+                const response = await fetch('data/price_history.json', { cache: 'no-cache' });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const payload = await response.json();
+                if (!payload || typeof payload.contracts !== 'object' || !payload.contracts) {
+                    throw new Error('bad price payload');
+                }
+                priceHistory = payload;
+                priceLoadFailure = null;
+            } catch (err) {
+                priceHistory = null;
+                priceLoadFailure = '期貨報價未能載入';
+            }
+        }
+
         function seriesFor(contract) {
             if (!contract || contract.missing || !contract.series) return null;
             return contract.series;
@@ -387,6 +423,240 @@
         let currentContract = CMR_DATA['EQUITIES'][3]; // S&P 500 default
         let netChartInstance = null;
         let oscillatorChartInstance = null;
+        let netChartType = 'line';
+        let indexChartType = 'line';
+
+        // Zone fills sit behind the series. Dashed 80/20 guides are redrawn on top.
+        const cotIndexGuides = {
+            id: 'cotIndexGuides',
+            beforeDatasetsDraw(chart) {
+                const area = guideArea(chart);
+                if (!area) return;
+                const { ctx, chartArea, y80, y20 } = area;
+                const width = chartArea.right - chartArea.left;
+                ctx.save();
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.24)';
+                ctx.fillRect(chartArea.left, chartArea.top, width, Math.max(0, y80 - chartArea.top));
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+                ctx.fillRect(chartArea.left, y20, width, Math.max(0, chartArea.bottom - y20));
+                ctx.restore();
+            },
+            afterDatasetsDraw(chart) {
+                const area = guideArea(chart);
+                if (!area) return;
+                const { ctx, chartArea, y80, y20 } = area;
+                const guides = [
+                    { y: y80, color: 'rgba(239, 68, 68, 0.95)' },
+                    { y: y20, color: 'rgba(16, 185, 129, 0.95)' }
+                ];
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+                ctx.clip();
+                ctx.lineCap = 'butt';
+                guides.forEach(({ y, color }) => {
+                    ctx.beginPath();
+                    ctx.setLineDash([6, 4]);
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
+                    ctx.lineWidth = 4;
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.setLineDash([6, 4]);
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1.5;
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
+        };
+
+        function guideArea(chart) {
+            const { ctx, chartArea, scales } = chart;
+            const yScale = scales.y;
+            if (!ctx || !chartArea || !yScale || chartArea.right <= chartArea.left || chartArea.bottom <= chartArea.top) return null;
+            const clamp = (y) => Math.min(chartArea.bottom, Math.max(chartArea.top, y));
+            return {
+                ctx,
+                chartArea,
+                y80: clamp(yScale.getPixelForValue(80)),
+                y20: clamp(yScale.getPixelForValue(20))
+            };
+        }
+
+        function seriesVisual(type, color, lineWidth, lineDash) {
+            if (type === 'bar') {
+                return {
+                    backgroundColor: color,
+                    borderColor: color,
+                    borderWidth: 0
+                };
+            }
+            const visual = {
+                borderColor: color,
+                borderWidth: lineWidth,
+                pointRadius: 0,
+                tension: 0.2
+            };
+            if (lineDash) visual.borderDash = lineDash;
+            return visual;
+        }
+
+        function formatPrice(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n)) return '';
+            const abs = Math.abs(n);
+            const digits = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 10 ? 2 : abs >= 1 ? 3 : 5;
+            return n.toLocaleString(undefined, { maximumFractionDigits: digits });
+        }
+
+        function priceFor(contract, labels) {
+            const missing = (reason) => ({ ok: false, reason, prices: null, ticker: contract.ticker || '', symbol: '', kind: 'futures' });
+            if (!labels || !labels.length) return missing('期貨報價未能載入');
+            if (!priceHistory || !priceHistory.contracts) return missing(priceLoadFailure || '期貨報價未能載入');
+            const row = priceHistory.contracts[contract.id];
+            if (!row || row.ok === false || !Array.isArray(row.prices)) {
+                return missing((row && row.reason) || '此商品未能取得報價');
+            }
+            if (row.prices.length !== labels.length) return missing('報價日期對不上 COT 序列');
+            const prices = row.prices.map(value => {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : null;
+            });
+            const covered = prices.filter(value => value !== null).length;
+            if (covered < Math.min(8, labels.length)) return missing('此商品未能取得足夠報價');
+            const kind = row.kind === 'index' ? 'index' : 'futures';
+            return {
+                ok: true,
+                reason: '',
+                prices,
+                ticker: row.ticker || contract.ticker,
+                symbol: row.symbol || contract.ticker,
+                kind
+            };
+        }
+
+        function renderPriceNote(noteId, chartType, price) {
+            const el = document.getElementById(noteId);
+            if (!el) return;
+            if (chartType !== 'bar') {
+                el.textContent = '';
+                el.className = 'hidden text-[11px] leading-snug';
+                return;
+            }
+            if (price && price.ok) {
+                const kind = price.kind === 'index' ? '指數收盤' : '期貨收盤';
+                el.textContent = `右軸 ${price.symbol} ${kind} · Yahoo Finance · 對齊報告日`;
+                el.className = 'text-[11px] leading-snug text-slate-400 font-mono';
+                return;
+            }
+            el.textContent = `未疊加報價線：${(price && price.reason) || '此商品未能取得報價'}`;
+            el.className = 'text-[11px] leading-snug text-amber-200/90';
+        }
+
+        function hidePriceNotes() {
+            renderPriceNote('netPriceNote', 'line', null);
+            renderPriceNote('indexPriceNote', 'line', null);
+        }
+
+        function priceDataset(price) {
+            if (!price || !price.ok) return null;
+            const kind = price.kind === 'index' ? '指數' : '期貨';
+            return {
+                type: 'line',
+                label: `${price.ticker} ${kind}`,
+                data: price.prices,
+                yAxisID: 'yPrice',
+                priceSeries: true,
+                borderColor: '#e2e8f0',
+                backgroundColor: 'transparent',
+                borderWidth: 1.75,
+                pointRadius: 0,
+                tension: 0.15,
+                spanGaps: true,
+                fill: false,
+                order: 0
+            };
+        }
+
+        function priceBounds(prices) {
+            let min = Infinity;
+            let max = -Infinity;
+            prices.forEach(value => {
+                if (!Number.isFinite(value)) return;
+                if (value < min) min = value;
+                if (value > max) max = value;
+            });
+            if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+            const span = max - min;
+            const pad = span > 0 ? span * 0.08 : (Math.abs(min) * 0.05 || 1);
+            return { min: min - pad, max: max + pad };
+        }
+
+        function withPrice(datasets, scales, chartType, price) {
+            const overlay = chartType === 'bar' ? priceDataset(price) : null;
+            const bounds = overlay ? priceBounds(price.prices) : null;
+            if (!overlay || !bounds) return { datasets, scales };
+            return {
+                datasets: datasets.concat(overlay),
+                scales: Object.assign({}, scales, {
+                    yPrice: {
+                        type: 'linear',
+                        position: 'right',
+                        min: bounds.min,
+                        max: bounds.max,
+                        beginAtZero: false,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            maxTicksLimit: 4,
+                            font: { size: 9 },
+                            callback: value => formatPrice(value)
+                        }
+                    }
+                })
+            };
+        }
+
+        function tooltipLabel(context, suffix) {
+            const y = context.parsed ? context.parsed.y : null;
+            if (y === null || y === undefined || Number.isNaN(y)) return null;
+            if (context.dataset.priceSeries) return `${context.dataset.label}: ${formatPrice(y)}`;
+            if (suffix) return `${context.dataset.label}: ${Number(y).toLocaleString()} ${suffix}`;
+            return `${context.dataset.label}: ${y}`;
+        }
+
+        function syncChartTypeToggle(rootId, active) {
+            const root = document.getElementById(rootId);
+            if (!root) return;
+            root.querySelectorAll('[data-chart-type]').forEach(btn => {
+                const on = btn.dataset.chartType === active;
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                btn.className = on
+                    ? 'chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold bg-blue-600 text-white'
+                    : 'chart-type-btn min-h-11 min-w-16 px-3 rounded-md text-xs font-semibold text-slate-300';
+            });
+        }
+
+        function syncChartTypeToggles() {
+            syncChartTypeToggle('netChartTypeToggle', netChartType);
+            syncChartTypeToggle('indexChartTypeToggle', indexChartType);
+        }
+
+        function bindChartTypeToggle(rootId, readType, writeType) {
+            const root = document.getElementById(rootId);
+            root.addEventListener('click', (event) => {
+                const btn = event.target.closest('[data-chart-type]');
+                if (!btn || !root.contains(btn)) return;
+                const next = btn.dataset.chartType === 'bar' ? 'bar' : 'line';
+                if (next === readType()) return;
+                writeType(next);
+                syncChartTypeToggles();
+                updateDetailedCharts(currentContract);
+            });
+        }
 
         // Initialize UI
         function initApp() {
@@ -577,6 +847,7 @@
                 note.textContent = loadFailure || '此商品沒有對上的官方 CFTC 合約，沒有淨部位或 COT Index。';
                 note.classList.remove('hidden');
                 renderQuickStats(contract, null);
+                hidePriceNotes();
                 clearCharts();
                 return;
             }
@@ -586,6 +857,9 @@
             const last = ts.labels[ts.labels.length - 1];
             document.getElementById('selectedMarketTitle').innerText = `${contract.name} (${contract.ticker}) — ${first} 至 ${last}`;
             renderQuickStats(contract, ts);
+            const price = priceFor(contract, ts.labels);
+            renderPriceNote('netPriceNote', netChartType, price);
+            renderPriceNote('indexPriceNote', indexChartType, price);
 
             // Chart Defaults
             Chart.defaults.color = '#94a3b8';
@@ -595,37 +869,46 @@
             const ctxNet = document.getElementById('netPositionChart').getContext('2d');
             if (netChartInstance) netChartInstance.destroy();
 
+            const netSeries = withPrice([
+                {
+                    label: 'Commercials (商業對沖)',
+                    data: ts.commNet,
+                    order: 1,
+                    ...seriesVisual(netChartType, '#ef4444', 1.8)
+                },
+                {
+                    label: 'Large Speculators (大型投機客)',
+                    data: ts.largeNet,
+                    order: 1,
+                    ...seriesVisual(netChartType, '#3b82f6', 1.8)
+                },
+                {
+                    label: 'Small Speculators (散戶投資人)',
+                    data: ts.smallNet,
+                    order: 1,
+                    ...seriesVisual(netChartType, '#eab308', 1.2, [3, 2])
+                }
+            ], {
+                x: {
+                    stacked: false,
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 8, font: { size: 10 } }
+                },
+                y: {
+                    stacked: false,
+                    grid: { color: '#1e293b' },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: val => (val / 1000).toFixed(0) + 'k'
+                    }
+                }
+            }, netChartType, price);
+
             netChartInstance = new Chart(ctxNet, {
-                type: 'line',
+                type: netChartType,
                 data: {
                     labels: ts.labels,
-                    datasets: [
-                        {
-                            label: 'Commercials (商業對沖)',
-                            data: ts.commNet,
-                            borderColor: '#ef4444',
-                            borderWidth: 1.8,
-                            pointRadius: 0,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Large Speculators (大型投機客)',
-                            data: ts.largeNet,
-                            borderColor: '#3b82f6',
-                            borderWidth: 1.8,
-                            pointRadius: 0,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Small Speculators (散戶投資人)',
-                            data: ts.smallNet,
-                            borderColor: '#eab308',
-                            borderWidth: 1.2,
-                            pointRadius: 0,
-                            borderDash: [3, 2],
-                            tension: 0.2
-                        }
-                    ]
+                    datasets: netSeries.datasets
                 },
                 options: {
                     responsive: true,
@@ -634,32 +917,22 @@
                         mode: 'index',
                         intersect: false
                     },
+                    datasets: netChartType === 'bar' ? {
+                        bar: { maxBarThickness: 8, categoryPercentage: 0.8, barPercentage: 0.9 }
+                    } : {},
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: { boxWidth: 12, font: { size: 10 } }
                         },
                         tooltip: {
+                            filter: item => item.parsed && Number.isFinite(item.parsed.y),
                             callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} 口`;
-                                }
+                                label: context => tooltipLabel(context, '口')
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { maxTicksLimit: 8, font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { color: '#1e293b' },
-                            ticks: {
-                                font: { size: 10 },
-                                callback: val => (val / 1000).toFixed(0) + 'k'
-                            }
-                        }
-                    }
+                    scales: netSeries.scales
                 }
             });
 
@@ -667,36 +940,55 @@
             const ctxOsc = document.getElementById('cotIndexChart').getContext('2d');
             if (oscillatorChartInstance) oscillatorChartInstance.destroy();
 
+            const indexSeries = withPrice([
+                {
+                    label: 'Commercial Index',
+                    data: ts.commIdx,
+                    order: 1,
+                    ...seriesVisual(indexChartType, '#ef4444', 1.5)
+                },
+                {
+                    label: 'Large Spec Index',
+                    data: ts.largeIdx,
+                    order: 1,
+                    ...seriesVisual(indexChartType, '#3b82f6', 1.5)
+                },
+                {
+                    label: 'Small Spec Index',
+                    data: ts.smallIdx,
+                    order: 1,
+                    ...seriesVisual(indexChartType, '#eab308', 1)
+                }
+            ], {
+                x: {
+                    stacked: false,
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 8, font: { size: 10 } }
+                },
+                y: {
+                    stacked: false,
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        color: (ctx) => {
+                            if (ctx.tick.value === 80) return 'rgba(239, 68, 68, 0.4)';
+                            if (ctx.tick.value === 20) return 'rgba(16, 185, 129, 0.4)';
+                            return '#1e293b';
+                        }
+                    },
+                    ticks: {
+                        stepSize: 20,
+                        font: { size: 9 }
+                    }
+                }
+            }, indexChartType, price);
+
             oscillatorChartInstance = new Chart(ctxOsc, {
-                type: 'line',
+                type: indexChartType,
+                plugins: [cotIndexGuides],
                 data: {
                     labels: ts.labels,
-                    datasets: [
-                        {
-                            label: 'Commercial Index',
-                            data: ts.commIdx,
-                            borderColor: '#ef4444',
-                            borderWidth: 1.5,
-                            pointRadius: 0,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Large Spec Index',
-                            data: ts.largeIdx,
-                            borderColor: '#3b82f6',
-                            borderWidth: 1.5,
-                            pointRadius: 0,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Small Spec Index',
-                            data: ts.smallIdx,
-                            borderColor: '#eab308',
-                            borderWidth: 1,
-                            pointRadius: 0,
-                            tension: 0.2
-                        }
-                    ]
+                    datasets: indexSeries.datasets
                 },
                 options: {
                     responsive: true,
@@ -705,33 +997,22 @@
                         mode: 'index',
                         intersect: false
                     },
+                    datasets: indexChartType === 'bar' ? {
+                        bar: { maxBarThickness: 8, categoryPercentage: 0.8, barPercentage: 0.9 }
+                    } : {},
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: { boxWidth: 10, font: { size: 9 } }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { maxTicksLimit: 8, font: { size: 10 } }
                         },
-                        y: {
-                            min: 0,
-                            max: 100,
-                            grid: {
-                                color: (ctx) => {
-                                    if (ctx.tick.value === 80) return 'rgba(239, 68, 68, 0.4)';
-                                    if (ctx.tick.value === 20) return 'rgba(16, 185, 129, 0.4)';
-                                    return '#1e293b';
-                                }
-                            },
-                            ticks: {
-                                stepSize: 20,
-                                font: { size: 9 }
+                        tooltip: {
+                            filter: item => item.parsed && Number.isFinite(item.parsed.y),
+                            callbacks: {
+                                label: context => tooltipLabel(context)
                             }
                         }
-                    }
+                    },
+                    scales: indexSeries.scales
                 }
             });
         }
@@ -745,14 +1026,19 @@
             modal.onclick = (e) => {
                 if (e.target === modal) modal.classList.add('hidden');
             };
+            bindChartTypeToggle('netChartTypeToggle', () => netChartType, (type) => { netChartType = type; });
+            bindChartTypeToggle('indexChartTypeToggle', () => indexChartType, (type) => { indexChartType = type; });
+            syncChartTypeToggles();
         }
 
         async function boot() {
+            const priceLoad = loadPriceHistory();
             try {
                 await loadCotHistory();
             } catch (err) {
                 markAllMissing('CFTC 資料載入失敗');
             }
+            await priceLoad;
             initApp();
         }
 

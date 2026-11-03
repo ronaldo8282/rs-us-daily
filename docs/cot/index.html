@@ -303,7 +303,7 @@
                         數字來自 CFTC 官網 Legacy「Futures and Options Combined」年度檔
                         <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">deahistfoYYYY.zip</code>，
                         由 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-slate-200 font-mono">scripts/fetch_cftc_cot.py</code> 計算 156 週 COT Index。
-                        柱狀圖右軸的報價線讀取 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">data/price_history.json</code>（Yahoo Finance 公開收盤，對齊報告日）。沒有報價的商品不畫那條線。
+                        淨部位柱狀圖與 156 週 COT Index（折線與柱狀）的右軸報價線讀取 <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">data/price_history.json</code>（Yahoo Finance 公開收盤，對齊報告日）。沒有報價的商品不畫那條線。
                     </p>
                 </div>
                 <div>
@@ -611,10 +611,10 @@
             };
         }
 
-        function renderPriceNote(noteId, chartType, price) {
+        function renderPriceNote(noteId, chartType, price, always) {
             const el = document.getElementById(noteId);
             if (!el) return;
-            if (chartType !== 'bar') {
+            if (!always && chartType !== 'bar') {
                 el.textContent = '';
                 el.className = 'hidden text-[11px] leading-snug';
                 return;
@@ -669,8 +669,8 @@
             return { min: min - pad, max: max + pad };
         }
 
-        function withPrice(datasets, scales, chartType, price) {
-            const overlay = chartType === 'bar' ? priceDataset(price) : null;
+        function withPrice(datasets, scales, chartType, price, always) {
+            const overlay = (always || chartType === 'bar') ? priceDataset(price) : null;
             const bounds = overlay ? priceBounds(price.prices) : null;
             if (!overlay || !bounds) return { datasets, scales };
             return {
@@ -958,24 +958,29 @@
         }
 
         function totalDataset(data) {
+            const green = '#4ade80';
             return {
                 type: 'line',
                 role: 'total',
                 label: '市場總淨倉',
                 data,
                 order: 1,
-                borderColor: '#f97316',
-                backgroundColor: 'transparent',
-                borderWidth: 2.25,
+                borderColor: green,
+                backgroundColor: green,
+                pointBackgroundColor: green,
+                pointBorderColor: green,
+                borderWidth: 3,
                 pointRadius: 0,
                 pointHoverRadius: 0,
                 tension: 0.15,
-                fill: false
+                fill: false,
+                showLine: true
             };
         }
 
-        function priceWillAttach(chartType, price) {
-            return chartType === 'bar' && !!(price && price.ok && priceBounds(price.prices));
+        function priceWillAttach(chartType, price, always) {
+            if (!(always || chartType === 'bar')) return false;
+            return !!(price && price.ok && priceBounds(price.prices));
         }
 
         function shapeKey(type, roles) {
@@ -990,7 +995,7 @@
 
         function indexRoles(chartType, price) {
             const roles = ['comm', 'large', 'small'];
-            if (priceWillAttach(chartType, price)) roles.push('price');
+            if (priceWillAttach(chartType, price, true)) roles.push('price');
             return roles;
         }
 
@@ -1005,10 +1010,10 @@
                     dataset.data = seriesByRole[dataset.role];
                 }
             });
-            if (priceWillAttach('bar', price)) {
-                const priceDs = chart.data.datasets.find(dataset => dataset.priceSeries);
+            const priceDs = chart.data.datasets.find(dataset => dataset.priceSeries);
+            if (priceDs && price && price.ok) {
                 const bounds = priceBounds(price.prices);
-                if (priceDs && bounds) {
+                if (bounds) {
                     priceDs.data = price.prices;
                     if (chart.options.scales.yPrice) {
                         chart.options.scales.yPrice.min = bounds.min;
@@ -1251,7 +1256,7 @@
                         font: { size: 9 }
                     }
                 }
-            }, indexChartType, price);
+            }, indexChartType, price, true);
 
             oscillatorChartInstance = new Chart(ctxOsc, {
                 type: indexChartType,
@@ -1308,7 +1313,7 @@
                 note.textContent = '';
                 renderQuickStats(contract, ts);
                 renderPriceNote('netPriceNote', netChartType, price);
-                renderPriceNote('indexPriceNote', indexChartType, price);
+                renderPriceNote('indexPriceNote', indexChartType, price, true);
                 Chart.defaults.color = '#94a3b8';
                 Chart.defaults.borderColor = '#1e293b';
             }

@@ -1,0 +1,51 @@
+# Weekly CFTC COT update for the Crowded Market Report.
+# The Legacy Futures and Options Combined report is released Friday afternoon
+# (15:30 America/New_York). Saturday 08:00 UTC is after that release.
+# Commits docs/cot/data only. Does not touch docs/tpo/data.
+name: Weekly CFTC COT update
+
+on:
+  schedule:
+    - cron: "0 8 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-cot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch official CFTC combined history
+        run: python scripts/fetch_cftc_cot.py
+
+      - name: Commit docs/cot/data only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- docs/cot/data
+          if git diff --cached --quiet; then
+            echo "No COT data changes"
+            exit 0
+          fi
+          while IFS= read -r path; do
+            case "$path" in
+              docs/cot/data/*) ;;
+              *)
+                echo "Refusing to commit path outside docs/cot/data: $path"
+                exit 1
+                ;;
+            esac
+          done < <(git diff --cached --name-only)
+          git commit -m "chore: weekly CFTC COT update"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push

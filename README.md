@@ -200,7 +200,7 @@ runs this after the Friday append step.
 
 ## GitHub Pages MVP
 
-Interactive Friday browser (no build step) with two tabs:
+Interactive Friday browser (no build step). Tags live in a collapsible left sidebar, default **expanded** (`localStorage` key `rs-us-daily.tag-sidebar`: `expanded` or `collapsed`): **Ranks**, **RS90–99**, **MM**, **XL**, **COT**. COT embeds the existing page `docs/cot/index.html` (data in `docs/cot/data/`).
 
 - Site root: `docs/index.html` (enable Pages: Settings → Pages → Deploy from branch `main` / folder `/docs`)
 - Suggested URL: https://ronaldo8282.github.io/rs-us-daily/

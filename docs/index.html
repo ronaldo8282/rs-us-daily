@@ -125,6 +125,10 @@
       margin: 0; padding: 0.65rem 0.9rem; font-size: 0.95rem;
       border-bottom: 1px solid var(--border); background: #243044;
     }
+    .count-window {
+      padding: 0.35rem 0.9rem; color: var(--muted); font-size: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
     .panel-block .empty {
       padding: 1rem; color: var(--muted); font-size: 0.9rem;
     }
@@ -333,10 +337,17 @@
     <div class="dash-grid">
       <div class="panel-block">
         <h2>Sector counts</h2>
+        <div id="sector-window" class="count-window"></div>
         <div class="table-scroll sm">
           <table>
             <thead>
-              <tr><th>Sector</th><th class="num">Count</th><th class="num">%</th></tr>
+              <tr>
+                <th>Sector</th>
+                <th class="num" title="Distinct Percentile ≥ 90 names in the previous window of the same length">Prior</th>
+                <th class="num" title="Distinct Percentile ≥ 90 names in the selected period">This</th>
+                <th class="num" title="This period minus prior period">Δ</th>
+                <th class="num" title="Share of this period">%</th>
+              </tr>
             </thead>
             <tbody id="sector-tbody"></tbody>
           </table>
@@ -344,10 +355,17 @@
       </div>
       <div class="panel-block">
         <h2>Industry counts</h2>
+        <div id="industry-window" class="count-window"></div>
         <div class="table-scroll sm">
           <table>
             <thead>
-              <tr><th>Industry</th><th class="num">Count</th><th class="num">%</th></tr>
+              <tr>
+                <th>Industry</th>
+                <th class="num" title="Distinct Percentile ≥ 90 names in the previous window of the same length">Prior</th>
+                <th class="num" title="Distinct Percentile ≥ 90 names in the selected period">This</th>
+                <th class="num" title="This period minus prior period">Δ</th>
+                <th class="num" title="Share of this period">%</th>
+              </tr>
             </thead>
             <tbody id="industry-tbody"></tbody>
           </table>
@@ -362,7 +380,13 @@
         <div class="table-scroll sm" id="adds-wrap">
           <table>
             <thead>
-              <tr><th>Ticker</th><th class="num">Pct</th><th>Sector</th><th>Industry</th></tr>
+              <tr>
+                <th>Ticker</th>
+                <th class="num">Pct</th>
+                <th class="num sortable wow-sort" id="adds-sort" data-wow="adds" title="Change in Percentile vs the previous Friday. Click to sort.">ΔRS</th>
+                <th>Sector</th>
+                <th>Industry</th>
+              </tr>
             </thead>
             <tbody id="adds-tbody"></tbody>
           </table>
@@ -374,7 +398,13 @@
         <div class="table-scroll sm" id="drops-wrap">
           <table>
             <thead>
-              <tr><th>Ticker</th><th class="num">Pct</th><th>Sector</th><th>Industry</th></tr>
+              <tr>
+                <th>Ticker</th>
+                <th class="num">Pct</th>
+                <th class="num sortable wow-sort" id="drops-sort" data-wow="drops" title="Change in Percentile vs the previous Friday. Click to sort.">ΔRS</th>
+                <th>Sector</th>
+                <th>Industry</th>
+              </tr>
             </thead>
             <tbody id="drops-tbody"></tbody>
           </table>
@@ -385,8 +415,9 @@
     <div class="wrap" style="padding-top:0">
       <p class="note">
         RS90–99 = Percentile ≥ 90 on the as-of Friday. Sector/Industry blank → <code>(unknown)</code>.
+        Sector and Industry tables count distinct RS≥90 names in the selected period (This) versus the prior window of the same length (Prior, Δ).
         MarketCap filter (default off) applies only when MarketCap is known; names with blank mcap stay included when filter is off.
-        WoW compares the as-of week to the previous Friday column in the file.
+        WoW adds/drops compare the as-of Friday to the previous Friday column. ΔRS is the change in Percentile; lists sort by the size of that change.
         Tickers open TradingView charts in a new tab.
       </p>
     </div>
@@ -514,6 +545,8 @@
   let rs90From = null;
   let rs90McapOnly = false;
   let customPeriod = false;
+  let wowSortAdds = "abs";
+  let wowSortDrops = "abs";
   const MCAP_MIN = 3e9;
 
   const statusEl = document.getElementById("status");
@@ -1070,41 +1103,141 @@
     if (rs90From) fromEl.value = rs90From;
   }
 
-  function countTable(map, total) {
-    const entries = [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  function priorPeriodDates(period) {
+    if (!pctsWide || !period.length) return [];
+    const dates = pctsWide.dates;
+    const startIdx = dates.indexOf(period[0]);
+    if (startIdx <= 0) return [];
+    const start = Math.max(0, startIdx - period.length);
+    return dates.slice(start, startIdx);
+  }
+
+  function windowLabel(dates, expectN) {
+    if (!dates.length) return "—";
+    const span = dates.length === 1 ? dates[0] : (dates[0] + " → " + dates[dates.length - 1]);
+    if (expectN != null && dates.length !== expectN) return span + " (" + dates.length + " cols)";
+    return span;
+  }
+
+  function periodCaption(period, prior) {
+    const tag = customPeriod ? "custom" : (rs90Weeks + "w");
+    const n = period.length;
+    return tag + " · this " + windowLabel(period, n) + " · prior " + windowLabel(prior, n);
+  }
+
+  function countsForWindow(dates) {
+    const seen = new Set();
+    const sec = new Map();
+    const ind = new Map();
+    for (const d of dates) {
+      const week = rs90Universe(d);
+      for (const t of week.keys()) {
+        if (seen.has(t)) continue;
+        seen.add(t);
+        const s = fundLabel(t, "Sector");
+        const iName = fundLabel(t, "Industry");
+        sec.set(s, (sec.get(s) || 0) + 1);
+        ind.set(iName, (ind.get(iName) || 0) + 1);
+      }
+    }
+    return { sec, ind };
+  }
+
+  function fmtCountDelta(n) {
+    const sign = n > 0 ? "+" : "";
+    const cls = n > 0 ? "up" : n < 0 ? "down" : "flat";
+    return { text: sign + n, cls };
+  }
+
+  function countCompareTable(currMap, priorMap) {
+    const names = new Set([...currMap.keys(), ...priorMap.keys()]);
+    let total = 0;
+    currMap.forEach(n => { total += n; });
+    const rows = [...names].map(name => {
+      const curr = currMap.get(name) || 0;
+      const prior = priorMap.get(name) || 0;
+      return { name, curr, prior, delta: curr - prior };
+    });
+    rows.sort((a, b) => b.curr - a.curr || Math.abs(b.delta) - Math.abs(a.delta) || a.name.localeCompare(b.name));
     const frag = document.createDocumentFragment();
-    for (const [name, n] of entries) {
+    for (const r of rows) {
+      const d = fmtCountDelta(r.delta);
+      const pct = total ? ((r.curr / total) * 100).toFixed(1) : "0.0";
       const tr = document.createElement("tr");
-      const pct = total ? ((n / total) * 100).toFixed(1) : "0.0";
       tr.innerHTML =
-        "<td>" + escapeHtml(name) + "</td>" +
-        '<td class="num">' + n + "</td>" +
+        "<td>" + escapeHtml(r.name) + "</td>" +
+        '<td class="num">' + r.prior + "</td>" +
+        '<td class="num">' + r.curr + "</td>" +
+        '<td class="num delta-cell ' + d.cls + '">' + d.text + "</td>" +
         '<td class="num">' + pct + "</td>";
       frag.appendChild(tr);
     }
     return frag;
   }
 
-  function listWow(tickers, pctMap, tbodyEl) {
-    const rows = tickers.map(t => ({
-      ticker: t,
-      pct: pctMap.get(t),
-      sector: fundLabel(t, "Sector"),
-      industry: fundLabel(t, "Industry"),
-    }));
-    rows.sort((a, b) => (b.pct ?? 0) - (a.pct ?? 0) || a.ticker.localeCompare(b.ticker));
+  function pctAt(ticker, week) {
+    if (!pctsWide || !week) return null;
+    const pv = pctsWide.map.get(ticker);
+    if (!pv) return null;
+    const p = pv[week];
+    if (p == null || isNaN(p)) return null;
+    return Number(p);
+  }
+
+  function fmtPctDelta(n) {
+    if (n == null || isNaN(n)) return { text: "—", cls: "flat" };
+    const sign = n > 0 ? "+" : "";
+    const cls = n > 0.05 ? "up" : n < -0.05 ? "down" : "flat";
+    return { text: sign + n.toFixed(1), cls };
+  }
+
+  function wowSortMark(mode) {
+    if (mode === "asc") return "ΔRS ↑";
+    if (mode === "desc") return "ΔRS ↓";
+    return "ΔRS |Δ|";
+  }
+
+  function listWow(tickers, tbodyEl, thisWeek, prevWeek, mode) {
+    const rows = tickers.map(t => {
+      const now = pctAt(t, thisWeek);
+      const prev = pctAt(t, prevWeek);
+      const delta = (now != null && prev != null) ? now - prev : null;
+      return {
+        ticker: t,
+        pct: mode === "adds" ? now : prev,
+        now: now,
+        prev: prev,
+        delta: delta,
+        sector: fundLabel(t, "Sector"),
+        industry: fundLabel(t, "Industry"),
+      };
+    });
+    const sortMode = mode === "drops" ? wowSortDrops : wowSortAdds;
+    rows.sort((a, b) => {
+      if (a.delta == null && b.delta == null) return a.ticker.localeCompare(b.ticker);
+      if (a.delta == null) return 1;
+      if (b.delta == null) return -1;
+      if (sortMode === "asc") return a.delta - b.delta || a.ticker.localeCompare(b.ticker);
+      if (sortMode === "desc") return b.delta - a.delta || a.ticker.localeCompare(b.ticker);
+      return Math.abs(b.delta) - Math.abs(a.delta) || b.delta - a.delta || a.ticker.localeCompare(b.ticker);
+    });
     const frag = document.createDocumentFragment();
     for (const r of rows) {
+      const d = fmtPctDelta(r.delta);
+      const title = "Percentile " + (r.prev != null ? r.prev : "—") + " → " + (r.now != null ? r.now : "—");
       const tr = document.createElement("tr");
       tr.innerHTML =
         "<td>" + tvLink(r.ticker) + "</td>" +
         '<td class="num">' + (r.pct != null ? r.pct : "") + "</td>" +
+        '<td class="num delta-cell ' + d.cls + '" title="' + escapeHtml(title) + '">' + d.text + "</td>" +
         "<td>" + escapeHtml(r.sector) + "</td>" +
         "<td>" + escapeHtml(r.industry) + "</td>";
       frag.appendChild(tr);
     }
     tbodyEl.innerHTML = "";
     tbodyEl.appendChild(frag);
+    const sortEl = document.getElementById(mode === "drops" ? "drops-sort" : "adds-sort");
+    if (sortEl) sortEl.textContent = wowSortMark(sortMode);
   }
 
   function renderRs90() {
@@ -1132,16 +1265,17 @@
     const avg = periodCounts.reduce((a, b) => a + b, 0) / periodCounts.length;
 
     let unk = 0, blankMcap = 0;
-    const secMap = new Map();
-    const indMap = new Map();
     for (const t of thisSet.keys()) {
-      const s = fundLabel(t, "Sector");
-      const ind = fundLabel(t, "Industry");
-      if (s === "(unknown)") unk++;
+      if (fundLabel(t, "Sector") === "(unknown)") unk++;
       if (fundMcap(t) == null) blankMcap++;
-      secMap.set(s, (secMap.get(s) || 0) + 1);
-      indMap.set(ind, (indMap.get(ind) || 0) + 1);
     }
+
+    const priorDates = priorPeriodDates(period);
+    const currCounts = countsForWindow(period);
+    const priorCounts = countsForWindow(priorDates);
+    const caption = periodCaption(period, priorDates);
+    document.getElementById("sector-window").textContent = caption;
+    document.getElementById("industry-window").textContent = caption;
 
     const n = thisSet.size;
     document.getElementById("card-count").textContent = n.toLocaleString();
@@ -1174,10 +1308,10 @@
 
     const secBody = document.getElementById("sector-tbody");
     secBody.innerHTML = "";
-    secBody.appendChild(countTable(secMap, n));
+    secBody.appendChild(countCompareTable(currCounts.sec, priorCounts.sec));
     const indBody = document.getElementById("industry-tbody");
     indBody.innerHTML = "";
-    indBody.appendChild(countTable(indMap, n));
+    indBody.appendChild(countCompareTable(currCounts.ind, priorCounts.ind));
 
     const addsEmpty = document.getElementById("adds-empty");
     const dropsEmpty = document.getElementById("drops-empty");
@@ -1202,8 +1336,8 @@
       const drops = [...prevSet.keys()].filter(t => !thisSet.has(t));
       document.getElementById("adds-count").textContent = "(" + adds.length + ")";
       document.getElementById("drops-count").textContent = "(" + drops.length + ")";
-      listWow(adds, thisSet, document.getElementById("adds-tbody"));
-      listWow(drops, prevSet, document.getElementById("drops-tbody"));
+      listWow(adds, document.getElementById("adds-tbody"), rs90AsOf, prevWeek, "adds");
+      listWow(drops, document.getElementById("drops-tbody"), rs90AsOf, prevWeek, "drops");
     }
 
     st.textContent =
@@ -1399,6 +1533,16 @@
   document.getElementById("rs90-mcap").addEventListener("change", (e) => {
     rs90McapOnly = e.target.checked;
     renderRs90();
+  });
+  document.querySelectorAll("th.wow-sort").forEach(th => {
+    th.addEventListener("click", () => {
+      const which = th.dataset.wow;
+      const cur = which === "drops" ? wowSortDrops : wowSortAdds;
+      const next = cur === "abs" ? "desc" : cur === "desc" ? "asc" : "abs";
+      if (which === "drops") wowSortDrops = next;
+      else wowSortAdds = next;
+      renderRs90();
+    });
   });
 
   window.addEventListener("hashchange", () => {

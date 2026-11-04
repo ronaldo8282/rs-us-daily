@@ -88,14 +88,14 @@
     }
     .group { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
     .group label { color: var(--muted); font-size: 0.8rem; margin-right: 0.25rem; }
-    button.range, button.sortbtn, button.period {
+    button.range, button.sortbtn, button.period, button.sec-win {
       background: #243044; color: var(--text); border: 1px solid var(--border);
       border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
     }
-    button.range.active, button.sortbtn.active, button.period.active {
+    button.range.active, button.sortbtn.active, button.period.active, button.sec-win.active {
       background: var(--accent); border-color: var(--accent); color: #fff;
     }
-    button.range:hover, button.sortbtn:hover, button.period:hover { filter: brightness(1.1); }
+    button.range:hover, button.sortbtn:hover, button.period:hover, button.sec-win:hover { filter: brightness(1.1); }
     select, input[type="search"] {
       background: #0f1622; color: var(--text); border: 1px solid var(--border);
       border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.9rem;
@@ -258,6 +258,57 @@
     }
     .tpo-links a:hover { border-color: var(--accent2); filter: brightness(1.08); }
     #rs90-mix { align-items: start; }
+    #sec-trend {
+      margin: 0 1.5rem 1rem; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    #sec-trend .sec-trend-head {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;
+      justify-content: space-between; padding: 0.65rem 0.9rem;
+      background: #243044; border-bottom: 1px solid var(--border);
+    }
+    #sec-trend h2 { margin: 0; font-size: 0.95rem; font-weight: 650; }
+    #sec-trend button.sec-win { background: #0f1622; }
+    #sec-trend button.sec-win.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #sec-trend .sec-trend-sub { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+    #sec-trend .sec-trend-note {
+      padding: 0.35rem 0.9rem; color: var(--muted); font-size: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    #sec-trend .sec-chips {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border);
+    }
+    #sec-trend button.sec-chip {
+      background: #0f1622; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 0.22rem 0.6rem; cursor: pointer; font-size: 0.78rem;
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    #sec-trend button.sec-chip:hover { filter: brightness(1.12); }
+    #sec-trend button.sec-chip:focus-visible, #sec-trend button.sec-win:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 1px;
+    }
+    #sec-trend button.sec-chip.on {
+      color: var(--text); border-color: var(--chip, var(--accent)); background: #1e2a3d;
+    }
+    #sec-trend button.sec-chip .sw {
+      width: 0.65rem; height: 0.65rem; border-radius: 2px;
+      background: var(--chip, var(--muted)); opacity: 0.35;
+    }
+    #sec-trend button.sec-chip.on .sw { opacity: 1; }
+    #sec-trend button.sec-chip .n { font-variant-numeric: tabular-nums; }
+    #sec-trend .sec-trend-scroll {
+      position: relative; height: 260px; overflow-x: auto; overflow-y: hidden;
+      background: var(--bg);
+    }
+    #sec-trend .sec-trend-scroll canvas { display: block; height: 260px; }
+    #sec-trend .sec-trend-tip {
+      position: fixed; z-index: 5; pointer-events: none;
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.35rem 0.5rem; font-size: 0.75rem; color: var(--text);
+      max-width: 18rem; line-height: 1.35;
+    }
   </style>
 </head>
 <body>
@@ -501,6 +552,24 @@
       </div>
     </div>
 
+    <div class="sec-trend" id="sec-trend">
+      <div class="sec-trend-head">
+        <h2>Sector counts trend <span class="sec-trend-sub">RS≥90 names each Friday</span></h2>
+        <div class="group" role="group" aria-label="Lookback window">
+          <button type="button" class="sec-win" data-months="3">3M</button>
+          <button type="button" class="sec-win active" data-months="6">6M</button>
+          <button type="button" class="sec-win" data-months="12">1Y</button>
+          <button type="button" class="sec-win" data-months="24">2Y</button>
+        </div>
+      </div>
+      <div class="sec-trend-note" id="sec-trend-note"></div>
+      <div class="sec-chips" id="sec-trend-chips" role="group" aria-label="Sectors on the chart"></div>
+      <div class="sec-trend-scroll" id="sec-trend-scroll">
+        <canvas id="sec-trend-chart" aria-label="Count of names with Percentile at least 90, by sector, across Fridays"></canvas>
+        <div id="sec-trend-tip" class="sec-trend-tip" hidden></div>
+      </div>
+    </div>
+
     <div class="wow-grid">
       <div class="panel-block">
         <h2>WoW adds <span id="adds-count" style="color:var(--muted);font-weight:500"></span></h2>
@@ -546,6 +615,7 @@
         Sector and Industry tables count distinct RS≥90 names in the selected period (This) versus the prior window of the same length (Prior, Δ).
         MarketCap filter (default off) applies only when MarketCap is known; names with blank mcap stay included when filter is off.
         WoW adds/drops compare the as-of Friday to the previous Friday column. ΔRS is the change in Percentile; lists sort by the size of that change.
+        Sector counts trend uses the same membership rule on each Friday (Percentile ≥ 90, sector from fundamentals, blank → <code>(unknown)</code>). The window ends at the latest Friday column. Chips show or hide sectors; the number on a chip is that Friday’s count. The top 5 start on.
         Tickers open TradingView charts in a new tab.
       </p>
     </div>
@@ -705,6 +775,14 @@
   let customPeriod = false;
   let wowSortAdds = "abs";
   let wowSortDrops = "abs";
+  let secTrendMonths = 6;
+  let secTrendUserOn = null;
+  let secCountCache = null;
+  let secTrendModel = null;
+  let secTrendGeom = null;
+  let secTrendKey = "";
+  const SEC_WIN_LABEL = { 3: "3M", 6: "6M", 12: "1Y", 24: "2Y" };
+  const SEC_COLORS = ["#94a3b8","#a3e635","#facc15","#f87171","#c084fc","#2dd4bf","#818cf8","#38bdf8","#fb923c","#4ade80","#e879f9","#64748b"];
   const MCAP_MIN = 3e9;
 
   const statusEl = document.getElementById("status");
@@ -1614,6 +1692,7 @@
       st.textContent = "No percentile data loaded.";
       st.classList.add("error");
       renderHorizonMix();
+      renderSecTrend();
       return;
     }
     st.classList.remove("error");
@@ -1715,6 +1794,7 @@
       " · " + pctsWide.dates.length + " Friday columns" +
       (rs90McapOnly ? " · MKT CAP >3B filter on" : "");
     renderHorizonMix();
+    renderSecTrend();
   }
 
   // Distinct RS≥90 names in the 5/10/20 Friday windows ending at as-of.
@@ -1790,6 +1870,255 @@
       frag.appendChild(tr);
     }
     return frag;
+  }
+
+  // Per-Friday sector membership (Percentile ≥ 90), same rule as Sector counts.
+  function secCountsByDate() {
+    if (secCountCache && secCountCache.mcap === rs90McapOnly && secCountCache.dates === pctsWide.dates) {
+      return secCountCache;
+    }
+    const byDate = new Map();
+    const names = new Set();
+    for (const d of pctsWide.dates) {
+      const m = new Map();
+      const uni = rs90Universe(d);
+      for (const t of uni.keys()) {
+        const s = fundLabel(t, "Sector");
+        m.set(s, (m.get(s) || 0) + 1);
+        names.add(s);
+      }
+      byDate.set(d, m);
+    }
+    secCountCache = {
+      mcap: rs90McapOnly,
+      dates: pctsWide.dates,
+      byDate: byDate,
+      allNames: [...names].sort((a, b) => a.localeCompare(b)),
+    };
+    return secCountCache;
+  }
+
+  function secTrendWindow() {
+    const all = pctsWide.dates;
+    const end = all[all.length - 1];
+    const cut = mmShiftMonths(end, -secTrendMonths);
+    const dates = [];
+    for (const d of all) if (d >= cut) dates.push(d);
+    return { dates: dates, end: end, cut: cut, first: all[0], clipped: all[0] > cut };
+  }
+
+  function secYScale(maxVal) {
+    const max = Math.max(4, maxVal);
+    const rough = max / 4;
+    const pow = Math.pow(10, Math.floor(Math.log10(Math.max(rough, 1))));
+    const frac = rough / pow;
+    const nice = frac <= 1 ? 1 : frac <= 2 ? 2 : frac <= 2.5 ? 2.5 : frac <= 5 ? 5 : 10;
+    const step = nice * pow;
+    const yMax = Math.ceil((max - 1e-9) / step) * step || 1;
+    const ticks = [];
+    for (let v = 0; v <= yMax + step * 0.01; v += step) ticks.push(Math.round(v * 1000) / 1000);
+    return { yMax: yMax, ticks: ticks };
+  }
+
+  function secTrendBuild() {
+    if (!pctsWide || !pctsWide.dates.length) return null;
+    const cache = secCountsByDate();
+    const win = secTrendWindow();
+    const latestMap = cache.byDate.get(win.end) || new Map();
+    const names = new Set();
+    for (const d of win.dates) {
+      const m = cache.byDate.get(d);
+      if (!m) continue;
+      m.forEach((n, s) => { if (n > 0) names.add(s); });
+    }
+    const rows = [];
+    for (const name of names) {
+      const values = [];
+      for (const d of win.dates) {
+        const m = cache.byDate.get(d);
+        values.push(m ? (m.get(name) || 0) : 0);
+      }
+      const colorIdx = cache.allNames.indexOf(name);
+      rows.push({
+        name: name,
+        latest: latestMap.get(name) || 0,
+        color: SEC_COLORS[(colorIdx < 0 ? 0 : colorIdx) % SEC_COLORS.length],
+        values: values,
+      });
+    }
+    rows.sort((a, b) => b.latest - a.latest || a.name.localeCompare(b.name));
+    const on = secTrendUserOn || new Set(rows.slice(0, 5).map(r => r.name));
+    return { win: win, rows: rows, on: on };
+  }
+
+  function secTrendNoteText(model) {
+    const w = model.win;
+    const label = SEC_WIN_LABEL[secTrendMonths] || String(secTrendMonths);
+    const span = w.dates.length ? (w.dates[0] + " → " + w.dates[w.dates.length - 1]) : "—";
+    let msg = label + " · " + w.dates.length + " Fridays · " + span;
+    if (w.clipped) msg += " · shorter than " + label + " (file starts " + w.first + ")";
+    msg += " · chip count is " + w.end;
+    if (rs90McapOnly) msg += " · MKT CAP >3B";
+    return msg;
+  }
+
+  function renderSecChips() {
+    const host = document.getElementById("sec-trend-chips");
+    const note = document.getElementById("sec-trend-note");
+    if (!host || !note) return;
+    host.innerHTML = "";
+    if (!secTrendModel) {
+      note.textContent = "No Friday percentile columns.";
+      return;
+    }
+    note.textContent = secTrendNoteText(secTrendModel);
+    for (const r of secTrendModel.rows) {
+      const on = secTrendModel.on.has(r.name);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sec-chip" + (on ? " on" : "");
+      btn.setAttribute("data-sector", r.name);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.style.setProperty("--chip", r.color);
+      btn.title = r.name + ": " + r.latest + " on " + secTrendModel.win.end;
+      btn.innerHTML = '<i class="sw"></i>' + escapeHtml(r.name) + ' <span class="n">' + r.latest + "</span>";
+      host.appendChild(btn);
+    }
+  }
+
+  function drawSecTrend() {
+    const canvas = document.getElementById("sec-trend-chart");
+    const scroll = document.getElementById("sec-trend-scroll");
+    if (!canvas || !scroll) return;
+    const model = secTrendModel;
+    const cssH = scroll.clientHeight || 260;
+    const viewW = Math.max(0, scroll.clientWidth || 0);
+    if (!model || viewW < 40) {
+      secTrendKey = "";
+      secTrendGeom = null;
+      return;
+    }
+    const dates = model.win.dates;
+    const visible = model.rows.filter(r => model.on.has(r.name));
+    const drawKey = [
+      viewW, cssH, secTrendMonths, rs90McapOnly ? 1 : 0, dates.length,
+      dates[0] || "", dates[dates.length - 1] || "",
+      visible.map(r => r.name).join("|"),
+    ].join(":");
+    if (drawKey === secTrendKey) return;
+    secTrendKey = drawKey;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d");
+    const pad = { l: 42, r: 14, t: 12, b: 28 };
+    const inner = Math.max(10, viewW - pad.l - pad.r);
+    const step = Math.max(8, inner / Math.max(1, dates.length));
+    const cssW = Math.max(viewW, Math.ceil(pad.l + pad.r + step * dates.length));
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    let maxVal = 0;
+    for (const r of visible) for (const v of r.values) if (v > maxVal) maxVal = v;
+    const scale = secYScale(maxVal);
+    const plotH = cssH - pad.t - pad.b;
+    const plotW = step * dates.length;
+    const yOf = (v) => pad.t + (1 - v / scale.yMax) * plotH;
+    const muted = mmCssColor("--muted");
+    const border = mmCssColor("--border");
+
+    ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 1;
+    for (const t of scale.ticks) {
+      const y = yOf(t);
+      ctx.strokeStyle = mmRgba(border, 0.9);
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + plotW, y);
+      ctx.stroke();
+      ctx.fillStyle = muted;
+      ctx.fillText(String(t), pad.l - 6, y);
+    }
+    ctx.strokeStyle = border;
+    ctx.strokeRect(pad.l + 0.5, pad.t + 0.5, plotW, plotH);
+
+    if (!visible.length) {
+      ctx.fillStyle = muted;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Select a sector", pad.l + plotW / 2, pad.t + plotH / 2);
+    } else {
+      for (let s = visible.length - 1; s >= 0; s--) {
+        const row = visible[s];
+        ctx.beginPath();
+        for (let i = 0; i < row.values.length; i++) {
+          const x = pad.l + (i + 0.5) * step;
+          const y = yOf(row.values[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = row.color;
+        ctx.lineWidth = 1.75;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+        const last = row.values.length - 1;
+        ctx.beginPath();
+        ctx.fillStyle = row.color;
+        ctx.arc(pad.l + (last + 0.5) * step, yOf(row.values[last]), 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.fillStyle = muted;
+    ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+    ctx.textBaseline = "top";
+    let lastLabelX = -1e9;
+    for (let i = 0; i < dates.length; i++) {
+      const monthStart = i === 0 || dates[i].slice(0, 7) !== dates[i - 1].slice(0, 7);
+      if (!monthStart && i !== dates.length - 1) continue;
+      const x = pad.l + (i + 0.5) * step;
+      if (i !== 0 && i !== dates.length - 1 && x - lastLabelX < 56) continue;
+      if (i === dates.length - 1 && x - lastLabelX < 36) continue;
+      ctx.textAlign = i === dates.length - 1 ? "right" : "center";
+      ctx.fillText(dates[i].slice(0, 7), x, pad.t + plotH + 8);
+      lastLabelX = x;
+    }
+    secTrendGeom = { dates: dates, visible: visible, pad: pad, step: step, plotTop: pad.t, plotH: plotH };
+  }
+
+  function secTrendTipAt(clientX, clientY) {
+    const tip = document.getElementById("sec-trend-tip");
+    const canvas = document.getElementById("sec-trend-chart");
+    if (!tip || !canvas || !secTrendGeom) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const g = secTrendGeom;
+    const i = Math.floor((x - g.pad.l) / g.step);
+    if (i < 0 || i >= g.dates.length || y < g.plotTop || y > g.plotTop + g.plotH) {
+      tip.hidden = true;
+      return;
+    }
+    const lines = [g.dates[i]];
+    for (const r of g.visible) lines.push(r.name + " " + r.values[i]);
+    if (!g.visible.length) lines.push("no sectors selected");
+    tip.hidden = false;
+    tip.style.whiteSpace = "pre-line";
+    tip.textContent = lines.join("\n");
+    tip.style.left = (clientX + 12) + "px";
+    tip.style.top = (clientY + 14) + "px";
+  }
+
+  function renderSecTrend() {
+    secTrendModel = secTrendBuild();
+    renderSecChips();
+    secTrendKey = "";
+    drawSecTrend();
   }
 
   // ---- Tabs + sidebar ----
@@ -2003,6 +2332,38 @@
     rs90McapOnly = e.target.checked;
     renderRs90();
   });
+  document.querySelectorAll("#sec-trend button.sec-win").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#sec-trend button.sec-win").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      secTrendMonths = parseInt(btn.dataset.months, 10) || 6;
+      renderSecTrend();
+    });
+  });
+  document.getElementById("sec-trend-chips").addEventListener("click", (e) => {
+    const btn = e.target.closest("button.sec-chip");
+    if (!btn || !secTrendModel) return;
+    const name = btn.getAttribute("data-sector");
+    const next = new Set(secTrendModel.on);
+    if (next.has(name)) next.delete(name);
+    else next.add(name);
+    secTrendUserOn = next;
+    renderSecTrend();
+  });
+  const secScrollEl = document.getElementById("sec-trend-scroll");
+  if (secScrollEl) {
+    secScrollEl.addEventListener("mousemove", (e) => secTrendTipAt(e.clientX, e.clientY));
+    secScrollEl.addEventListener("mouseleave", () => {
+      const tip = document.getElementById("sec-trend-tip");
+      if (tip) tip.hidden = true;
+    });
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        const panel = document.getElementById("panel-rs90");
+        if (panel && panel.classList.contains("active")) drawSecTrend();
+      }).observe(secScrollEl);
+    }
+  }
   document.querySelectorAll("th.wow-sort").forEach(th => {
     th.addEventListener("click", () => {
       const which = th.dataset.wow;

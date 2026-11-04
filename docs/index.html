@@ -184,6 +184,7 @@
       padding: 0.3rem 0.75rem;
     }
     .tpo-links a:hover { border-color: var(--accent2); filter: brightness(1.08); }
+    #rs90-mix { align-items: start; }
   </style>
 </head>
 <body>
@@ -327,6 +328,41 @@
         <div class="label">Unknown sector</div>
         <div class="value" id="card-unk">—</div>
         <div class="delta flat" id="card-mcap-note"></div>
+      </div>
+    </div>
+
+    <div class="dash-grid" id="rs90-mix">
+      <div class="panel-block">
+        <h2>Sector mix <span style="color:var(--muted);font-weight:500">5/10/20w · distinct RS≥90 names</span></h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Sector</th>
+                <th class="num" id="mix-sec-h-5" title="Share of distinct RS≥90 names over the 5 Fridays ending at as-of">5w %</th>
+                <th class="num" id="mix-sec-h-10" title="Share of distinct RS≥90 names over the 10 Fridays ending at as-of">10w %</th>
+                <th class="num" id="mix-sec-h-20" title="Share of distinct RS≥90 names over the 20 Fridays ending at as-of">20w %</th>
+              </tr>
+            </thead>
+            <tbody id="mix-sector-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h2>Industry mix <span style="color:var(--muted);font-weight:500">5/10/20w · distinct RS≥90 names</span></h2>
+        <div class="table-scroll sm">
+          <table>
+            <thead>
+              <tr>
+                <th>Industry</th>
+                <th class="num" id="mix-ind-h-5" title="Share of distinct RS≥90 names over the 5 Fridays ending at as-of">5w %</th>
+                <th class="num" id="mix-ind-h-10" title="Share of distinct RS≥90 names over the 10 Fridays ending at as-of">10w %</th>
+                <th class="num" id="mix-ind-h-20" title="Share of distinct RS≥90 names over the 20 Fridays ending at as-of">20w %</th>
+              </tr>
+            </thead>
+            <tbody id="mix-industry-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1112,6 +1148,7 @@
     if (!pctsWide || !rs90AsOf) {
       st.textContent = "No percentile data loaded.";
       st.classList.add("error");
+      renderHorizonMix();
       return;
     }
     st.classList.remove("error");
@@ -1211,6 +1248,82 @@
       (prevWeek ? " · prior " + prevWeek : " · no prior week") +
       " · " + pctsWide.dates.length + " Friday columns" +
       (rs90McapOnly ? " · MKT CAP >3B filter on" : "");
+    renderHorizonMix();
+  }
+
+  // Distinct RS≥90 names in the 5/10/20 Friday windows ending at as-of.
+  function renderHorizonMix() {
+    const secBody = document.getElementById("mix-sector-tbody");
+    const indBody = document.getElementById("mix-industry-tbody");
+    if (!secBody || !indBody) return;
+    secBody.innerHTML = "";
+    indBody.innerHTML = "";
+    if (!pctsWide || !rs90AsOf) return;
+
+    const longest = periodDatesEndingAt(rs90AsOf, 20);
+    const namesByDate = new Map();
+    for (const d of longest) namesByDate.set(d, rs90Universe(d));
+
+    const bundles = [5, 10, 20].map(n => {
+      const dates = longest.slice(Math.max(0, longest.length - n));
+      const seen = new Set();
+      for (const d of dates) {
+        const week = namesByDate.get(d);
+        if (!week) continue;
+        for (const t of week.keys()) seen.add(t);
+      }
+      const sec = new Map();
+      const ind = new Map();
+      for (const t of seen) {
+        const s = fundLabel(t, "Sector");
+        const iName = fundLabel(t, "Industry");
+        sec.set(s, (sec.get(s) || 0) + 1);
+        ind.set(iName, (ind.get(iName) || 0) + 1);
+      }
+      return { n, dates, sec, ind, total: seen.size };
+    });
+
+    for (const b of bundles) {
+      const label = b.dates.length === b.n ? (b.n + "w %") : (b.n + "w % (" + b.dates.length + ")");
+      const title = b.dates.length
+        ? (b.dates[0] + " → " + b.dates[b.dates.length - 1] +
+          " · " + b.dates.length + " Fridays · " + b.total.toLocaleString() + " names")
+        : "no Fridays";
+      for (const prefix of ["mix-sec-h-", "mix-ind-h-"]) {
+        const th = document.getElementById(prefix + b.n);
+        if (!th) continue;
+        th.textContent = label;
+        th.title = title;
+      }
+    }
+
+    secBody.appendChild(mixShareRows(bundles, "sec"));
+    indBody.appendChild(mixShareRows(bundles, "ind"));
+  }
+
+  function mixShareRows(bundles, field) {
+    const names = new Set();
+    for (const b of bundles) b[field].forEach((_, name) => names.add(name));
+    const rows = [...names].map(name => ({
+      name,
+      pcts: bundles.map(b => b.total ? ((b[field].get(name) || 0) / b.total) * 100 : 0),
+      counts: bundles.map(b => b[field].get(name) || 0),
+    }));
+    rows.sort((a, b) =>
+      b.pcts[0] - a.pcts[0] || b.pcts[1] - a.pcts[1] || b.pcts[2] - a.pcts[2] ||
+      a.name.localeCompare(b.name));
+    const frag = document.createDocumentFragment();
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      let html = "<td>" + escapeHtml(r.name) + "</td>";
+      for (let i = 0; i < r.pcts.length; i++) {
+        const tip = r.counts[i].toLocaleString() + " / " + bundles[i].total.toLocaleString();
+        html += '<td class="num" title="' + tip + '">' + r.pcts[i].toFixed(1) + "</td>";
+      }
+      tr.innerHTML = html;
+      frag.appendChild(tr);
+    }
+    return frag;
   }
 
   // ---- Tabs ----

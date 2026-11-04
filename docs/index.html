@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RS US Daily — Ranks · RS90–99 · MM · XL · COT</title>
+  <title>RS US Daily — Ranks · RS90–99 · MM · XL · COT · TPO</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -45,8 +45,17 @@
       color: var(--muted); font-size: 0.75rem; font-weight: 650;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .tag-sidebar.is-collapsed .sidebar-title,
-    .tag-sidebar.is-collapsed .tabs { display: none; }
+    .tag-sidebar.is-collapsed .sidebar-title { display: none; }
+    .tag-sidebar.is-collapsed .tabs { padding: 0.2rem 0.08rem 0.75rem; }
+    .tag-sidebar.is-collapsed button.tab {
+      text-align: center; padding: 0.42rem 0.02rem;
+      font-size: 0.62rem; line-height: 1.15; letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+    .tag-sidebar.is-collapsed button.tab .tab-label { display: none; }
+    .tag-sidebar.is-collapsed button.tab::after {
+      content: attr(data-mark); font-weight: 700;
+    }
     button.sidebar-toggle {
       background: #243044; color: var(--text); border: 1px solid var(--border);
       border-radius: 6px; width: 1.7rem; height: 1.7rem; padding: 0;
@@ -245,18 +254,6 @@
     th.xl-date { font-size: 0.75rem; text-align: right; }
     th.xl-primary { color: var(--accent2); }
     td.xl-primary { font-weight: 700; }
-    .tpo-links {
-      display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
-      padding: 0.65rem 1.5rem; background: #152033; border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    .tpo-links .tpo-label { color: var(--muted); margin-right: 0.25rem; font-weight: 600; }
-    .tpo-links a {
-      color: var(--accent2); text-decoration: none; font-weight: 650;
-      background: #243044; border: 1px solid var(--border); border-radius: 6px;
-      padding: 0.3rem 0.75rem;
-    }
-    .tpo-links a:hover { border-color: var(--accent2); filter: brightness(1.08); }
     #rs90-mix { align-items: start; }
   </style>
 </head>
@@ -268,11 +265,14 @@
       <button type="button" id="sidebar-toggle" class="sidebar-toggle" aria-expanded="true" aria-controls="tag-list" aria-label="Hide tags" title="Hide tags">‹</button>
     </div>
     <nav id="tag-list" class="tabs" role="tablist" aria-label="Tags">
-      <button class="tab active" data-tab="ranks" role="tab" aria-selected="true">Ranks</button>
-      <button class="tab" data-tab="rs90" role="tab" aria-selected="false">RS90–99</button>
-      <button class="tab" data-tab="mm" role="tab" aria-selected="false">MM</button>
-      <button class="tab" data-tab="xl" role="tab" aria-selected="false">XL</button>
-      <button class="tab" data-tab="cot" role="tab" aria-selected="false">COT</button>
+      <button class="tab active" data-tab="ranks" data-mark="R" role="tab" aria-selected="true" aria-label="Ranks"><span class="tab-label">Ranks</span></button>
+      <button class="tab" data-tab="rs90" data-mark="90" role="tab" aria-selected="false" aria-label="RS90–99"><span class="tab-label">RS90–99</span></button>
+      <button class="tab" data-tab="mm" data-mark="MM" role="tab" aria-selected="false" aria-label="MM"><span class="tab-label">MM</span></button>
+      <button class="tab" data-tab="xl" data-mark="XL" role="tab" aria-selected="false" aria-label="XL"><span class="tab-label">XL</span></button>
+      <button class="tab" data-tab="cot" data-mark="COT" role="tab" aria-selected="false" aria-label="COT"><span class="tab-label">COT</span></button>
+      <button class="tab" data-tab="tpo" data-mark="TPO" role="tab" aria-selected="false" aria-label="HSIF TPO"><span class="tab-label">HSIF TPO</span></button>
+      <button class="tab" data-tab="tpo-ym" data-mark="YM" role="tab" aria-selected="false" aria-label="道指 YM"><span class="tab-label">道指 YM</span></button>
+      <button class="tab" data-tab="tpo-nq" data-mark="NQ" role="tab" aria-selected="false" aria-label="納指 NQ"><span class="tab-label">納指 NQ</span></button>
     </nav>
   </aside>
   <script>
@@ -295,13 +295,6 @@
     <h1>RS US Daily</h1>
     <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth, XL sector strength &amp; CFTC COT · data from <code>docs/data/</code> and <code>docs/cot/</code></div>
   </header>
-
-  <div class="tpo-links" role="navigation" aria-label="TPO letter walls">
-    <span class="tpo-label">TPO 字母牆</span>
-    <a href="tpo/">HSIF TPO</a>
-    <a href="tpo-ym/">道指 YM</a>
-    <a href="tpo-nq/">納指 NQ</a>
-  </div>
 
   <!-- ========== RANKS TAB ========== -->
   <div id="panel-ranks" class="tab-panel active" role="tabpanel">
@@ -669,6 +662,17 @@
   <div id="panel-cot" class="tab-panel" role="tabpanel">
     <iframe id="cot-frame" class="cot-frame" title="CFTC COT — Crowded Market Report"></iframe>
   </div>
+
+  <!-- ========== TPO TABS (existing pages; no new copy) ========== -->
+  <div id="panel-tpo" class="tab-panel" role="tabpanel">
+    <iframe id="tpo-frame" class="cot-frame" title="TPO Letter Hourglass MVP · HSIF"></iframe>
+  </div>
+  <div id="panel-tpo-ym" class="tab-panel" role="tabpanel">
+    <iframe id="tpo-ym-frame" class="cot-frame" title="TPO Letter Hourglass · 道指期貨 YM"></iframe>
+  </div>
+  <div id="panel-tpo-nq" class="tab-panel" role="tabpanel">
+    <iframe id="tpo-nq-frame" class="cot-frame" title="TPO Letter Hourglass · 納指期貨 NQ"></iframe>
+  </div>
   </div>
   </div>
 
@@ -852,7 +856,7 @@
     return prev;
   }
 
-  const TAB_IDS = ["ranks", "rs90", "mm", "xl", "cot"];
+  const TAB_IDS = ["ranks", "rs90", "mm", "xl", "cot", "tpo", "tpo-ym", "tpo-nq"];
   const SIDEBAR_KEY = "rs-us-daily.tag-sidebar";
   const sidebarEl = document.getElementById("tag-sidebar");
   const sidebarToggle = document.getElementById("sidebar-toggle");
@@ -869,9 +873,23 @@
     }
   }
 
+  function ensureFrame(id, src) {
+    const frame = document.getElementById(id);
+    if (frame && !frame.getAttribute("src")) frame.src = src;
+  }
+
   function ensureCot() {
-    const frame = document.getElementById("cot-frame");
-    if (frame && !frame.getAttribute("src")) frame.src = "cot/index.html";
+    ensureFrame("cot-frame", "cot/index.html");
+  }
+
+  function ensureTpo(name) {
+    const frames = {
+      tpo: ["tpo-frame", "tpo/index.html"],
+      "tpo-ym": ["tpo-ym-frame", "tpo-ym/index.html"],
+      "tpo-nq": ["tpo-nq-frame", "tpo-nq/index.html"],
+    };
+    const pair = frames[name];
+    if (pair) ensureFrame(pair[0], pair[1]);
   }
 
   function tabFromHash() {
@@ -893,6 +911,7 @@
     if (name === "mm") renderMm();
     if (name === "xl") renderXlTab();
     if (name === "cot") ensureCot();
+    if (name === "tpo" || name === "tpo-ym" || name === "tpo-nq") ensureTpo(name);
     try {
       if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
     } catch (e) { /* ignore */ }

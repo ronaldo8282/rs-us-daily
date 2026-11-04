@@ -201,6 +201,43 @@
     td.mm-red-deep { background: var(--mm-red-deep); }
     td.mm-red-light { background: rgba(153, 27, 27, 0.45); }
     td.mm-mild { background: rgba(22, 101, 52, 0.25); color: var(--text); font-weight: 500; }
+    #panel-mm .mm-thrust-note { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+    #panel-mm button.mm-range {
+      background: #243044; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
+    }
+    #panel-mm button.mm-range.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #panel-mm button.mm-range:hover { filter: brightness(1.1); }
+    #panel-mm .mm-chart-block {
+      margin: 0.75rem 1.5rem 0; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    #panel-mm .mm-chart-head {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;
+      justify-content: space-between; padding: 0.5rem 0.85rem;
+      background: #243044; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem; font-weight: 650;
+    }
+    #panel-mm .mm-chart-legend {
+      display: inline-flex; align-items: center; gap: 0.85rem;
+      color: var(--muted); font-weight: 500; font-size: 0.78rem;
+    }
+    #panel-mm .mm-swatch {
+      display: inline-block; width: 1.15rem; height: 0.18rem; border-radius: 2px;
+      margin-right: 0.3rem; vertical-align: middle;
+    }
+    #panel-mm .mm-swatch-5 { background: var(--muted); }
+    #panel-mm .mm-swatch-10 { background: var(--accent); height: 0.28rem; }
+    #panel-mm .mm-chart-scroll {
+      position: relative; height: 228px; overflow-x: auto; overflow-y: hidden;
+      background: var(--bg);
+    }
+    #panel-mm .mm-chart-scroll canvas { display: block; height: 228px; }
+    #panel-mm .mm-chart-tip {
+      position: fixed; z-index: 5; pointer-events: none;
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.28rem 0.45rem; font-size: 0.75rem; color: var(--text); white-space: nowrap;
+    }
     th.xl-date { font-size: 0.75rem; text-align: right; }
     th.xl-primary { color: var(--accent2); }
     td.xl-primary { font-weight: 700; }
@@ -452,6 +489,7 @@
     <div class="mm-header">
       <strong>Stockbee MM–inspired · not a TeeChart clone</strong>
       · daily market breadth from <code>mm_breadth_daily.csv</code>
+      <div class="mm-thrust-note">Thrust bands: 10d ≥2 / ≤0.5 (deep) · 5d ≥2 / ≤0.5 (soft) · Stockbee-inspired</div>
     </div>
     <div class="controls">
       <div class="group">
@@ -459,6 +497,25 @@
           <input type="checkbox" id="mm-newest" checked />
           Newest date first
         </label>
+      </div>
+      <div class="group">
+        <label>Chart</label>
+        <button type="button" class="mm-range" data-mm-months="6">6M</button>
+        <button type="button" class="mm-range active" data-mm-months="12">1Y</button>
+        <button type="button" class="mm-range" data-mm-months="0">All</button>
+      </div>
+    </div>
+    <div class="mm-chart-block" id="mm-chart-block">
+      <div class="mm-chart-head">
+        <span>5d / 10d ratio</span>
+        <span class="mm-chart-legend">
+          <span><i class="mm-swatch mm-swatch-5"></i>ratio_5d</span>
+          <span><i class="mm-swatch mm-swatch-10"></i>ratio_10d</span>
+        </span>
+      </div>
+      <div class="mm-chart-scroll" id="mm-chart-scroll">
+        <canvas id="mm-ratio-chart" aria-label="5-day and 10-day breadth ratios with thrust bands"></canvas>
+        <div id="mm-chart-tip" class="mm-chart-tip" hidden></div>
       </div>
     </div>
     <div class="status" id="mm-status">Loading MM…</div>
@@ -570,6 +627,9 @@
   let xlWeeksN = 10;
   let xlSort = "rs";
   let mmNewestFirst = true;
+  let mmChartMonths = 12;
+  let mmChartGeom = null;
+  let mmChartKey = "";
 
   let rs90Weeks = 5;
   let rs90AsOf = null;
@@ -770,6 +830,185 @@
   }
 
   // ---- MM tab ----
+  function mmShiftMonths(iso, delta) {
+    const parts = iso.split("-");
+    const dt = new Date(Date.UTC(+parts[0], +parts[1] - 1 + delta, +parts[2]));
+    const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(dt.getUTCDate()).padStart(2, "0");
+    return dt.getUTCFullYear() + "-" + m + "-" + d;
+  }
+
+  function mmCssColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888";
+  }
+
+  function mmRgba(hex, alpha) {
+    let h = String(hex || "").trim().replace("#", "");
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    if ([r, g, b].some(n => isNaN(n))) return "rgba(128,128,128," + alpha + ")";
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+  }
+
+  function mmChartSourceRows() {
+    const sorted = mmRows.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    if (!mmChartMonths || !sorted.length) return sorted;
+    const cut = mmShiftMonths(sorted[sorted.length - 1].date, -mmChartMonths);
+    const vis = [];
+    for (const r of sorted) if (r.date >= cut) vis.push(r);
+    return vis.length ? vis : sorted;
+  }
+
+  function drawMmRatioChart() {
+    const canvas = document.getElementById("mm-ratio-chart");
+    const scroll = document.getElementById("mm-chart-scroll");
+    if (!canvas || !scroll) return;
+    const cssH = scroll.clientHeight || 228;
+    const viewW = Math.max(1, scroll.clientWidth || 320);
+    const rows = mmChartSourceRows();
+    const drawKey = viewW + ":" + cssH + ":" + mmChartMonths + ":" + rows.length;
+    if (drawKey === mmChartKey) return;
+    mmChartKey = drawKey;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d");
+    if (!rows.length) {
+      canvas.width = Math.round(viewW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      canvas.style.width = viewW + "px";
+      canvas.style.height = cssH + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, viewW, cssH);
+      mmChartGeom = null;
+      return;
+    }
+
+    const pad = { l: 46, r: 14, t: 14, b: 28 };
+    const minStep = 4;
+    const inner = Math.max(10, viewW - pad.l - pad.r);
+    const step = Math.max(minStep, inner / rows.length);
+    const cssW = Math.max(viewW, Math.ceil(pad.l + pad.r + step * rows.length));
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const plotH = cssH - pad.t - pad.b;
+    const plotW = step * rows.length;
+    let yMax = 2.5;
+    for (const r of rows) {
+      if (r.ratio_5d != null && r.ratio_5d > yMax) yMax = r.ratio_5d;
+      if (r.ratio_10d != null && r.ratio_10d > yMax) yMax = r.ratio_10d;
+    }
+    yMax *= 1.08;
+    const yMin = 0;
+    const yOf = (v) => pad.t + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+    const greenDeep = mmCssColor("--mm-green-deep");
+    const green = mmCssColor("--mm-green");
+    const redDeep = mmCssColor("--mm-red-deep");
+    const redLight = mmCssColor("--mm-red-light");
+    const muted = mmCssColor("--muted");
+    const accent = mmCssColor("--accent");
+    const border = mmCssColor("--border");
+
+    function paintBands(pred, color, alpha) {
+      ctx.fillStyle = alpha >= 1 ? color : mmRgba(color, alpha);
+      for (let i = 0; i < rows.length; i++) {
+        if (!pred(rows[i])) continue;
+        ctx.fillRect(pad.l + i * step, pad.t, step, plotH);
+      }
+    }
+    // Soft 5d under deep 10d so a day that hits both shows the primary band.
+    paintBands(r => r.ratio_5d != null && r.ratio_5d >= 2, green, 0.58);
+    paintBands(r => r.ratio_5d != null && r.ratio_5d <= 0.5, redLight, 0.58);
+    paintBands(r => r.ratio_10d != null && r.ratio_10d >= 2, greenDeep, 1);
+    paintBands(r => r.ratio_10d != null && r.ratio_10d <= 0.5, redDeep, 1);
+
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = mmRgba(muted, 0.55);
+    ctx.lineWidth = 1;
+    ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+    ctx.fillStyle = muted;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (const g of [0.5, 2]) {
+      const y = yOf(g);
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + plotW, y);
+      ctx.stroke();
+      ctx.fillText(g === 2 ? "2" : "0.5", pad.l - 6, y);
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pad.l + 0.5, pad.t + 0.5, plotW, plotH);
+
+    function strokeSeries(key, color, width) {
+      ctx.beginPath();
+      let on = false;
+      for (let i = 0; i < rows.length; i++) {
+        const v = rows[i][key];
+        if (v == null || !isFinite(v)) { on = false; continue; }
+        const x = pad.l + (i + 0.5) * step;
+        const y = yOf(Math.min(yMax, Math.max(yMin, v)));
+        if (!on) { ctx.moveTo(x, y); on = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+    strokeSeries("ratio_5d", muted, 1.25);
+    strokeSeries("ratio_10d", accent, 1.75);
+
+    ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+    ctx.fillStyle = muted;
+    ctx.textBaseline = "top";
+    let lastLabelX = -1e9;
+    for (let i = 0; i < rows.length; i++) {
+      const monthStart = i === 0 || rows[i].date.slice(0, 7) !== rows[i - 1].date.slice(0, 7);
+      if (!monthStart && i !== rows.length - 1) continue;
+      const x = pad.l + (i + 0.5) * step;
+      if (i !== 0 && i !== rows.length - 1 && x - lastLabelX < 64) continue;
+      if (i === rows.length - 1 && x - lastLabelX < 36) continue;
+      ctx.textAlign = i === rows.length - 1 ? "right" : "center";
+      ctx.fillText(rows[i].date.slice(0, 7), x, pad.t + plotH + 8);
+      lastLabelX = x;
+    }
+
+    mmChartGeom = { rows: rows, pad: pad, step: step, plotTop: pad.t, plotH: plotH };
+  }
+
+  function mmChartTipAt(clientX, clientY) {
+    const tip = document.getElementById("mm-chart-tip");
+    const canvas = document.getElementById("mm-ratio-chart");
+    if (!tip || !canvas || !mmChartGeom) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const g = mmChartGeom;
+    const i = Math.floor((x - g.pad.l) / g.step);
+    if (i < 0 || i >= g.rows.length || y < g.plotTop || y > g.plotTop + g.plotH) {
+      tip.hidden = true;
+      return;
+    }
+    const r = g.rows[i];
+    const f = (v) => v == null ? "—" : v.toFixed(4);
+    tip.hidden = false;
+    tip.textContent = r.date + " · 5d " + f(r.ratio_5d) + " · 10d " + f(r.ratio_10d);
+    tip.style.left = (clientX + 12) + "px";
+    tip.style.top = (clientY + 14) + "px";
+  }
+
   function numOrNull(v) {
     if (v === "" || v == null) return null;
     const n = Number(v);
@@ -783,6 +1022,7 @@
       st.textContent = "No MM breadth data loaded.";
       st.classList.add("error");
       body.innerHTML = "";
+      drawMmRatioChart();
       return;
     }
     st.classList.remove("error");
@@ -851,6 +1091,7 @@
     body.innerHTML = "";
     body.appendChild(frag);
     st.textContent = mmRows.length + " daily rows · Stockbee MM–inspired coloring";
+    drawMmRatioChart();
   }
 
   // ---- XL independent tab (Deemer multi-week) ----
@@ -1440,6 +1681,28 @@
     mmNewestFirst = e.target.checked;
     renderMm();
   });
+  document.querySelectorAll("#panel-mm button.mm-range").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#panel-mm button.mm-range").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      mmChartMonths = parseInt(btn.dataset.mmMonths, 10) || 0;
+      drawMmRatioChart();
+    });
+  });
+  const mmScrollEl = document.getElementById("mm-chart-scroll");
+  if (mmScrollEl) {
+    mmScrollEl.addEventListener("mousemove", (e) => mmChartTipAt(e.clientX, e.clientY));
+    mmScrollEl.addEventListener("mouseleave", () => {
+      const tip = document.getElementById("mm-chart-tip");
+      if (tip) tip.hidden = true;
+    });
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        const panel = document.getElementById("panel-mm");
+        if (panel && panel.classList.contains("active")) drawMmRatioChart();
+      }).observe(mmScrollEl);
+    }
+  }
 
   document.getElementById("xl-week").addEventListener("change", () => {
     xlAsOf = document.getElementById("xl-week").value;

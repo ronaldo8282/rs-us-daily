@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RS US Daily — Ranks · RS90–99 · MM · XL</title>
+  <title>RS US Daily — Ranks · RS90–99 · MM · XL · COT</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -27,6 +27,35 @@
       margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       background: var(--bg); color: var(--text); line-height: 1.45;
     }
+    .shell { display: flex; align-items: stretch; min-height: 100vh; }
+    .shell-main { flex: 1 1 auto; min-width: 0; }
+    .tag-sidebar {
+      flex: 0 0 10.75rem; width: 10.75rem;
+      background: var(--panel); border-right: 1px solid var(--border);
+      position: sticky; top: 0; align-self: flex-start; height: 100vh;
+      overflow: auto; z-index: 3;
+    }
+    .tag-sidebar.is-collapsed { flex-basis: 2.5rem; width: 2.5rem; }
+    .sidebar-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.35rem; padding: 0.7rem 0.55rem 0.35rem;
+    }
+    .tag-sidebar.is-collapsed .sidebar-head { justify-content: center; padding: 0.7rem 0.3rem; }
+    .sidebar-title {
+      color: var(--muted); font-size: 0.75rem; font-weight: 650;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .tag-sidebar.is-collapsed .sidebar-title,
+    .tag-sidebar.is-collapsed .tabs { display: none; }
+    button.sidebar-toggle {
+      background: #243044; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; width: 1.7rem; height: 1.7rem; padding: 0;
+      cursor: pointer; font-size: 1rem; line-height: 1; font-weight: 650;
+    }
+    button.sidebar-toggle:hover { filter: brightness(1.1); }
+    button.tab:focus-visible, button.sidebar-toggle:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 1px;
+    }
     header {
       padding: 1.25rem 1.5rem 0.5rem; border-bottom: 1px solid var(--border);
       background: linear-gradient(180deg, #152033 0%, var(--bg) 100%);
@@ -34,19 +63,22 @@
     h1 { margin: 0 0 0.25rem; font-size: 1.35rem; font-weight: 650; }
     .sub { color: var(--muted); font-size: 0.9rem; }
     .tabs {
-      display: flex; gap: 0.35rem; padding: 0.75rem 1.5rem 0;
-      border-bottom: 1px solid var(--border); background: var(--panel);
-      flex-wrap: wrap;
+      display: flex; flex-direction: column; gap: 0.25rem;
+      padding: 0.25rem 0.5rem 0.85rem; background: transparent;
     }
     button.tab {
       background: transparent; color: var(--muted); border: none;
-      border-bottom: 2px solid transparent; padding: 0.55rem 1rem;
-      cursor: pointer; font-size: 0.95rem; font-weight: 600;
-      margin-bottom: -1px;
+      border-left: 3px solid transparent; border-radius: 6px;
+      padding: 0.5rem 0.65rem; cursor: pointer; font-size: 0.92rem;
+      font-weight: 600; text-align: left; width: 100%;
     }
-    button.tab:hover { color: var(--text); }
+    button.tab:hover { color: var(--text); background: #1e2a3d; }
     button.tab.active {
-      color: var(--text); border-bottom-color: var(--accent);
+      color: var(--text); border-left-color: var(--accent); background: #243044;
+    }
+    .cot-frame {
+      display: block; width: 100%; height: calc(100vh - 8.5rem);
+      border: 0; background: #0f172a;
     }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -187,9 +219,39 @@
   </style>
 </head>
 <body>
+  <div class="shell">
+  <aside id="tag-sidebar" class="tag-sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">Tags</span>
+      <button type="button" id="sidebar-toggle" class="sidebar-toggle" aria-expanded="true" aria-controls="tag-list" aria-label="Hide tags" title="Hide tags">‹</button>
+    </div>
+    <nav id="tag-list" class="tabs" role="tablist" aria-label="Tags">
+      <button class="tab active" data-tab="ranks" role="tab" aria-selected="true">Ranks</button>
+      <button class="tab" data-tab="rs90" role="tab" aria-selected="false">RS90–99</button>
+      <button class="tab" data-tab="mm" role="tab" aria-selected="false">MM</button>
+      <button class="tab" data-tab="xl" role="tab" aria-selected="false">XL</button>
+      <button class="tab" data-tab="cot" role="tab" aria-selected="false">COT</button>
+    </nav>
+  </aside>
+  <script>
+  (function () {
+    try {
+      if (localStorage.getItem("rs-us-daily.tag-sidebar") === "collapsed") {
+        var aside = document.getElementById("tag-sidebar");
+        var btn = document.getElementById("sidebar-toggle");
+        aside.classList.add("is-collapsed");
+        btn.setAttribute("aria-expanded", "false");
+        btn.setAttribute("aria-label", "Show tags");
+        btn.title = "Show tags";
+        btn.textContent = "›";
+      }
+    } catch (e) { /* ignore */ }
+  })();
+  </script>
+  <div class="shell-main">
   <header>
     <h1>RS US Daily</h1>
-    <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth &amp; XL sector strength · data from <code>docs/data/</code></div>
+    <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth, XL sector strength &amp; CFTC COT · data from <code>docs/data/</code> and <code>docs/cot/</code></div>
   </header>
 
   <div class="tpo-links" role="navigation" aria-label="TPO letter walls">
@@ -198,13 +260,6 @@
     <a href="tpo-ym/">道指 YM</a>
     <a href="tpo-nq/">納指 NQ</a>
   </div>
-
-  <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="ranks" role="tab" aria-selected="true">Ranks</button>
-    <button class="tab" data-tab="rs90" role="tab" aria-selected="false">RS90–99</button>
-    <button class="tab" data-tab="mm" role="tab" aria-selected="false">MM</button>
-    <button class="tab" data-tab="xl" role="tab" aria-selected="false">XL</button>
-  </nav>
 
   <!-- ========== RANKS TAB ========== -->
   <div id="panel-ranks" class="tab-panel active" role="tabpanel">
@@ -486,6 +541,13 @@
     </div>
   </div>
 
+  <!-- ========== COT TAB ========== -->
+  <div id="panel-cot" class="tab-panel" role="tabpanel">
+    <iframe id="cot-frame" class="cot-frame" title="CFTC COT — Crowded Market Report"></iframe>
+  </div>
+  </div>
+  </div>
+
   <script>
 (function () {
   const DATA = {
@@ -661,7 +723,35 @@
     return prev;
   }
 
+  const TAB_IDS = ["ranks", "rs90", "mm", "xl", "cot"];
+  const SIDEBAR_KEY = "rs-us-daily.tag-sidebar";
+  const sidebarEl = document.getElementById("tag-sidebar");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+
+  function applySidebar(collapsed, persist) {
+    sidebarEl.classList.toggle("is-collapsed", collapsed);
+    sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    sidebarToggle.setAttribute("aria-label", collapsed ? "Show tags" : "Hide tags");
+    sidebarToggle.title = collapsed ? "Show tags" : "Hide tags";
+    sidebarToggle.textContent = collapsed ? "›" : "‹";
+    if (persist) {
+      try { localStorage.setItem(SIDEBAR_KEY, collapsed ? "collapsed" : "expanded"); }
+      catch (e) { /* ignore */ }
+    }
+  }
+
+  function ensureCot() {
+    const frame = document.getElementById("cot-frame");
+    if (frame && !frame.getAttribute("src")) frame.src = "cot/index.html";
+  }
+
+  function tabFromHash() {
+    const hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+    return TAB_IDS.indexOf(hash) >= 0 ? hash : null;
+  }
+
   function activateTab(name) {
+    if (TAB_IDS.indexOf(name) < 0) return;
     document.querySelectorAll("button.tab").forEach(b => {
       const on = b.dataset.tab === name;
       b.classList.toggle("active", on);
@@ -673,6 +763,7 @@
     if (name === "rs90") renderRs90();
     if (name === "mm") renderMm();
     if (name === "xl") renderXlTab();
+    if (name === "cot") ensureCot();
     try {
       if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
     } catch (e) { /* ignore */ }
@@ -1213,7 +1304,11 @@
       (rs90McapOnly ? " · MKT CAP >3B filter on" : "");
   }
 
-  // ---- Tabs ----
+  // ---- Tabs + sidebar ----
+  applySidebar(sidebarEl.classList.contains("is-collapsed"), false);
+  sidebarToggle.addEventListener("click", () => {
+    applySidebar(!sidebarEl.classList.contains("is-collapsed"), true);
+  });
   document.querySelectorAll("button.tab").forEach(btn => {
     btn.addEventListener("click", () => activateTab(btn.dataset.tab));
   });
@@ -1305,10 +1400,8 @@
         : "XL CSV missing.";
 
       // Hash routing
-      const hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (hash === "mm" || hash === "xl" || hash === "rs90" || hash === "ranks") {
-        activateTab(hash);
-      }
+      const hash = tabFromHash();
+      if (hash) activateTab(hash);
     } catch (e) {
       setStatus("Failed to load data: " + e.message, true);
       document.getElementById("rs90-status").textContent = "Failed: " + e.message;
@@ -1402,10 +1495,8 @@
   });
 
   window.addEventListener("hashchange", () => {
-    const hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "mm" || hash === "xl" || hash === "rs90" || hash === "ranks") {
-      activateTab(hash);
-    }
+    const hash = tabFromHash();
+    if (hash) activateTab(hash);
   });
 
   loadAll();

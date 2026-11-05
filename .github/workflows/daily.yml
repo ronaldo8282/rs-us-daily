@@ -72,6 +72,9 @@ jobs:
           if [ -f output/xl/xl_sector_etf_weekly.csv ]; then
             cp -f output/xl/xl_sector_etf_weekly.csv docs/data/xl_sector_etf_weekly.csv
           fi
+          if [ -f output/mm/mm_breadth_daily.csv ]; then
+            cp -f output/mm/mm_breadth_daily.csv docs/data/mm_breadth_daily.csv
+          fi
 
 
       - name: Market breadth MM (Stockbee-inspired MVP)

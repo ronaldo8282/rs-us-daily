@@ -200,7 +200,7 @@ runs this after the Friday append step.
 
 ## GitHub Pages MVP
 
-Interactive Friday browser (no build step). Tags live in a collapsible left sidebar, default **expanded** (`localStorage` key `rs-us-daily.tag-sidebar`: `expanded` or `collapsed`): **Ranks**, **RS90–99**, **MM**, **XL**, **COT**. COT embeds the existing page `docs/cot/index.html` (data in `docs/cot/data/`).
+Interactive Friday browser (no build step). Tags live in a collapsible left sidebar, default **expanded** (`localStorage` key `rs-us-daily.tag-sidebar`: `expanded` or `collapsed`): **Ranks**, **RS90–99**, **MM**, **XL**, **COT**, **HSIF TPO**, **道指 YM**, **納指 NQ**. COT embeds the existing page `docs/cot/index.html` (data in `docs/cot/data/`). HSIF TPO, 道指 YM, and 納指 NQ embed the existing pages `docs/tpo/`, `docs/tpo-ym/`, and `docs/tpo-nq/` — no new TPO copy. Expanded, each tag shows its full label; collapsed, the rail keeps a short mark (R, 90, MM, XL, COT, TPO, YM, NQ). The same toggle hides and shows the full labels.
 
 - Site root: `docs/index.html` (enable Pages: Settings → Pages → Deploy from branch `main` / folder `/docs`)
 - Suggested URL: https://ronaldo8282.github.io/rs-us-daily/

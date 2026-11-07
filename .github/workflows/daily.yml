@@ -58,6 +58,15 @@ jobs:
           # Resume fill; cap per day so the job still finishes under timeout.
           python src/update_fundamentals.py --resume --limit 400 --prioritize-friday
 
+      # MM downloads its own closes and upserts output/mm. It must finish
+      # before Sync Pages so docs/data gets today's mm_breadth_daily.csv.
+      # It does not read Friday, XL, or fundamentals outputs.
+      - name: Market breadth MM (Stockbee-inspired MVP)
+        continue-on-error: true
+        run: |
+          mkdir -p output/mm
+          python src/mm_breadth.py --out output/mm/mm_breadth_daily.csv --rewrite-days 15
+
       - name: Sync Pages data copies
         continue-on-error: true
         run: |
@@ -75,13 +84,6 @@ jobs:
           if [ -f output/mm/mm_breadth_daily.csv ]; then
             cp -f output/mm/mm_breadth_daily.csv docs/data/mm_breadth_daily.csv
           fi
-
-
-      - name: Market breadth MM (Stockbee-inspired MVP)
-        continue-on-error: true
-        run: |
-          mkdir -p output/mm
-          python src/mm_breadth.py --out output/mm/mm_breadth_daily.csv --rewrite-days 15
 
       - name: Overlap vs Fred (best-effort)
         continue-on-error: true

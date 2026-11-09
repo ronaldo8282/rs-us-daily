@@ -74,11 +74,6 @@ jobs:
         continue-on-error: true
         run: python scripts/fetch_otc_fin.py
 
-      # Refresh the vendored marginMonitor page used by the #otc tab.
-      - name: Vendor marginMonitor page
-        continue-on-error: true
-        run: python scripts/fetch_margin_monitor_page.py
-
       - name: Sync Pages data copies
         continue-on-error: true
         run: |

@@ -200,7 +200,7 @@ runs this after the Friday append step.
 
 ## GitHub Pages MVP
 
-Interactive Friday browser (no build step). Tags live in a collapsible left sidebar, default **expanded** (`localStorage` key `rs-us-daily.tag-sidebar`: `expanded` or `collapsed`): **Ranks**, **RS90–99**, **MM**, **XL**, **COT**, **HSIF TPO**, **道指 YM**, **納指 NQ**. COT embeds the existing page `docs/cot/index.html` (data in `docs/cot/data/`). HSIF TPO, 道指 YM, and 納指 NQ embed the existing pages `docs/tpo/`, `docs/tpo-ym/`, and `docs/tpo-nq/` — no new TPO copy. Expanded, each tag shows its full label; collapsed, the rail keeps a short mark (R, 90, MM, XL, COT, TPO, YM, NQ). The same toggle hides and shows the full labels.
+Interactive Friday browser (no build step). Tags live in a collapsible left sidebar, default **expanded** (`localStorage` key `rs-us-daily.tag-sidebar`: `expanded` or `collapsed`): **Ranks**, **RS90–99**, **MM**, **XL**, **COT**, **HSIF TPO**, **道指 YM**, **納指 NQ**, **斷頭壓力儀表**. COT embeds the existing page `docs/cot/index.html` (data in `docs/cot/data/`). HSIF TPO, 道指 YM, and 納指 NQ embed the existing pages `docs/tpo/`, `docs/tpo-ym/`, and `docs/tpo-nq/` — no new TPO copy. Expanded, each tag shows its full label; collapsed, the rail keeps a short mark (R, 90, MM, XL, COT, TPO, YM, NQ, OTC). The same toggle hides and shows the full labels.
 
 - Site root: `docs/index.html` (enable Pages: Settings → Pages → Deploy from branch `main` / folder `/docs`)
 - Suggested URL: https://ronaldo8282.github.io/rs-us-daily/
@@ -209,6 +209,7 @@ Interactive Friday browser (no build step). Tags live in a collapsible left side
   - `rs_friday_percentiles.csv` — wide Ticker × Friday Percentile
   - `fundamentals_latest.csv` — Ticker, Sector, Industry, MarketCap, updated_at
   - `xl_sector_etf_weekly.csv` — XL sector ETF Relative Strength + XlRank by Friday
+  - `otc_fin_pressure.csv` — 斷頭壓力儀表 (`date`, `otc_fin`, `taiex_close`, `ewt_close`). `otc_fin_pressure.json` is the same rows plus the column contract.
 
 ### Tab: Ranks
 
@@ -227,6 +228,24 @@ Weekly dashboard for names with **Percentile ≥ 90** on the as-of Friday:
 - Optional toggle **MKT CAP >3B only** (default **off** so incomplete MarketCap does not understate counts)
 
 Daily Actions copies the three CSVs into `docs/data/` and commits `docs/` with the rank outputs.
+
+### Tab: 斷頭壓力儀表
+
+Last tag in the rail. One chart: 上櫃融資維持率 (`otc_fin`, left axis), TAIEX / 加權 (`taiex_close`, right axis), and EWT (`ewt_close`, own scale). Hover shows the date plus all three. Buy zone is at or below 150, strict line 145; sell zone is at or above 210, strict line 205. Range buttons are 1Y / 2Y / 5Y / ALL. Drag the main plot to brush a custom window, drag the overview strip to pan or resize it, scroll to zoom, double-click to return to the last range button. Presets clamp to the dates actually in the CSV.
+
+**Index choice.** `taiex_close` is marginMonitor `series.TSE[].close`, so it shares session dates with OTC `fin`. EWT (iShares MSCI Taiwan ETF) is the USD daily close from Yahoo, a price proxy for the 0050 / 正二 thesis. The page does not scrape MacroMicro.
+
+**Cache.** `docs/data/otc_fin_pressure.csv` is what the page reads. Columns: `date` (YYYY-MM-DD), `otc_fin` (上櫃融資維持率 / finRatio), `taiex_close` (TAIEX / 加權), `ewt_close` (EWT USD). `docs/data/otc_fin_pressure.json` repeats those rows and states the same contract (`schema`: `otc_fin_pressure.v1`).
+
+marginMonitor `history.js` is only a short rolling seed. The script upserts it and keeps older dates. A longer history file (same columns, or aliases `fin` / `finRatio`, `taiex` / `tse_close`, `ewt`) merges through the same script:
+
+```bash
+python scripts/fetch_otc_fin.py
+python scripts/fetch_otc_fin.py --merge path/to/longer.csv
+python scripts/fetch_otc_fin.py --merge path/to/longer.json --replace
+```
+
+`--merge` lets non-empty incoming values replace that date. `--replace` starts from the file, then fills any dates it lacks from the seed. Without `--merge`, the seed refreshes `otc_fin` and `taiex_close` on dates it still publishes. Daily Actions runs the no-argument command (`continue-on-error`). Research series only, not investment advice.
 
 ### Fundamentals fill
 

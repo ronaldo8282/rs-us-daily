@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RS US Daily — Ranks · RS90–99 · MM · XL · COT · TPO</title>
+  <title>RS US Daily — Ranks · RS90–99 · MM · XL · COT · TPO · 斷頭</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -214,7 +214,7 @@
     td.mm-red-deep { background: var(--mm-red-deep); }
     td.mm-red-light { background: rgba(153, 27, 27, 0.45); }
     td.mm-mild { background: rgba(22, 101, 52, 0.25); color: var(--text); font-weight: 500; }
-    #panel-mm .mm-thrust-note { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+    #panel-mm .mm-thrust-note, #panel-otc .mm-thrust-note { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
     #panel-mm button.mm-range {
       background: #243044; color: var(--text); border: 1px solid var(--border);
       border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
@@ -251,6 +251,58 @@
       background: var(--card); border: 1px solid var(--border); border-radius: 6px;
       padding: 0.28rem 0.45rem; font-size: 0.75rem; color: var(--text); white-space: nowrap;
     }
+    #panel-otc button.otc-range {
+      background: #243044; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
+    }
+    #panel-otc button.otc-range.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #panel-otc button.otc-range:hover { filter: brightness(1.1); }
+    #panel-otc .otc-window {
+      color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums;
+    }
+    #panel-otc .mm-chart-block {
+      margin: 0.75rem 1.5rem 0; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    #panel-otc .mm-chart-head {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;
+      justify-content: space-between; padding: 0.5rem 0.85rem;
+      background: #243044; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem; font-weight: 650;
+    }
+    #panel-otc .mm-chart-legend {
+      display: inline-flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;
+      color: var(--muted); font-weight: 500; font-size: 0.78rem;
+    }
+    #panel-otc .mm-swatch {
+      display: inline-block; width: 1.15rem; height: 0.18rem; border-radius: 2px;
+      margin-right: 0.3rem; vertical-align: middle;
+    }
+    #panel-otc .otc-swatch-fin { background: var(--accent); height: 0.28rem; }
+    #panel-otc .otc-swatch-taiex { background: var(--accent2); }
+    #panel-otc .otc-swatch-ewt { background: var(--danger); }
+    #panel-otc .otc-chart-scroll {
+      position: relative; height: 280px; background: var(--bg);
+      touch-action: none; cursor: crosshair; user-select: none;
+    }
+    #panel-otc .otc-chart-scroll canvas { display: block; width: 100%; height: 280px; }
+    #panel-otc .otc-brush-band {
+      position: absolute; pointer-events: none; z-index: 2;
+      background: rgba(59, 130, 246, 0.18);
+      border-left: 1px solid var(--accent); border-right: 1px solid var(--accent);
+    }
+    #panel-otc .otc-chart-tip {
+      position: fixed; z-index: 5; pointer-events: none;
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.35rem 0.5rem; font-size: 0.75rem; color: var(--text);
+      white-space: pre-line; line-height: 1.35;
+    }
+    #panel-otc .otc-overview {
+      position: relative; height: 46px; border-top: 1px solid var(--border);
+      background: var(--bg); touch-action: none; cursor: ew-resize;
+    }
+    #panel-otc .otc-overview canvas { display: block; width: 100%; height: 46px; }
+    #panel-otc .note a { color: var(--accent); }
     th.xl-date { font-size: 0.75rem; text-align: right; }
     th.xl-primary { color: var(--accent2); }
     td.xl-primary { font-weight: 700; }
@@ -324,6 +376,7 @@
       <button class="tab" data-tab="tpo" data-mark="TPO" role="tab" aria-selected="false" aria-label="HSIF TPO"><span class="tab-label">HSIF TPO</span></button>
       <button class="tab" data-tab="tpo-ym" data-mark="YM" role="tab" aria-selected="false" aria-label="道指 YM"><span class="tab-label">道指 YM</span></button>
       <button class="tab" data-tab="tpo-nq" data-mark="NQ" role="tab" aria-selected="false" aria-label="納指 NQ"><span class="tab-label">納指 NQ</span></button>
+      <button class="tab" data-tab="otc" data-mark="OTC" role="tab" aria-selected="false" aria-label="斷頭壓力儀表"><span class="tab-label">斷頭壓力儀表</span></button>
     </nav>
   </aside>
   <script>
@@ -344,7 +397,7 @@
   <div class="shell-main">
   <header>
     <h1>RS US Daily</h1>
-    <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth, XL sector strength &amp; CFTC COT · data from <code>docs/data/</code> and <code>docs/cot/</code></div>
+    <div class="sub">IBD-style Relative Strength — Friday ranks, RS90–99, Stockbee MM breadth, XL sector strength, CFTC COT &amp; 斷頭壓力儀表 · data from <code>docs/data/</code> and <code>docs/cot/</code></div>
   </header>
 
   <!-- ========== RANKS TAB ========== -->
@@ -743,6 +796,52 @@
   <div id="panel-tpo-nq" class="tab-panel" role="tabpanel">
     <iframe id="tpo-nq-frame" class="cot-frame" title="TPO Letter Hourglass · 納指期貨 NQ"></iframe>
   </div>
+
+  <!-- ========== OTC FIN PRESSURE ========== -->
+  <div id="panel-otc" class="tab-panel" role="tabpanel">
+    <div class="mm-header">
+      <strong>斷頭壓力儀表</strong>
+      · 上櫃融資維持率
+      <div class="mm-thrust-note" id="otc-asof">As of …</div>
+      <div class="mm-thrust-note">買區 ≤150（嚴格 145）· 賣區 ≥210（嚴格 205）。拖主圖選區間，下方總覽拖曳平移或拉邊，滾輪縮放，雙擊回到區間按鈕。</div>
+    </div>
+    <div class="controls">
+      <div class="group">
+        <label>Range</label>
+        <button type="button" class="otc-range active" data-otc-range="1y">1Y</button>
+        <button type="button" class="otc-range" data-otc-range="2y">2Y</button>
+        <button type="button" class="otc-range" data-otc-range="5y">5Y</button>
+        <button type="button" class="otc-range" data-otc-range="all">ALL</button>
+      </div>
+      <span class="otc-window" id="otc-window"></span>
+    </div>
+    <div class="mm-chart-block" id="otc-chart-block">
+      <div class="mm-chart-head">
+        <span>上櫃融資維持率 · TAIEX / 加權 · EWT</span>
+        <span class="mm-chart-legend">
+          <span><i class="mm-swatch otc-swatch-fin"></i>融資維持率</span>
+          <span><i class="mm-swatch otc-swatch-taiex"></i>TAIEX / 加權</span>
+          <span><i class="mm-swatch otc-swatch-ewt"></i>EWT（獨立刻度）</span>
+        </span>
+      </div>
+      <div class="otc-chart-scroll" id="otc-chart-scroll">
+        <canvas id="otc-chart" aria-label="OTC margin maintenance ratio with TAIEX and EWT"></canvas>
+        <div id="otc-brush-band" class="otc-brush-band" hidden></div>
+        <div id="otc-chart-tip" class="otc-chart-tip" hidden></div>
+      </div>
+      <div class="otc-overview" id="otc-overview" title="拖曳中間平移，拉左右邊緣改區間，或在外側拖選">
+        <canvas id="otc-overview-canvas" aria-label="Full-series brush for the margin chart"></canvas>
+      </div>
+    </div>
+    <div class="status" id="otc-status">Loading OTC fin…</div>
+    <div class="wrap">
+      <p class="note">
+        研究對照，非投資建議。上櫃融資維持率與 TAIEX／加權取自
+        <a href="https://twm-z3sodp.github.io/marginMonitor/" target="_blank" rel="noopener noreferrer">marginMonitor</a>
+        （TSE.close 與 OTC fin 同日）。EWT 為 Yahoo Finance 日收盤，美元計的台灣股票 ETF，對應 0050／正二。
+      </p>
+    </div>
+  </div>
   </div>
   </div>
 
@@ -754,6 +853,7 @@
     fund: "./data/fundamentals_latest.csv",
     xl: "./data/xl_sector_etf_weekly.csv",
     mm: "./data/mm_breadth_daily.csv",
+    otc: "./data/otc_fin_pressure.csv",
   };
 
   let ranksWide = null;
@@ -771,6 +871,14 @@
   let mmChartMonths = 12;
   let mmChartGeom = null;
   let mmChartKey = "";
+  let otcRows = [];
+  let otcPreset = "1y";
+  let otcAnchorPreset = "1y";
+  let otcCustom = null;
+  let otcGeom = null;
+  let otcOvGeom = null;
+  let otcChartKey = "";
+  let otcPointer = null;
 
   let rs90Weeks = 5;
   let rs90AsOf = null;
@@ -934,7 +1042,7 @@
     return prev;
   }
 
-  const TAB_IDS = ["ranks", "rs90", "mm", "xl", "cot", "tpo", "tpo-ym", "tpo-nq"];
+  const TAB_IDS = ["ranks", "rs90", "mm", "xl", "cot", "tpo", "tpo-ym", "tpo-nq", "otc"];
   const SIDEBAR_KEY = "rs-us-daily.tag-sidebar";
   const sidebarEl = document.getElementById("tag-sidebar");
   const sidebarToggle = document.getElementById("sidebar-toggle");
@@ -988,6 +1096,7 @@
     if (name === "rs90") renderRs90();
     if (name === "mm") renderMm();
     if (name === "xl") renderXlTab();
+    if (name === "otc") renderOtc();
     if (name === "cot") ensureCot();
     if (name === "tpo" || name === "tpo-ym" || name === "tpo-nq") ensureTpo(name);
     try {
@@ -2140,6 +2249,463 @@
     drawSecTrend();
   }
 
+  // ---- OTC fin pressure (斷頭壓力儀表) ----
+  // Reads docs/data/otc_fin_pressure.csv only. Window presets clamp to whatever
+  // dates are in that file; nothing here assumes the short marginMonitor seed.
+  function otcShiftYears(iso, delta) {
+    const p = iso.split("-");
+    const dt = new Date(Date.UTC(+p[0] + delta, +p[1] - 1, +p[2]));
+    const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(dt.getUTCDate()).padStart(2, "0");
+    return dt.getUTCFullYear() + "-" + m + "-" + d;
+  }
+
+  function otcFmt(v, digits) {
+    if (v == null || !isFinite(v)) return "—";
+    return v.toLocaleString("en-US", {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  }
+
+  function otcWindow() {
+    const n = otcRows.length;
+    if (!n) return { i0: 0, i1: -1, start: "", end: "" };
+    const last = n - 1;
+    let startDate;
+    let endDate;
+    if (otcPreset === "custom" && otcCustom) {
+      startDate = otcCustom.start;
+      endDate = otcCustom.end;
+    } else if (otcPreset === "all") {
+      startDate = otcRows[0].date;
+      endDate = otcRows[last].date;
+    } else {
+      const years = otcPreset === "5y" ? 5 : otcPreset === "2y" ? 2 : 1;
+      endDate = otcRows[last].date;
+      startDate = otcShiftYears(endDate, -years);
+    }
+    let i0 = 0;
+    let i1 = last;
+    while (i0 < n && otcRows[i0].date < startDate) i0++;
+    while (i1 > 0 && otcRows[i1].date > endDate) i1--;
+    if (i0 > i1) { i0 = 0; i1 = last; }
+    return { i0: i0, i1: i1, start: otcRows[i0].date, end: otcRows[i1].date };
+  }
+
+  function otcVisible() {
+    const w = otcWindow();
+    if (w.i1 < w.i0) return { rows: [], i0: 0, start: "", end: "" };
+    return { rows: otcRows.slice(w.i0, w.i1 + 1), i0: w.i0, start: w.start, end: w.end };
+  }
+
+  function otcSyncButtons() {
+    document.querySelectorAll("#panel-otc button.otc-range").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.otcRange === otcPreset);
+    });
+    const label = document.getElementById("otc-window");
+    if (!label) return;
+    if (!otcRows.length) { label.textContent = ""; return; }
+    const w = otcWindow();
+    label.textContent = w.start + " → " + w.end + (otcPreset === "custom" ? " · custom" : "");
+  }
+
+  function otcSetCustom(i0, i1) {
+    const n = otcRows.length;
+    if (n < 2) return;
+    i0 = Math.max(0, Math.min(n - 1, i0));
+    i1 = Math.max(0, Math.min(n - 1, i1));
+    if (i1 < i0) { const swap = i0; i0 = i1; i1 = swap; }
+    if (i1 === i0) {
+      if (i1 < n - 1) i1 += 1;
+      else i0 -= 1;
+    }
+    const start = otcRows[i0].date;
+    const end = otcRows[i1].date;
+    if (otcPreset === "custom" && otcCustom && otcCustom.start === start && otcCustom.end === end) return;
+    const cur = otcWindow();
+    if (otcPreset !== "custom" && cur.start === start && cur.end === end) return;
+    otcCustom = { start: start, end: end };
+    otcPreset = "custom";
+    otcSyncButtons();
+    drawOtc(true);
+  }
+
+  function otcApplyPreset(name, remember) {
+    if (remember !== false) otcAnchorPreset = name;
+    otcPreset = name;
+    otcCustom = null;
+    otcSyncButtons();
+    drawOtc(true);
+  }
+
+  function otcIndexAt(x, geom) {
+    if (!geom || !geom.rows.length) return 0;
+    const i = Math.floor((x - geom.pad.l) / geom.step);
+    return Math.max(0, Math.min(geom.rows.length - 1, i));
+  }
+
+  function otcY(domain, v, top, plotH) {
+    return top + (1 - (v - domain.lo) / (domain.hi - domain.lo)) * plotH;
+  }
+
+  function otcDomain(vals, floor, ceil) {
+    const clean = [];
+    for (const v of vals) if (v != null && isFinite(v)) clean.push(v);
+    if (!clean.length) return null;
+    let lo = Math.min.apply(null, clean);
+    let hi = Math.max.apply(null, clean);
+    if (floor != null) lo = Math.min(lo, floor);
+    if (ceil != null) hi = Math.max(hi, ceil);
+    if (hi === lo) { lo -= 1; hi += 1; }
+    const pad = (hi - lo) * 0.06;
+    return { lo: lo - pad, hi: hi + pad };
+  }
+
+  function otcTicks(lo, hi) {
+    const span = hi - lo;
+    if (!(span > 0)) return [];
+    const raw = span / 4;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const err = raw / pow;
+    const mult = err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1;
+    const inc = pow * mult;
+    if (!(inc > 0)) return [];
+    const ticks = [];
+    for (let v = Math.ceil(lo / inc) * inc; v < hi - inc * 0.2 && ticks.length < 6; v += inc) {
+      ticks.push(v);
+    }
+    return ticks;
+  }
+
+  function otcHideBand() {
+    const band = document.getElementById("otc-brush-band");
+    if (band) band.hidden = true;
+  }
+
+  function otcPlaceBand(x0, x1) {
+    const band = document.getElementById("otc-brush-band");
+    const g = otcGeom;
+    if (!band || !g) return;
+    const left = Math.max(g.pad.l, Math.min(x0, x1));
+    const right = Math.min(g.pad.l + g.plotW, Math.max(x0, x1));
+    band.hidden = false;
+    band.style.left = left + "px";
+    band.style.width = Math.max(1, right - left) + "px";
+    band.style.top = g.plotTop + "px";
+    band.style.height = g.plotH + "px";
+  }
+
+  function drawOtcOverview() {
+    const canvas = document.getElementById("otc-overview-canvas");
+    const host = document.getElementById("otc-overview");
+    if (!canvas || !host) return;
+    const cssH = host.clientHeight || 46;
+    const viewW = host.clientWidth || 0;
+    if (viewW < 40) return;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d");
+    canvas.width = Math.round(viewW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = viewW + "px";
+    canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, viewW, cssH);
+    const n = otcRows.length;
+    const pad = { l: 48, r: 68, t: 4, b: 4 };
+    const plotW = Math.max(10, viewW - pad.l - pad.r);
+    const plotH = cssH - pad.t - pad.b;
+    if (!n) { otcOvGeom = null; return; }
+    const vals = [];
+    for (const r of otcRows) if (r.otc_fin != null && isFinite(r.otc_fin)) vals.push(r.otc_fin);
+    let lo = vals.length ? Math.min.apply(null, vals) : 0;
+    let hi = vals.length ? Math.max.apply(null, vals) : 1;
+    if (hi === lo) { lo -= 1; hi += 1; }
+    const yOf = (v) => pad.t + (1 - (v - lo) / (hi - lo)) * plotH;
+    const xAt = (i) => n <= 1 ? pad.l : pad.l + (i / (n - 1)) * plotW;
+    ctx.beginPath();
+    let on = false;
+    for (let i = 0; i < n; i++) {
+      const v = otcRows[i].otc_fin;
+      if (v == null || !isFinite(v)) { on = false; continue; }
+      const x = xAt(i);
+      const y = yOf(v);
+      if (!on) { ctx.moveTo(x, y); on = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = mmCssColor("--accent");
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+    const w = otcWindow();
+    const x0 = xAt(Math.max(0, w.i0));
+    const x1 = xAt(Math.max(0, w.i1));
+    ctx.fillStyle = "rgba(8, 12, 18, 0.55)";
+    ctx.fillRect(pad.l, pad.t, Math.max(0, x0 - pad.l), plotH);
+    ctx.fillRect(x1, pad.t, Math.max(0, pad.l + plotW - x1), plotH);
+    const accent = mmCssColor("--accent");
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0 + 0.5, pad.t + 0.5, Math.max(2, x1 - x0), plotH);
+    ctx.fillStyle = accent;
+    ctx.fillRect(x0 - 2, pad.t, 4, plotH);
+    ctx.fillRect(x1 - 2, pad.t, 4, plotH);
+    otcOvGeom = { pad: pad, plotW: plotW, plotH: plotH, n: n, i0: w.i0, i1: w.i1 };
+  }
+
+  function ovIndexAt(x) {
+    const g = otcOvGeom;
+    if (!g || g.n <= 1) return 0;
+    const t = (x - g.pad.l) / g.plotW;
+    return Math.round(Math.max(0, Math.min(1, t)) * (g.n - 1));
+  }
+
+  function drawOtc(force) {
+    const canvas = document.getElementById("otc-chart");
+    const scroll = document.getElementById("otc-chart-scroll");
+    if (!canvas || !scroll) return;
+    const cssH = scroll.clientHeight || 280;
+    const viewW = scroll.clientWidth || 0;
+    if (viewW < 40) return;
+    const vis = otcVisible();
+    const key = viewW + ":" + cssH + ":" + vis.start + ":" + vis.end + ":" + vis.rows.length + ":" + otcRows.length;
+    if (!force && key === otcChartKey) {
+      drawOtcOverview();
+      return;
+    }
+    otcChartKey = key;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d");
+    canvas.width = Math.round(viewW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = viewW + "px";
+    canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, viewW, cssH);
+    const rows = vis.rows;
+    if (!rows.length) {
+      otcGeom = null;
+      drawOtcOverview();
+      return;
+    }
+    const pad = { l: 48, r: 68, t: 14, b: 28 };
+    const plotW = Math.max(10, viewW - pad.l - pad.r);
+    const plotH = cssH - pad.t - pad.b;
+    const step = plotW / rows.length;
+    const finDom = otcDomain(rows.map(r => r.otc_fin), 145, 210);
+    const taiexDom = otcDomain(rows.map(r => r.taiex_close), null, null);
+    const ewtDom = otcDomain(rows.map(r => r.ewt_close), null, null);
+    const greenDeep = mmCssColor("--mm-green-deep");
+    const green = mmCssColor("--mm-green");
+    const redLight = mmCssColor("--mm-red-light");
+    const muted = mmCssColor("--muted");
+    const accent = mmCssColor("--accent");
+    const accent2 = mmCssColor("--accent2");
+    const amber = mmCssColor("--danger");
+    const border = mmCssColor("--border");
+    const plotBottom = pad.t + plotH;
+
+    if (finDom) {
+      const y145 = otcY(finDom, 145, pad.t, plotH);
+      const y150 = otcY(finDom, 150, pad.t, plotH);
+      const y210 = otcY(finDom, 210, pad.t, plotH);
+      ctx.fillStyle = mmRgba(green, 0.28);
+      ctx.fillRect(pad.l, y150, plotW, plotBottom - y150);
+      ctx.fillStyle = mmRgba(greenDeep, 0.55);
+      ctx.fillRect(pad.l, y145, plotW, plotBottom - y145);
+      ctx.fillStyle = mmRgba(redLight, 0.32);
+      ctx.fillRect(pad.l, pad.t, plotW, y210 - pad.t);
+      ctx.save();
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.strokeStyle = mmRgba(accent2, 0.75);
+      ctx.moveTo(pad.l, y150); ctx.lineTo(pad.l + plotW, y150);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = mmRgba(mmCssColor("--drop"), 0.75);
+      ctx.moveTo(pad.l, y210); ctx.lineTo(pad.l + plotW, y210);
+      ctx.stroke();
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      ctx.strokeStyle = accent2;
+      const yS145 = otcY(finDom, 145, pad.t, plotH);
+      ctx.moveTo(pad.l, yS145); ctx.lineTo(pad.l + plotW, yS145);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = mmCssColor("--drop");
+      const y205 = otcY(finDom, 205, pad.t, plotH);
+      ctx.moveTo(pad.l, y205); ctx.lineTo(pad.l + plotW, y205);
+      ctx.stroke();
+      ctx.restore();
+      ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      const labs = [
+        { y: yS145, text: "145", color: accent2 },
+        { y: y205, text: "205", color: mmCssColor("--drop") },
+        { y: y150, text: "150", color: muted },
+        { y: y210, text: "210", color: muted },
+      ];
+      const placed = [];
+      for (const lab of labs) {
+        if (lab.y < pad.t + 6 || lab.y > plotBottom - 6) continue;
+        if (placed.some(y => Math.abs(y - lab.y) < 12)) continue;
+        ctx.fillStyle = lab.color;
+        ctx.fillText(lab.text, pad.l - 6, lab.y);
+        placed.push(lab.y);
+      }
+    }
+
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pad.l + 0.5, pad.t + 0.5, plotW, plotH);
+
+    if (taiexDom) {
+      ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = muted;
+      for (const v of otcTicks(taiexDom.lo, taiexDom.hi)) {
+        const y = otcY(taiexDom, v, pad.t, plotH);
+        if (y < pad.t + 4 || y > plotBottom - 4) continue;
+        ctx.fillText(otcFmt(v, v >= 1000 ? 0 : 2), pad.l + plotW + 6, y);
+      }
+    }
+
+    function strokeKey(key, domain, color, width) {
+      if (!domain) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.l, pad.t, plotW, plotH);
+      ctx.clip();
+      ctx.beginPath();
+      let on = false;
+      for (let i = 0; i < rows.length; i++) {
+        const v = rows[i][key];
+        if (v == null || !isFinite(v)) { on = false; continue; }
+        const x = pad.l + (i + 0.5) * step;
+        const y = otcY(domain, v, pad.t, plotH);
+        if (!on) { ctx.moveTo(x, y); on = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+      ctx.restore();
+    }
+    strokeKey("ewt_close", ewtDom, amber, 1.25);
+    strokeKey("taiex_close", taiexDom, accent2, 1.6);
+    strokeKey("otc_fin", finDom, accent, 2.15);
+
+    ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+    ctx.fillStyle = muted;
+    ctx.textBaseline = "top";
+    let lastLabelX = -1e9;
+    let lastLabelMonth = "";
+    for (let i = 0; i < rows.length; i++) {
+      const month = rows[i].date.slice(0, 7);
+      const monthStart = i === 0 || month !== rows[i - 1].date.slice(0, 7);
+      if (!monthStart && i !== rows.length - 1) continue;
+      if (month === lastLabelMonth) continue;
+      const x = pad.l + (i + 0.5) * step;
+      if (i !== 0 && i !== rows.length - 1 && x - lastLabelX < 64) continue;
+      if (i === rows.length - 1 && x - lastLabelX < 36) continue;
+      ctx.textAlign = i === rows.length - 1 ? "right" : "center";
+      ctx.fillText(month, x, pad.t + plotH + 8);
+      lastLabelX = x;
+      lastLabelMonth = month;
+    }
+
+    otcGeom = { rows: rows, i0: vis.i0, pad: pad, step: step, plotTop: pad.t, plotH: plotH, plotW: plotW };
+    drawOtcOverview();
+  }
+
+  function otcTipAt(clientX, clientY) {
+    const tip = document.getElementById("otc-chart-tip");
+    const canvas = document.getElementById("otc-chart");
+    if (!tip || !canvas || !otcGeom || otcPointer) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const g = otcGeom;
+    const inside = x >= g.pad.l && x <= g.pad.l + g.plotW && y >= g.plotTop && y <= g.plotTop + g.plotH;
+    if (!inside) { tip.hidden = true; return; }
+    const r = g.rows[otcIndexAt(x, g)];
+    tip.hidden = false;
+    tip.textContent = r.date
+      + "\n融資維持率 " + otcFmt(r.otc_fin, 2)
+      + "\nTAIEX " + otcFmt(r.taiex_close, 2)
+      + "\nEWT " + otcFmt(r.ewt_close, 2);
+    tip.style.left = (clientX + 12) + "px";
+    tip.style.top = (clientY + 14) + "px";
+  }
+
+  function otcZoomAt(clientX, deltaY) {
+    if (otcRows.length < 2) return;
+    const w = otcWindow();
+    const span = Math.max(1, w.i1 - w.i0);
+    const maxSpan = otcRows.length - 1;
+    const zoomIn = deltaY < 0;
+    let newSpan = Math.round(span * (zoomIn ? 0.8 : 1.25));
+    if (zoomIn && newSpan >= span) newSpan = span - 1;
+    if (!zoomIn && newSpan <= span) newSpan = span + 1;
+    if (!zoomIn && newSpan >= maxSpan) {
+      otcApplyPreset("all", false);
+      return;
+    }
+    newSpan = Math.max(8, Math.min(maxSpan, newSpan));
+    if (newSpan >= maxSpan) {
+      otcApplyPreset("all", false);
+      return;
+    }
+    let ratio = 0.5;
+    const canvas = document.getElementById("otc-chart");
+    if (canvas && otcGeom) {
+      const x = clientX - canvas.getBoundingClientRect().left;
+      if (x >= otcGeom.pad.l && x <= otcGeom.pad.l + otcGeom.plotW && otcGeom.rows.length > 1) {
+        ratio = otcIndexAt(x, otcGeom) / (otcGeom.rows.length - 1);
+      }
+    }
+    const anchor = w.i0 + Math.round(span * ratio);
+    let i0 = Math.round(anchor - newSpan * ratio);
+    let i1 = i0 + newSpan;
+    if (i0 < 0) { i1 -= i0; i0 = 0; }
+    if (i1 > maxSpan) { i0 -= i1 - maxSpan; i1 = maxSpan; }
+    if (i0 < 0) i0 = 0;
+    otcSetCustom(i0, i1);
+  }
+
+  function renderOtc() {
+    const st = document.getElementById("otc-status");
+    const asof = document.getElementById("otc-asof");
+    if (!otcRows.length) {
+      if (st) {
+        st.textContent = "No OTC fin series in docs/data/otc_fin_pressure.csv.";
+        st.classList.add("error");
+      }
+      if (asof) asof.textContent = "As of —";
+      otcSyncButtons();
+      requestAnimationFrame(() => drawOtc(true));
+      return;
+    }
+    if (st) st.classList.remove("error");
+    let last = otcRows[otcRows.length - 1];
+    for (let i = otcRows.length - 1; i >= 0; i--) {
+      if (otcRows[i].otc_fin != null) { last = otcRows[i]; break; }
+    }
+    const bits = ["As of " + last.date, "上櫃融資維持率 " + otcFmt(last.otc_fin, 2)];
+    if (last.taiex_close != null) bits.push("TAIEX " + otcFmt(last.taiex_close, 2));
+    if (last.ewt_close != null) bits.push("EWT " + otcFmt(last.ewt_close, 2));
+    if (asof) asof.textContent = bits.join(" · ");
+    if (st) {
+      st.textContent = otcRows.length + " sessions · " + otcRows[0].date + " → " + otcRows[otcRows.length - 1].date;
+    }
+    otcSyncButtons();
+    requestAnimationFrame(() => drawOtc(true));
+  }
+
   // ---- Tabs + sidebar ----
   applySidebar(sidebarEl.classList.contains("is-collapsed"), false);
   sidebarToggle.addEventListener("click", () => {
@@ -2159,12 +2725,13 @@
   async function loadAll() {
     setStatus("Loading CSVs…");
     try {
-      const [rText, pText, fText, xlText, mmText] = await Promise.all([
+      const [rText, pText, fText, xlText, mmText, otcText] = await Promise.all([
         fetch(DATA.ranks).then(r => { if (!r.ok) throw new Error(DATA.ranks + " " + r.status); return r.text(); }),
         fetch(DATA.pcts).then(r => { if (!r.ok) throw new Error(DATA.pcts + " " + r.status); return r.text(); }),
         fetch(DATA.fund).then(r => r.ok ? r.text() : "").catch(() => ""),
         fetch(DATA.xl).then(r => r.ok ? r.text() : "").catch(() => ""),
         fetch(DATA.mm).then(r => r.ok ? r.text() : "").catch(() => ""),
+        fetch(DATA.otc).then(r => r.ok ? r.text() : "").catch(() => ""),
       ]);
       const rParsed = parseCSV(rText);
       const pParsed = parseCSV(pText);
@@ -2234,6 +2801,29 @@
       document.getElementById("xl-status").textContent = xlDates.length
         ? "Ready — " + xlDates.length + " XL Fridays."
         : "XL CSV missing.";
+      otcRows = [];
+      if (otcText) {
+        const otcParsed = parseCSV(otcText);
+        const byDate = new Map();
+        for (const rec of otcParsed.records) {
+          const d = String(rec.date || "").trim().slice(0, 10);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+          byDate.set(d, {
+            date: d,
+            otc_fin: numOrNull(rec.otc_fin),
+            taiex_close: numOrNull(rec.taiex_close),
+            ewt_close: numOrNull(rec.ewt_close),
+          });
+        }
+        otcRows = [...byDate.keys()].sort().map(d => byDate.get(d));
+      }
+      const otcStatus = document.getElementById("otc-status");
+      if (otcStatus) {
+        otcStatus.textContent = otcRows.length
+          ? otcRows.length + " sessions · " + otcRows[0].date + " → " + otcRows[otcRows.length - 1].date
+          : "OTC fin CSV missing.";
+        otcStatus.classList.toggle("error", !otcRows.length);
+      }
 
       // Hash routing
       const hash = tabFromHash();
@@ -2284,6 +2874,133 @@
       drawMmRatioChart();
     });
   });
+  document.querySelectorAll("#panel-otc button.otc-range").forEach(btn => {
+    btn.addEventListener("click", () => otcApplyPreset(btn.dataset.otcRange));
+  });
+  const otcScrollEl = document.getElementById("otc-chart-scroll");
+  const otcCanvas = document.getElementById("otc-chart");
+  if (otcScrollEl && otcCanvas) {
+    otcScrollEl.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (!otcGeom) return;
+      const x = e.clientX - otcCanvas.getBoundingClientRect().left;
+      if (x < otcGeom.pad.l || x > otcGeom.pad.l + otcGeom.plotW) return;
+      otcPointer = { kind: "brush", x0: x, x1: x };
+      otcScrollEl.setPointerCapture(e.pointerId);
+      const tip = document.getElementById("otc-chart-tip");
+      if (tip) tip.hidden = true;
+    });
+    otcScrollEl.addEventListener("pointermove", (e) => {
+      if (otcPointer && otcPointer.kind === "brush") {
+        otcPointer.x1 = e.clientX - otcCanvas.getBoundingClientRect().left;
+        otcPlaceBand(otcPointer.x0, otcPointer.x1);
+        return;
+      }
+      otcTipAt(e.clientX, e.clientY);
+    });
+    function endOtcBrush(e) {
+      if (!otcPointer || otcPointer.kind !== "brush") return;
+      const p = otcPointer;
+      otcPointer = null;
+      otcHideBand();
+      if (!otcGeom) return;
+      const x1 = e.clientX - otcCanvas.getBoundingClientRect().left;
+      if (Math.abs(x1 - p.x0) < 6) return;
+      const a = otcGeom.i0 + otcIndexAt(p.x0, otcGeom);
+      const b = otcGeom.i0 + otcIndexAt(x1, otcGeom);
+      if (a !== b) otcSetCustom(a, b);
+    }
+    otcScrollEl.addEventListener("pointerup", endOtcBrush);
+    otcScrollEl.addEventListener("pointercancel", () => {
+      otcPointer = null;
+      otcHideBand();
+    });
+    otcScrollEl.addEventListener("pointerleave", () => {
+      if (otcPointer) return;
+      const tip = document.getElementById("otc-chart-tip");
+      if (tip) tip.hidden = true;
+    });
+    otcScrollEl.addEventListener("dblclick", () => {
+      otcPointer = null;
+      otcHideBand();
+      otcApplyPreset(otcAnchorPreset || "1y");
+    });
+    otcScrollEl.addEventListener("wheel", (e) => {
+      if (!otcRows.length) return;
+      e.preventDefault();
+      otcZoomAt(e.clientX, e.deltaY);
+    }, { passive: false });
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        const panel = document.getElementById("panel-otc");
+        if (panel && panel.classList.contains("active")) drawOtc(false);
+      }).observe(otcScrollEl);
+    }
+  }
+  const otcOvEl = document.getElementById("otc-overview");
+  if (otcOvEl) {
+    otcOvEl.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (!otcOvGeom) return;
+      const canvas = document.getElementById("otc-overview-canvas");
+      const x = e.clientX - canvas.getBoundingClientRect().left;
+      const n = otcOvGeom.n;
+      const xAt = (i) => n <= 1 ? otcOvGeom.pad.l : otcOvGeom.pad.l + (i / (n - 1)) * otcOvGeom.plotW;
+      const x0 = xAt(otcOvGeom.i0);
+      const x1 = xAt(otcOvGeom.i1);
+      let mode = "select";
+      if (Math.abs(x - x0) <= 8) mode = "left";
+      else if (Math.abs(x - x1) <= 8) mode = "right";
+      else if (x > x0 && x < x1) mode = "pan";
+      otcPointer = {
+        kind: "ov",
+        mode: mode,
+        x0: x,
+        anchor: ovIndexAt(x),
+        originI0: otcOvGeom.i0,
+        originI1: otcOvGeom.i1,
+      };
+      otcOvEl.setPointerCapture(e.pointerId);
+    });
+    otcOvEl.addEventListener("pointermove", (e) => {
+      if (!otcPointer || otcPointer.kind !== "ov") return;
+      const canvas = document.getElementById("otc-overview-canvas");
+      const x = e.clientX - canvas.getBoundingClientRect().left;
+      const i = ovIndexAt(x);
+      const p = otcPointer;
+      const n = otcRows.length;
+      if (p.mode === "select" && Math.abs(x - p.x0) < 4) return;
+      if (p.mode === "pan") {
+        const delta = i - p.anchor;
+        const span = p.originI1 - p.originI0;
+        let i0 = p.originI0 + delta;
+        let i1 = i0 + span;
+        if (i0 < 0) { i1 -= i0; i0 = 0; }
+        if (i1 > n - 1) { i0 -= i1 - (n - 1); i1 = n - 1; }
+        if (i0 < 0) i0 = 0;
+        otcSetCustom(i0, i1);
+      } else if (p.mode === "left") {
+        otcSetCustom(Math.min(i, p.originI1 - 1), p.originI1);
+      } else if (p.mode === "right") {
+        otcSetCustom(p.originI0, Math.max(i, p.originI0 + 1));
+      } else {
+        otcSetCustom(p.anchor, i);
+      }
+    });
+    function endOv(e) {
+      if (!otcPointer || otcPointer.kind !== "ov") return;
+      const p = otcPointer;
+      otcPointer = null;
+      if (p.mode !== "select") return;
+      const canvas = document.getElementById("otc-overview-canvas");
+      const x = e.clientX - canvas.getBoundingClientRect().left;
+      if (Math.abs(x - p.x0) < 4) return;
+      otcSetCustom(p.anchor, ovIndexAt(x));
+    }
+    otcOvEl.addEventListener("pointerup", endOv);
+    otcOvEl.addEventListener("pointercancel", () => { otcPointer = null; });
+  }
+
   const mmScrollEl = document.getElementById("mm-chart-scroll");
   if (mmScrollEl) {
     mmScrollEl.addEventListener("mousemove", (e) => mmChartTipAt(e.clientX, e.clientY));

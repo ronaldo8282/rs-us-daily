@@ -863,82 +863,9 @@
     <iframe id="tpo-nq-frame" class="cot-frame" title="TPO Letter Hourglass · 納指期貨 NQ"></iframe>
   </div>
 
-  <!-- ========== OTC FIN PRESSURE ========== -->
+  <!-- ========== OTC FIN PRESSURE (vendored marginMonitor) ========== -->
   <div id="panel-otc" class="tab-panel" role="tabpanel">
-    <div class="mm-header">
-      <strong>斷頭壓力儀表</strong>
-      · 成數與市值兩種口徑
-      <div class="mm-thrust-note" id="otc-asof">As of …</div>
-      <div class="mm-thrust-note">市值線 mkt_fin 供 1Y／2Y／5Y／ALL。追繳／買賣帶只對齊成數線。拖主圖選區間，下方總覽拖曳平移或拉邊，滾輪縮放，雙擊回到區間按鈕。</div>
-    </div>
-    <div class="otc-kpis" id="otc-kpis"></div>
-    <div class="otc-band-legend" aria-label="追繳與買賣帶，僅成數">
-      <strong>追繳／買賣帶</strong>
-      <span>僅成數 · marginMonitor</span>
-      <span><i class="otc-dot call"></i>低於 130 追繳線</span>
-      <span><i class="otc-dot near"></i>130–140 接近追繳</span>
-      <span><i class="otc-dot low"></i>145／150</span>
-      <span><i class="otc-dot high"></i>205／210</span>
-      <span>市值線不套用</span>
-    </div>
-    <div class="controls">
-      <div class="group">
-        <label>Range</label>
-        <button type="button" class="otc-range active" data-otc-range="1y">1Y</button>
-        <button type="button" class="otc-range" data-otc-range="2y">2Y</button>
-        <button type="button" class="otc-range" data-otc-range="5y">5Y</button>
-        <button type="button" class="otc-range" data-otc-range="all">ALL</button>
-      </div>
-      <span class="otc-window" id="otc-window"></span>
-    </div>
-    <div class="mm-chart-block" id="otc-chart-block">
-      <div class="mm-chart-head">
-        <span>成數與市值 · TAIEX / 加權 · EWT</span>
-        <span class="mm-chart-legend">
-          <span><i class="mm-swatch otc-swatch-fin"></i>成數 · marginMonitor 上櫃</span>
-          <span><i class="mm-swatch otc-swatch-mkt"></i>市值 · FinLab 上市+上櫃</span>
-          <span><i class="mm-swatch otc-swatch-band"></i>145／150 · 205／210（僅成數）</span>
-          <span><i class="mm-swatch otc-swatch-taiex"></i>TAIEX / 加權</span>
-          <span><i class="mm-swatch otc-swatch-ewt"></i>EWT（獨立刻度）</span>
-        </span>
-      </div>
-      <div class="otc-chart-scroll" id="otc-chart-scroll">
-        <canvas id="otc-chart" aria-label="marginMonitor cost ratio and FinLab mark-to-market ratio with TAIEX and EWT"></canvas>
-        <div id="otc-brush-band" class="otc-brush-band" hidden></div>
-        <div id="otc-chart-tip" class="otc-chart-tip" hidden></div>
-      </div>
-      <div class="otc-overview" id="otc-overview" title="拖曳中間平移，拉左右邊緣改區間，或在外側拖選">
-        <canvas id="otc-overview-canvas" aria-label="Full-series brush for the margin chart"></canvas>
-      </div>
-    </div>
-    <div class="status" id="otc-status">Loading OTC fin…</div>
-    <div class="otc-chips" id="otc-chips"></div>
-    <div class="wrap">
-      <div class="table-scroll sm otc-tbl-wrap">
-        <table id="otc-table">
-          <thead>
-            <tr>
-              <th class="num">#</th>
-              <th>日期</th>
-              <th class="num">成數</th>
-              <th class="num">較前日</th>
-              <th class="num">市值</th>
-              <th class="num">較前日</th>
-              <th class="num">TAIEX</th>
-              <th class="num">較前日</th>
-              <th class="num">EWT</th>
-              <th>成數帶</th>
-            </tr>
-          </thead>
-          <tbody id="otc-tbody"></tbody>
-        </table>
-      </div>
-      <p class="note">
-        研究對照。藍線是
-        <a href="https://twm-z3sodp.github.io/marginMonitor/" target="_blank" rel="noopener noreferrer">marginMonitor</a>
-        上櫃融資風險指標（成本／成數，約近 60 個交易日）。紫線是 FinLab 上市+上櫃市值維持率 Σ(融資餘額×收盤價)／融資金額（2009 年起）。兩種口徑不互蓋；同日差距見上方統計。145／150、205／210 與 130 追繳線只畫在成數線的日期上。TAIEX／加權與 EWT 是價格疊圖（Yahoo ^TWII、EWT）。
-      </p>
-    </div>
+    <iframe id="otc-frame" class="cot-frame" title="斷頭壓力儀表 · marginMonitor" src="./margin-monitor/index.html"></iframe>
   </div>
   </div>
   </div>
@@ -1166,6 +1093,10 @@
     ensureFrame("cot-frame", "cot/index.html");
   }
 
+  function ensureOtc() {
+    ensureFrame("otc-frame", "./margin-monitor/index.html");
+  }
+
   function ensureTpo(name) {
     const frames = {
       tpo: ["tpo-frame", "tpo/index.html"],
@@ -1194,7 +1125,7 @@
     if (name === "rs90") renderRs90();
     if (name === "mm") renderMm();
     if (name === "xl") renderXlTab();
-    if (name === "otc") renderOtc();
+    if (name === "otc") ensureOtc();
     if (name === "cot") ensureCot();
     if (name === "tpo" || name === "tpo-ym" || name === "tpo-nq") ensureTpo(name);
     try {

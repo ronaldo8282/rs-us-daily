@@ -1,0 +1,611 @@
+<!--
+  Vendored from https://twm-z3sodp.github.io/marginMonitor/
+  Date vendored: 2026-11-09 HKT
+  Original layout preserved; only additive TAIEX/EWT overlays added.
+-->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>台股融資融券風險指標監控</title>
+<style>
+:root{
+  --bg:#0d1117; --surface:#161b22; --surface2:#1c2230; --border:#2a3140;
+  --ink:#e6edf3; --ink2:#9aa7b8; --ink3:#6b7688;
+  --good:#3fb27f; --warn:#e8a33d; --danger:#f2545b;
+  --warn-bg:rgba(232,163,61,.12); --danger-bg:rgba(242,84,91,.14);
+  --up:#f2545b; --down:#3fb27f; /* 台股紅漲綠跌 */
+  --accent:#5b9dd9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+
+/* ── header ── */
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+header h1{font-size:22px;font-weight:700;letter-spacing:.5px}
+.date-chip{color:var(--ink2);font-size:13px}
+.sub{color:var(--ink3);font-size:12.5px;margin-bottom:18px}
+
+/* ── market cards ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.card .mkt-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.card .mkt-name{font-size:16px;font-weight:700}
+.card .mkt-code{color:var(--ink3);font-size:12px}
+.card .idx{font-size:15px;font-variant-numeric:tabular-nums}
+.card .idx .chg{margin-left:6px;font-size:13px}
+.ratio-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ratio{background:var(--surface2);border-radius:10px;padding:10px 12px;position:relative}
+.ratio .lbl{font-size:12px;color:var(--ink2);margin-bottom:2px}
+.ratio .val{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.ratio .unit{font-size:13px;color:var(--ink2);margin-left:1px}
+.card .meta{margin-top:12px;color:var(--ink3);font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
+
+/* 狀態色 */
+.s-good{color:var(--ink)}
+.s-warn{color:var(--warn)}
+.s-danger{color:var(--danger)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;margin-top:6px;white-space:nowrap}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.danger{background:var(--danger-bg);color:var(--danger)}
+.blink{animation:blink 1.1s step-end infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.blink{animation:none}}
+
+/* ── alert summary ── */
+.alert-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.alert-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--ink2)}
+.alert-chip b{font-variant-numeric:tabular-nums}
+.alert-chip.danger{border-color:rgba(242,84,91,.45)}
+.alert-chip.danger b{color:var(--danger)}
+.alert-chip.warn b{color:var(--warn)}
+
+/* ── controls ── */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.controls input[type=text]{background:var(--surface);border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:14px;width:220px;outline:none}
+.controls input[type=text]:focus{border-color:var(--accent)}
+.seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{background:var(--surface);border:none;color:var(--ink2);padding:8px 14px;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--surface2);color:var(--ink);font-weight:700}
+.chk{display:flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--danger)}
+.legend{margin-left:auto;display:flex;gap:14px;font-size:12px;color:var(--ink3);flex-wrap:wrap}
+.legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+
+/* ── table ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{position:sticky;top:0;background:var(--surface2);color:var(--ink2);font-size:12px;font-weight:600;text-align:right;padding:10px 12px;white-space:nowrap;cursor:pointer;user-select:none;z-index:1}
+th.l{text-align:left}
+th .arr{color:var(--accent);margin-left:2px}
+td{padding:8px 12px;text-align:right;font-variant-numeric:tabular-nums;border-top:1px solid var(--border);white-space:nowrap}
+td.l{text-align:left}
+tr:hover td{background:rgba(91,157,217,.06)}
+.nm{font-weight:600}
+.code{color:var(--ink3);font-size:12px;margin-left:6px}
+.mtag{font-size:11px;color:var(--ink3);border:1px solid var(--border);border-radius:4px;padding:0 5px;margin-left:6px}
+.chg-up{color:var(--up)} .chg-down{color:var(--down)} .chg-flat{color:var(--ink3)}
+td .w-ic{font-size:11px;margin-left:4px}
+.cell-warn{color:var(--warn);font-weight:700}
+.cell-danger{color:var(--danger);font-weight:700}
+.dim{color:var(--ink3)}
+.more{display:block;width:100%;background:var(--surface2);border:none;color:var(--accent);padding:12px;font-size:14px;cursor:pointer;border-top:1px solid var(--border)}
+.more:hover{background:#232b3d}
+.count-note{color:var(--ink3);font-size:12px;margin:8px 2px}
+
+/* ── footer ── */
+footer{margin-top:26px;color:var(--ink3);font-size:12px;line-height:1.8;border-top:1px solid var(--border);padding-top:14px}
+footer b{color:var(--ink2)}
+/* ── 昨日比較 ── */
+.diff{font-size:11px;margin-top:5px;font-weight:600;white-space:nowrap}
+.diff.bad{color:var(--danger)}
+.diff.good{color:var(--good)}
+.diff.flat{color:var(--ink3)}
+.mini{font-size:10px;margin-left:5px;font-weight:700}
+.mini.bad{color:var(--danger)}
+.mini.good{color:var(--good)}
+.mini.flat{color:var(--ink3)}
+
+/* ── 斷頭壓力儀表 ── */
+#breadthWrap{margin-bottom:14px}
+.bd-grid{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch}
+.bd-left{flex:1 1 280px;min-width:260px}
+.bd-spark{flex:1 1 320px;min-width:260px;display:flex;flex-direction:column;justify-content:flex-end}
+.bd-big{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.bd-big .unit{font-size:16px;color:var(--ink2)}
+.bd-cnt{color:var(--ink3);font-size:12px;margin-left:8px}
+.bd-row{margin-top:8px;font-size:13px;color:var(--ink2)}
+.bd-row b{color:var(--ink);font-variant-numeric:tabular-nums}
+.zone-badge{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;border-radius:7px;padding:3px 10px;margin-top:10px}
+.zone-badge.danger{background:var(--danger-bg);color:var(--danger)}
+.zone-badge.warn{background:var(--warn-bg);color:var(--warn)}
+.zone-badge.good{background:rgba(63,178,127,.12);color:var(--good)}
+.mc-type{font-weight:700}
+.mc-type.full{color:var(--warn)}
+.mc-type.part{color:var(--danger)}
+.gauge{position:relative;display:flex;height:10px;border-radius:5px;overflow:visible;margin:16px 0 4px}
+.gauge div{height:100%}
+.gauge .g1{background:#2e4a3c;width:25%;border-radius:5px 0 0 5px}
+.gauge .g2{background:#5c4a22;width:25%}
+.gauge .g3{background:#5e2a2e;width:25%}
+.gauge .g4{background:#7a2229;width:25%;border-radius:0 5px 5px 0}
+.gauge .gm{position:absolute;top:-7px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--ink);transform:translateX(-6px)}
+.gauge-lab{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-bottom:2px}
+
+/* ── 走勢圖 ── */
+.chart-box{position:relative}
+.chart-box svg{display:block;width:100%;height:auto}
+.tt{position:absolute;pointer-events:none;background:#0d1117ee;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.6;display:none;white-space:nowrap;z-index:5}
+.tt b{font-variant-numeric:tabular-nums}
+
+/* ── RWD 手機版 ── */
+@media (max-width:640px){
+  body{font-size:13px}
+  .wrap{padding:14px 10px 40px}
+  header h1{font-size:18px}
+  .date-chip{font-size:12px}
+  .card{padding:14px 14px}
+  .ratio-row{gap:6px}
+  .ratio{padding:8px 8px}
+  .ratio .val{font-size:19px}
+  .ratio .lbl{font-size:11px}
+  .badge{font-size:10px;padding:2px 5px}
+  .diff{font-size:10px}
+  .alert-chip{padding:6px 10px;font-size:12px}
+  .controls input[type=text]{flex:1 1 100%;width:auto}
+  .legend{margin-left:0}
+  table{min-width:560px}
+  th,td{padding:7px 8px;font-size:12px}
+  .hide-m{display:none}
+  #tbl.etf-mode .hide-m.cap-col{display:table-cell}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>台股融資融券風險指標監控</h1>
+    <span class="date-chip" id="dataDate"></span>
+  </header>
+  <div class="sub">每日盤後信用交易資料｜追繳警戒線 130%</div>
+
+  <div class="cards" id="cards"></div>
+  <div id="breadthWrap"></div>
+  <div class="cards" id="trendCards"></div>
+  <div class="alert-bar" id="alertBar"></div>
+
+  <div class="controls">
+    <input type="text" id="q" placeholder="搜尋代號或名稱…">
+    <div class="seg" id="mktSeg">
+      <button data-m="" class="on">全部</button>
+      <button data-m="上市">上市</button>
+      <button data-m="上櫃">上櫃</button>
+      <button data-m="ETF">ETF</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="onlyAlert">只看警示</label>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--danger)"></span>低於 130%（追繳線）</span>
+      <span><span class="dot" style="background:var(--warn)"></span>130–140%（接近追繳）</span>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th class="l" style="width:36px">#</th>
+          <th class="l" data-k="name">個股</th>
+          <th data-k="close">收盤價</th>
+          <th data-k="chg">漲跌</th>
+          <th data-k="cap" class="hide-m cap-col">市值(億)</th>
+          <th data-k="finRatio">融資風險指標</th>
+          <th data-k="shortRatio">融券風險指標</th>
+          <th data-k="overall">整體風險指標</th>
+          <th data-k="finBal" class="hide-m">資餘(張)</th>
+          <th data-k="finChg" class="hide-m">資增減</th>
+          <th data-k="sr" class="hide-m">券資比%</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <button class="more" id="moreBtn">載入更多</button>
+  </div>
+  <div class="count-note" id="countNote"></div>
+
+  <footer>
+    <b>資料說明</b>：融資／融券／整體三項風險指標為每日盤後依信用交易資料推估計算；
+    加權指數／OTC 指數卡片為上市、上櫃全市場大盤合計值。
+    收盤價、漲跌、市值、資券餘額與券資比由資料庫同日資料補充。<br>
+    <b>注意</b>：風險指標為推估口徑（依公告成數與推估成本計算），與券商實際帳戶數值、交易所公告之實戶口徑會有差異。
+    數值僅供研究參考，非投資建議。
+  </footer>
+</div>
+
+<script>
+document.write('<script src="data.js?v=' + Date.now() + '"><\/script>');
+document.write('<script src="history.js?v=' + Date.now() + '"><\/script>');
+document.write('<script src="breadth.js?v=' + Date.now() + '"><\/script>');
+document.write('<script src="prices.js?v=' + Date.now() + '"><\/script>');
+</script>
+<script>
+const D = window.MARGIN_DATA;
+const TH_DANGER = 130, TH_WARN = 140;
+
+function cls(v){ if(v==null) return ''; if(v<TH_DANGER) return 'danger'; if(v<TH_WARN) return 'warn'; return 'good'; }
+function fmtDate(s){ return s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8); }
+function fmt(n,d=1){ return n==null ? '–' : n.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtInt(n){ return n==null ? '–' : n.toLocaleString('zh-TW'); }
+
+document.getElementById('dataDate').textContent = '資料日期 ' + fmtDate(D.date)
+  + (D.generated ? '｜' + D.generated.slice(11,16) + ' 更新' : '');
+
+/* ── market cards ── */
+const MKT_META = { TSE:{name:'加權指數', tag:'上市'}, OTC:{name:'OTC 櫃買指數', tag:'上櫃'} };
+const cardsEl = document.getElementById('cards');
+for(const key of ['TSE','OTC']){
+  const m = D.market[key], meta = MKT_META[key];
+  const chgCls = m.indexChg>0?'chg-up':(m.indexChg<0?'chg-down':'chg-flat');
+  const hs = (window.MARGIN_HISTORY && window.MARGIN_HISTORY.series && window.MARGIN_HISTORY.series[key]) || [];
+  const prevFin = hs.length > 1 ? hs[hs.length-2].fin : null;
+  let diffHtml = '';
+  if(prevFin != null && m.finRatio != null){
+    const df = +(m.finRatio - prevFin).toFixed(2);
+    diffHtml = df < 0 ? `<div class="diff bad">▼ 較昨日 ${df.toFixed(2)}（風險升高）</div>`
+             : df > 0 ? `<div class="diff good">▲ 較昨日 +${df.toFixed(2)}（改善）</div>`
+             : `<div class="diff flat">— 與昨日持平</div>`;
+  }
+  const ratios = [
+    ['融資風險指標', m.finRatio, diffHtml],
+    ['融券風險指標', m.shortRatio, ''],
+    ['整體風險指標', m.overall, ''],
+  ].map(([lbl,v,extra])=>{
+    const c = cls(v);
+    const badge = c==='danger' ? '<span class="badge danger blink">⚠ 低於追繳線</span>'
+               : c==='warn'   ? '<span class="badge warn blink">⚠ 接近追繳</span>' : '';
+    return `<div class="ratio"><div class="lbl">${lbl}</div>
+      <div class="val s-${c}">${fmt(v)}<span class="unit">%</span></div>${badge}${extra}</div>`;
+  }).join('');
+  cardsEl.insertAdjacentHTML('beforeend', `
+    <div class="card">
+      <div class="mkt-head">
+        <span class="mkt-name">${meta.name}</span><span class="mkt-code">${meta.tag}</span>
+        <span class="idx">${fmt(m.index,2)}<span class="chg ${chgCls}">${m.indexChg>0?'▲':(m.indexChg<0?'▼':'')} ${fmt(Math.abs(m.indexChg),2)}</span></span>
+      </div>
+      <div class="ratio-row">${ratios}</div>
+      <div class="meta"><span>信用交易檔數 ${m.n.toLocaleString()}</span>${m.finBalValue?`<span>融資餘額約 ${fmtInt(m.finBalValue)} 億</span>`:''}</div>
+    </div>`);
+}
+
+/* ── alert summary ── */
+const nDanger = D.stocks.filter(s=>s.finRatio!=null && s.finRatio<TH_DANGER).length;
+const nWarn   = D.stocks.filter(s=>s.finRatio!=null && s.finRatio>=TH_DANGER && s.finRatio<TH_WARN).length;
+document.getElementById('alertBar').innerHTML = `
+  <div class="alert-chip danger">融資風險指標跌破 130%：<b>${nDanger}</b> 檔</div>
+  <div class="alert-chip warn">130–140% 接近追繳：<b>${nWarn}</b> 檔</div>
+  <div class="alert-chip">有信用交易餘額個股：<b>${D.stocks.length.toLocaleString()}</b> 檔</div>`;
+
+/* ── 斷頭壓力儀表（破線比例＋所在位階） ── */
+(function(){
+  const B = window.BREADTH_DATA;
+  if(!B || !B.series || B.series.length < 10) return;
+  const s = B.series, nl = s.length - 1;
+  const cur = s[nl].pct, prev = s[nl-1].pct;
+  const d1 = cur - prev;
+  const d5 = cur - (s[Math.max(0, nl-5)].pct);
+  // 檔數與百分比共用 breadth.js 同一口徑（DB 直算、排除 91 開頭 DR）；舊檔無計數時才退回以表格資料估算
+  const lastPt = s[nl];
+  const nDang = lastPt.n!=null ? lastPt.n : D.stocks.filter(x=>x.finRatio!=null && x.finRatio<130).length;
+  const nCred = lastPt.c!=null ? lastPt.c : D.stocks.filter(x=>x.finRatio!=null).length;
+  // 制度後歷史百分位（格點內插，B.ref = p0,p5,...,p100）
+  const g = B.ref;
+  let pr = 100;
+  if(cur <= g[0]) pr = 0;
+  else { for(let i=0;i<g.length-1;i++){ if(cur < g[i+1]){ pr = (i + (cur-g[i])/Math.max(g[i+1]-g[i],1e-9))*5; break; } } }
+  pr = Math.min(100, Math.max(0, pr));
+  // 本波（自最後一次 <10% 起）峰值與回落
+  let ws = 0;
+  for(let i=nl;i>=0;i--){ if(s[i].pct < 10){ ws = i; break; } }
+  const wave = s.slice(ws);
+  const wavePeak = Math.max(...wave.map(p=>p.pct));
+  const pullback = wavePeak - cur;
+  const wave20 = wave.some(p=>p.pct >= 20);
+  const hs = (window.MARGIN_HISTORY && window.MARGIN_HISTORY.series && window.MARGIN_HISTORY.series.TSE) || [];
+  const idx5 = hs.length > 5 ? (hs[hs.length-1].close/hs[hs.length-6].close - 1)*100 : null;
+  // 狀態分級（依歷史研究：<10低壓/10-20壓力升高/>=20危機警報/>=30極端投降區）
+  let zone, zcls, blink='';
+  if(cur >= 30){ zone='極端投降區'; zcls='danger'; blink=' blink'; }
+  else if(cur >= 20){ zone = d5>=5 ? '危機警報・加速中' : '危機警報'; zcls='danger'; blink=' blink'; }
+  else if(cur >= 10){ zone='壓力升高'; zcls='warn'; }
+  else { zone='低壓'; zcls='good'; }
+  const reversal = wave20 && pullback >= 5 && idx5 != null && idx5 > 0;
+  // 全面／局部斷頭判定（依聯合回測：破線高漲時看上市大盤加權指標是否同步跌破）
+  let typeHtml = '';
+  if(cur >= 20 && D.market && D.market.TSE && D.market.TSE.finRatio != null){
+    const tw = D.market.TSE.finRatio;
+    if(tw < 140){
+      const deep = tw < 135;
+      typeHtml = `<div class="bd-row">斷頭型態：<span class="mc-type full">全面性${deep?'・深度':''}</span>`
+        + `（上市大盤加權 ${tw.toFixed(1)}% 已破 ${deep?'135':'140'}）｜歷史上大盤同步破線的組合較接近跌勢尾聲</div>`;
+    } else {
+      typeHtml = `<div class="bd-row">斷頭型態：<span class="mc-type part">局部性・集中中小型股</span>`
+        + `（上市大盤加權 ${tw.toFixed(1)}% 仍在 140 以上）｜歷史上大盤未同步破線的組合，跌勢常未結束</div>`;
+    }
+  }
+  const dchip = d1 > 0 ? `<span class="diff bad" style="margin-left:10px">▲ 較昨日 +${d1.toFixed(1)}pp（惡化）</span>`
+             : d1 < 0 ? `<span class="diff good" style="margin-left:10px">▼ 較昨日 ${d1.toFixed(1)}pp（改善）</span>`
+             : `<span class="diff flat" style="margin-left:10px">— 與昨日持平</span>`;
+  // 迷你走勢（180日）
+  const W=640, H=120, PL=34, PR=8, PT=6, PB=18;
+  const hi = Math.max(35, Math.ceil(Math.max(...s.map(p=>p.pct))/5)*5);
+  const xs = i => PL + i*(W-PL-PR)/(s.length-1);
+  const yy = v => PT + (H-PT-PB) * (1 - v/hi);
+  const path = s.map((p,i)=>(i?'L':'M')+xs(i).toFixed(1)+','+yy(p.pct).toFixed(1)).join('');
+  const ticks = [10,20,30].filter(v=>v<hi).map(v=>{
+    const col = v===10?'var(--warn)':'var(--danger)';
+    return `<line x1="${PL}" x2="${W-PR}" y1="${yy(v).toFixed(1)}" y2="${yy(v).toFixed(1)}" stroke="${col}" stroke-dasharray="3 4" stroke-width="1" opacity=".7"/>
+            <text x="${PL-5}" y="${(yy(v)+3.5).toFixed(1)}" fill="#6b7688" font-size="10" text-anchor="end">${v}</text>`;
+  }).join('');
+  const xdates = [0, Math.floor(s.length/2), s.length-1].map(i=>{
+    const d = s[i].d;
+    const anch = i===0?'start':(i===s.length-1?'end':'middle');
+    return `<text x="${xs(i).toFixed(1)}" y="${H-4}" fill="#6b7688" font-size="10" text-anchor="${anch}">${d.slice(4,6)}/${d.slice(6,8)}</text>`;
+  }).join('');
+  const markerPos = Math.min(cur/40*100, 100);
+  document.getElementById('breadthWrap').innerHTML = `
+  <div class="card">
+    <div class="mkt-head">
+      <span class="mkt-name">斷頭壓力儀表</span>
+      <span class="mkt-code">融資風險指標跌破 130% 之家數比例｜位階基準：2015/5 制度後歷史</span>
+    </div>
+    <div class="bd-grid">
+      <div class="bd-left">
+        <div class="bd-big s-${zcls==='good'?'':zcls}">${cur.toFixed(1)}<span class="unit">%</span><span class="bd-cnt">${nDang.toLocaleString()} / ${nCred.toLocaleString()} 檔</span>${dchip}</div>
+        <div class="bd-row">歷史位階：高於制度後 <b>${pr.toFixed(1)}%</b> 的交易日｜近5日 <b>${d5>=0?'+':''}${d5.toFixed(1)}pp</b></div>
+        <div class="zone-badge ${zcls}${blink}">⚠ ${zone}</div>
+        ${typeHtml}
+        <div class="bd-row">${reversal
+          ? '<span style="color:var(--good);font-weight:700">✓ 反轉候選成立</span>（本波峰值 '+wavePeak.toFixed(1)+'%，已回落 '+pullback.toFixed(1)+'pp 且大盤5日轉正）'
+          : '反轉確認：<b>未成立</b>（本波峰值 '+wavePeak.toFixed(1)+'%，需自峰值回落 ≥5pp 且大盤近5日轉正'+(idx5!=null?'；大盤5日 '+(idx5>=0?'+':'')+idx5.toFixed(1)+'%':'')+'）'}</div>
+        <div class="gauge-lab" style="margin-top:14px"><span>0</span><span>10 壓力</span><span>20 危機</span><span>30 極端</span><span>40+</span></div>
+        <div class="gauge"><div class="g1"></div><div class="g2"></div><div class="g3"></div><div class="g4"></div><div class="gm" style="left:${markerPos}%"></div></div>
+      </div>
+      <div class="bd-spark">
+        <svg viewBox="0 0 ${W} ${H}">
+          ${ticks}
+          <path d="${path}" fill="none" stroke="#e6edf3" stroke-width="1.6"/>
+          <circle cx="${xs(nl).toFixed(1)}" cy="${yy(cur).toFixed(1)}" r="3" fill="${zcls==='danger'?'var(--danger)':(zcls==='warn'?'var(--warn)':'#e6edf3')}"/>
+          ${xdates}
+        </svg>
+      </div>
+    </div>
+  </div>`;
+})();
+
+/* ── 走勢 × 融資風險指標 疊圖（上下雙格共用時間軸） ── */
+const TREND = {};
+(function(){
+  const H = window.MARGIN_HISTORY;
+  if(!H || !H.series) return;
+  const wrap = document.getElementById('trendCards');
+  for(const key of ['TSE','OTC']){
+    const s = H.series[key] || [];
+    if(s.length < 2) continue;
+    wrap.insertAdjacentHTML('beforeend', buildTrendCard(key, s));
+    hookTrend(key);
+  }
+})();
+
+function buildTrendCard(key, s){
+  const W=640, PL=48, PR=14, PT=22, PH1=118, GAP=44, PH2=100, XA=20;
+  const p2y = PT+PH1+GAP, total = p2y+PH2+XA, n = s.length;
+  const xs = i => PL + i*(W-PL-PR)/(n-1);
+  const cl = s.map(p=>p.close), fn = s.map(p=>p.fin);
+  const padr = (a,b)=>{ const m=(b-a)*0.08||1; return [a-m, b+m]; };
+  const [c0,c1] = padr(Math.min(...cl), Math.max(...cl));
+  const [f0,f1] = padr(Math.min(...fn,128), Math.max(...fn,142));
+  const yC = v => PT+PH1-(v-c0)/(c1-c0)*PH1;
+  const yF = v => p2y+PH2-(v-f0)/(f1-f0)*PH2;
+  const path = (y,arr)=>{
+    let d='', pen=false;
+    arr.forEach((v,i)=>{
+      if(v==null || !isFinite(v)){ pen=false; return; }
+      d += (pen?'L':'M')+xs(i).toFixed(1)+','+y(v).toFixed(1);
+      pen=true;
+    });
+    return d;
+  };
+  /* ── TAIEX / EWT overlays (joined by calendar date) ── */
+  const PRICES = window.MM_PRICES || {};
+  const taiex = s.map(p=>{ const px=PRICES[p.d]; return px && px.taiex!=null ? px.taiex : null; });
+  const ewtRaw = s.map(p=>{ const px=PRICES[p.d]; return px && px.ewt!=null ? px.ewt : null; });
+  const ewt0 = ewtRaw.find(v=>v!=null);
+  const ewt = ewt0 != null ? ewtRaw.map(v=>v==null?null:(cl[0]*(v/ewt0))) : [];
+  const hasEwt = ewt.some(v=>v!=null);
+  const hasTaiex = taiex.some(v=>v!=null);
+  const topVals = [...cl];
+  if(hasEwt) topVals.push(...ewt.filter(v=>v!=null));
+  if(hasTaiex) topVals.push(...taiex.filter(v=>v!=null));
+  const [tc0,tc1] = padr(Math.min(...topVals), Math.max(...topVals));
+  const yTop = v => PT+PH1-(v-tc0)/(tc1-tc0)*PH1;
+  const gl=[];
+  [[tc0,tc1,yTop,v=>Math.round(v).toLocaleString()],[f0,f1,yF,v=>Math.round(v)]].forEach(([a,b,y,fv])=>{
+    for(let t=0;t<3;t++){
+      const v=a+(b-a)*t/2, yy=y(v).toFixed(1);
+      gl.push(`<line x1="${PL}" x2="${W-PR}" y1="${yy}" y2="${yy}" class="grid"/>`);
+      gl.push(`<text x="${PL-6}" y="${(+yy+4).toFixed(1)}" class="ylab">${fv(v)}</text>`);
+    }
+  });
+  const xt=[];
+  for(let t=0;t<5;t++){
+    const i=Math.round(t*(n-1)/4), d=s[i].d;
+    xt.push(`<text x="${xs(i).toFixed(1)}" y="${total-6}" class="xlab">${d.slice(4,6)}/${d.slice(6,8)}</text>`);
+  }
+  const yD=yF(130), yW=yF(140);
+  const dangerRect=`<rect x="${PL}" y="${yD.toFixed(1)}" width="${W-PL-PR}" height="${(p2y+PH2-yD).toFixed(1)}" fill="rgba(242,84,91,.07)"/>`;
+  const th=`
+    <line x1="${PL}" x2="${W-PR}" y1="${yW.toFixed(1)}" y2="${yW.toFixed(1)}" stroke="var(--warn)" stroke-dasharray="4 4" stroke-width="1"/>
+    <line x1="${PL}" x2="${W-PR}" y1="${yD.toFixed(1)}" y2="${yD.toFixed(1)}" stroke="var(--danger)" stroke-dasharray="4 4" stroke-width="1"/>
+    <text x="${W-PR}" y="${(yD-4).toFixed(1)}" class="thlab" fill="var(--danger)">130 追繳線</text>
+    <text x="${W-PR}" y="${(yW-4).toFixed(1)}" class="thlab" fill="var(--warn)">140</text>`;
+  TREND[key]={s, taiex, ewtRaw, ewt0, PL, PR, W, n, yTop, cl};
+  const meta = MKT_META[key];
+  const ewtPath = hasEwt ? `<path d="${path(yTop,ewt)}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>` : '';
+  const taiexPath = hasTaiex ? `<path d="${path(yTop,taiex)}" fill="none" stroke="#3fb27f" stroke-width="1.5"/>` : '';
+  const ewtLast = hasEwt ? ewt[n-1] : null;
+  const taiexLast = hasTaiex ? taiex[n-1] : null;
+  return `
+  <div class="card">
+    <div class="mkt-head"><span class="mkt-name">${meta.name}走勢 × 融資風險指標</span><span class="mkt-code">近 ${n} 個交易日</span></div>
+    <div class="chart-box" id="cb-${key}">
+      <svg id="tc-${key}" viewBox="0 0 ${W} ${total}">
+        <style>.grid{stroke:#232b3a;stroke-width:1}.ylab{fill:#6b7688;font-size:10px;text-anchor:end}.xlab{fill:#6b7688;font-size:10px;text-anchor:middle}.ptitle{fill:#9aa7b8;font-size:11px}.thlab{font-size:10px;text-anchor:end}</style>
+        ${gl.join('')}
+        ${dangerRect}${th}
+        <text x="${PL}" y="${PT-8}" class="ptitle">TAIEX / 加權收盤 · EWT（橘線 = 績效對齊左軸）</text>
+        <text x="${PL}" y="${p2y-8}" class="ptitle">融資風險指標(%)</text>
+        <path d="${path(yTop,cl)}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        ${taiexPath}
+        ${ewtPath}
+        <path d="${path(yF,fn)}" fill="none" stroke="#e6edf3" stroke-width="2"/>
+        <circle cx="${xs(n-1).toFixed(1)}" cy="${yTop(cl[n-1]).toFixed(1)}" r="3" fill="var(--accent)"/>
+        ${taiexLast!=null?`<circle cx="${xs(n-1).toFixed(1)}" cy="${yTop(taiexLast).toFixed(1)}" r="2.5" fill="#3fb27f"/>`:''}
+        ${ewtLast!=null?`<circle cx="${xs(n-1).toFixed(1)}" cy="${yTop(ewtLast).toFixed(1)}" r="2.5" fill="#f59e0b"/>`:''}
+        <circle cx="${xs(n-1).toFixed(1)}" cy="${yF(fn[n-1]).toFixed(1)}" r="3" fill="#e6edf3"/>
+        <line id="ch-${key}" x1="0" x2="0" y1="${PT}" y2="${p2y+PH2}" stroke="var(--accent)" stroke-width="1" opacity="0" stroke-dasharray="2 3"/>
+        ${xt.join('')}
+        <rect id="ov-${key}" x="${PL}" y="0" width="${W-PL-PR}" height="${total}" fill="transparent"/>
+      </svg>
+      <div class="tt" id="tt-${key}"></div>
+    </div>
+  </div>`;
+}
+
+function hookTrend(key){
+  const t=TREND[key], svg=document.getElementById('tc-'+key),
+        ov=document.getElementById('ov-'+key), ch=document.getElementById('ch-'+key),
+        tt=document.getElementById('tt-'+key), box=document.getElementById('cb-'+key);
+  const {PL,PR,W,n}=t;
+  ov.addEventListener('mousemove', e=>{
+    const r=svg.getBoundingClientRect();
+    const fx=(e.clientX-r.left)/r.width*W;
+    let i=Math.round((fx-PL)/((W-PL-PR)/(n-1)));
+    i=Math.max(0,Math.min(n-1,i));
+    const p=t.s[i], x=PL+i*(W-PL-PR)/(n-1);
+    ch.setAttribute('x1',x); ch.setAttribute('x2',x); ch.setAttribute('opacity','1');
+    const c=cls(p.fin);
+    const col=c==='danger'?'var(--danger)':(c==='warn'?'var(--warn)':'var(--ink)');
+    let extra='';
+    const tx=t.taiex && t.taiex[i]!=null ? t.taiex[i] : null;
+    const ew=t.ewtRaw && t.ewtRaw[i]!=null ? t.ewtRaw[i] : null;
+    if(tx!=null) extra+=`<br>TAIEX <b>${tx.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</b>`;
+    if(ew!=null) extra+=`<br>EWT <b>${ew.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</b>`;
+    tt.innerHTML=`${fmtDate(p.d)}<br>TAIEX / 加權 <b>${p.close.toLocaleString('zh-TW')}</b>${extra}<br>融資風險指標 <b style="color:${col}">${p.fin.toFixed(2)}%</b>`;
+    tt.style.display='block';
+    const bw=box.clientWidth, px=x/W*bw;
+    tt.style.left=Math.min(px+12, bw-180)+'px';
+    tt.style.top='10px';
+  });
+  ov.addEventListener('mouseleave', ()=>{ ch.setAttribute('opacity','0'); tt.style.display='none'; });
+}
+
+/* ── table state ── */
+let state = { q:'', mkt:'', onlyAlert:false, sortK:'cap', sortDir:-1, shown:100 };
+
+function isAlert(s){
+  return [s.finRatio,s.shortRatio,s.overall].some(v=>v!=null && v<TH_WARN);
+}
+// ETF 獨立一類：上市／上櫃分頁只列個股（舊資料無 etf 欄位時以 00 開頭判斷）
+const isEtf = s => s.etf!=null ? !!s.etf : /^00/.test(s.id);
+function filtered(){
+  let rows = D.stocks;
+  if(state.mkt==='ETF') rows = rows.filter(isEtf);
+  else if(state.mkt) rows = rows.filter(s=>s.mkt===state.mkt && !isEtf(s));
+  if(state.onlyAlert) rows = rows.filter(isAlert);
+  if(state.q){
+    const q = state.q.toLowerCase();
+    rows = rows.filter(s=>s.id.includes(q)||s.name.toLowerCase().includes(q));
+  }
+  const k = state.sortK, dir = state.sortDir;
+  rows = [...rows].sort((a,b)=>{
+    let x=a[k], y=b[k];
+    if(k==='name'){ x=a.id; y=b.id; return dir*(x<y?-1:x>y?1:0); }
+    if(x==null) return 1; if(y==null) return -1;
+    return dir*(x-y);
+  });
+  return rows;
+}
+
+function ratioCell(v, d){
+  if(v==null) return '<td class="dim">–</td>';
+  const c = cls(v);
+  let mini = '';
+  if(d != null){
+    mini = d < 0 ? `<span class="mini bad" title="較昨日 ${d.toFixed(1)}">▼</span>`
+         : d > 0 ? `<span class="mini good" title="較昨日 +${d.toFixed(1)}">▲</span>`
+         : `<span class="mini flat" title="與昨日持平">—</span>`;
+  }
+  if(c==='danger') return `<td class="cell-danger blink">${fmt(v)}<span class="w-ic">⚠</span>${mini}</td>`;
+  if(c==='warn')   return `<td class="cell-warn">${fmt(v)}<span class="w-ic">⚠</span>${mini}</td>`;
+  return `<td>${fmt(v)}${mini}</td>`;
+}
+
+function render(){
+  const rows = filtered();
+  const slice = rows.slice(0, state.shown);
+  const html = slice.map((s,i)=>{
+    const chgCls = s.chg>0?'chg-up':(s.chg<0?'chg-down':'chg-flat');
+    return `<tr>
+      <td class="l dim">${i+1}</td>
+      <td class="l"><span class="nm">${s.name}</span><span class="code">${s.id}</span><span class="mtag">${s.mkt}</span></td>
+      <td>${fmt(s.close,2)}</td>
+      <td class="${chgCls}">${s.chg==null?'–':(s.chg>0?'+':'')+fmt(s.chg,2)}</td>
+      <td class="hide-m cap-col">${fmt(s.cap,0)}</td>
+      ${ratioCell(s.finRatio, s.finD)}
+      ${ratioCell(s.shortRatio)}
+      ${ratioCell(s.overall)}
+      <td class="hide-m">${fmtInt(s.finBal)}</td>
+      <td class="hide-m ${s.finChg>0?'chg-up':(s.finChg<0?'chg-down':'dim')}">${s.finChg>0?'+':''}${fmtInt(s.finChg)}</td>
+      <td class="hide-m">${fmt(s.sr,1)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tbody').innerHTML = html;
+  document.getElementById('moreBtn').style.display = rows.length>state.shown ? 'block':'none';
+  document.getElementById('countNote').textContent = `顯示 ${Math.min(state.shown,rows.length).toLocaleString()} / ${rows.length.toLocaleString()} 檔`;
+  const etfMode = state.mkt==='ETF';
+  document.getElementById('tbl').classList.toggle('etf-mode', etfMode);
+  document.querySelector('th[data-k="cap"]').textContent = etfMode ? '規模(億)' : '市值(億)';
+  document.querySelector('th[data-k="name"]').textContent = etfMode ? 'ETF' : '個股';
+  document.querySelectorAll('th[data-k]').forEach(th=>{
+    const base = th.textContent.replace(/[▲▼]\s*$/,'').trim();
+    th.innerHTML = base + (th.dataset.k===state.sortK ? `<span class="arr">${state.sortDir<0?'▼':'▲'}</span>`:'');
+  });
+}
+
+document.getElementById('q').addEventListener('input', e=>{ state.q=e.target.value.trim(); state.shown=100; render(); });
+document.getElementById('onlyAlert').addEventListener('change', e=>{ state.onlyAlert=e.target.checked; state.shown=100; render(); });
+document.getElementById('mktSeg').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('#mktSeg button').forEach(b=>b.classList.remove('on'));
+  e.target.classList.add('on');
+  state.mkt = e.target.dataset.m; state.shown=100;
+  if(state.mkt==='ETF'){ state.sortK='cap'; state.sortDir=-1; }  // ETF 依規模排序
+  render();
+});
+document.getElementById('moreBtn').addEventListener('click', ()=>{ state.shown+=200; render(); });
+document.querySelectorAll('th[data-k]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const k = th.dataset.k;
+    if(state.sortK===k) state.sortDir*=-1;
+    else { state.sortK=k; state.sortDir = k==='name'?1:-1; }
+    state.shown=100; render();
+  });
+});
+render();
+</script>
+</body>
+</html>

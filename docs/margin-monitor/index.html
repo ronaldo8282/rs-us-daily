@@ -410,7 +410,15 @@ function buildTrendCard(key, s){
   const [f0,f1] = padr(Math.min(...fn,128), Math.max(...fn,142));
   const yC = v => PT+PH1-(v-c0)/(c1-c0)*PH1;
   const yF = v => p2y+PH2-(v-f0)/(f1-f0)*PH2;
-  const path = (y,arr)=>arr.map((v,i)=>(i?'L':'M')+xs(i).toFixed(1)+','+y(v).toFixed(1)).join('');
+  const path = (y,arr)=>{
+    let d='', pen=false;
+    arr.forEach((v,i)=>{
+      if(v==null || !isFinite(v)){ pen=false; return; }
+      d += (pen?'L':'M')+xs(i).toFixed(1)+','+y(v).toFixed(1);
+      pen=true;
+    });
+    return d;
+  };
   /* ── TAIEX / EWT overlays (joined by calendar date) ── */
   const PRICES = window.MM_PRICES || {};
   const taiex = s.map(p=>{ const px=PRICES[p.d]; return px && px.taiex!=null ? px.taiex : null; });

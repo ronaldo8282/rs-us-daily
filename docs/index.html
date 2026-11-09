@@ -17,6 +17,7 @@
       --danger: #f59e0b;
       --drop: #ef4444;
       --card: #1e2a3d;
+      --otc-mkt: #c4b5fd;
       --mm-green-deep: #14532d;
       --mm-green: #166534;
       --mm-red-deep: #7f1d1d;
@@ -279,13 +280,18 @@
       margin-right: 0.3rem; vertical-align: middle;
     }
     #panel-otc .otc-swatch-fin { background: var(--accent); height: 0.28rem; }
+    #panel-otc .otc-swatch-mkt { background: var(--otc-mkt); }
+    #panel-otc .otc-swatch-band {
+      width: 0.72rem; height: 0.72rem; border-radius: 2px;
+      background: linear-gradient(var(--drop) 0 42%, transparent 42% 58%, var(--accent2) 58% 100%);
+    }
     #panel-otc .otc-swatch-taiex { background: var(--accent2); }
     #panel-otc .otc-swatch-ewt { background: var(--danger); }
     #panel-otc .otc-chart-scroll {
-      position: relative; height: 280px; background: var(--bg);
+      position: relative; height: 320px; background: var(--bg);
       touch-action: none; cursor: crosshair; user-select: none;
     }
-    #panel-otc .otc-chart-scroll canvas { display: block; width: 100%; height: 280px; }
+    #panel-otc .otc-chart-scroll canvas { display: block; width: 100%; height: 320px; }
     #panel-otc .otc-brush-band {
       position: absolute; pointer-events: none; z-index: 2;
       background: rgba(59, 130, 246, 0.18);
@@ -303,6 +309,66 @@
     }
     #panel-otc .otc-overview canvas { display: block; width: 100%; height: 46px; }
     #panel-otc .note a { color: var(--accent); }
+    #panel-otc .otc-kpis {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem; padding: 0.85rem 1.5rem 0;
+    }
+    #panel-otc .otc-kpi {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.7rem 0.9rem 0.8rem;
+    }
+    #panel-otc .otc-kpi .k { color: var(--muted); font-size: 0.75rem; }
+    #panel-otc .otc-kpi .v {
+      font-size: 1.65rem; font-weight: 750; line-height: 1.15; margin-top: 0.12rem;
+      font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
+    }
+    #panel-otc .otc-kpi .v .unit {
+      font-size: 0.85rem; color: var(--muted); font-weight: 650; margin-left: 0.12rem;
+    }
+    #panel-otc .otc-kpi .sub {
+      margin-top: 0.28rem; color: var(--muted); font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+    #panel-otc .otc-badge {
+      display: inline-block; margin-top: 0.35rem; font-size: 0.72rem; font-weight: 700;
+      border-radius: 6px; padding: 0.12rem 0.45rem;
+    }
+    #panel-otc .otc-badge.call { color: var(--drop); background: rgba(239, 68, 68, 0.16); }
+    #panel-otc .otc-badge.near { color: var(--danger); background: rgba(245, 158, 11, 0.16); }
+    #panel-otc .otc-badge.low { color: var(--accent2); background: rgba(34, 197, 94, 0.14); }
+    #panel-otc .otc-band-legend {
+      display: flex; flex-wrap: wrap; gap: 0.4rem 0.85rem; align-items: center;
+      margin: 0.75rem 1.5rem 0; padding: 0.45rem 0.75rem;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 0.78rem;
+    }
+    #panel-otc .otc-band-legend strong { color: var(--text); font-weight: 650; }
+    #panel-otc .otc-dot {
+      display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 2px;
+      margin-right: 0.28rem; vertical-align: -1px;
+    }
+    #panel-otc .otc-dot.call { background: var(--drop); }
+    #panel-otc .otc-dot.near { background: var(--danger); }
+    #panel-otc .otc-dot.low { background: var(--accent2); }
+    #panel-otc .otc-dot.high { background: var(--drop); }
+    #panel-otc .otc-chips {
+      display: flex; flex-wrap: wrap; gap: 0.45rem; padding: 0.65rem 1.5rem 0;
+    }
+    #panel-otc .otc-chip {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.32rem 0.7rem; font-size: 0.78rem; color: var(--muted);
+    }
+    #panel-otc .otc-chip b { color: var(--text); font-variant-numeric: tabular-nums; }
+    #panel-otc .otc-chip.call { border-color: rgba(239, 68, 68, 0.45); }
+    #panel-otc .otc-chip.call b { color: var(--drop); }
+    #panel-otc .otc-chip.near b { color: var(--danger); }
+    #panel-otc .otc-tbl-wrap { margin-top: 0.35rem; }
+    #panel-otc .otc-tbl-wrap table { font-size: 0.8rem; }
+    #panel-otc .otc-tbl-wrap th,
+    #panel-otc .otc-tbl-wrap td { padding: 0.38rem 0.55rem; }
+    #panel-otc td.otc-call, #panel-otc td.otc-high { color: var(--drop); font-weight: 700; }
+    #panel-otc td.otc-near { color: var(--danger); font-weight: 700; }
+    #panel-otc td.otc-low { color: var(--accent2); font-weight: 650; }
     th.xl-date { font-size: 0.75rem; text-align: right; }
     th.xl-primary { color: var(--accent2); }
     td.xl-primary { font-weight: 700; }
@@ -801,9 +867,19 @@
   <div id="panel-otc" class="tab-panel" role="tabpanel">
     <div class="mm-header">
       <strong>斷頭壓力儀表</strong>
-      · 上櫃融資維持率
+      · 成數與市值兩種口徑
       <div class="mm-thrust-note" id="otc-asof">As of …</div>
-      <div class="mm-thrust-note">買區 ≤150（嚴格 145）· 賣區 ≥210（嚴格 205）。拖主圖選區間，下方總覽拖曳平移或拉邊，滾輪縮放，雙擊回到區間按鈕。</div>
+      <div class="mm-thrust-note">市值線 mkt_fin 供 1Y／2Y／5Y／ALL。追繳／買賣帶只對齊成數線。拖主圖選區間，下方總覽拖曳平移或拉邊，滾輪縮放，雙擊回到區間按鈕。</div>
+    </div>
+    <div class="otc-kpis" id="otc-kpis"></div>
+    <div class="otc-band-legend" aria-label="追繳與買賣帶，僅成數">
+      <strong>追繳／買賣帶</strong>
+      <span>僅成數 · marginMonitor</span>
+      <span><i class="otc-dot call"></i>低於 130 追繳線</span>
+      <span><i class="otc-dot near"></i>130–140 接近追繳</span>
+      <span><i class="otc-dot low"></i>145／150</span>
+      <span><i class="otc-dot high"></i>205／210</span>
+      <span>市值線不套用</span>
     </div>
     <div class="controls">
       <div class="group">
@@ -817,15 +893,17 @@
     </div>
     <div class="mm-chart-block" id="otc-chart-block">
       <div class="mm-chart-head">
-        <span>上櫃融資維持率 · TAIEX / 加權 · EWT</span>
+        <span>成數與市值 · TAIEX / 加權 · EWT</span>
         <span class="mm-chart-legend">
-          <span><i class="mm-swatch otc-swatch-fin"></i>融資維持率</span>
+          <span><i class="mm-swatch otc-swatch-fin"></i>成數 · marginMonitor 上櫃</span>
+          <span><i class="mm-swatch otc-swatch-mkt"></i>市值 · FinLab 上市+上櫃</span>
+          <span><i class="mm-swatch otc-swatch-band"></i>145／150 · 205／210（僅成數）</span>
           <span><i class="mm-swatch otc-swatch-taiex"></i>TAIEX / 加權</span>
           <span><i class="mm-swatch otc-swatch-ewt"></i>EWT（獨立刻度）</span>
         </span>
       </div>
       <div class="otc-chart-scroll" id="otc-chart-scroll">
-        <canvas id="otc-chart" aria-label="OTC margin maintenance ratio with TAIEX and EWT"></canvas>
+        <canvas id="otc-chart" aria-label="marginMonitor cost ratio and FinLab mark-to-market ratio with TAIEX and EWT"></canvas>
         <div id="otc-brush-band" class="otc-brush-band" hidden></div>
         <div id="otc-chart-tip" class="otc-chart-tip" hidden></div>
       </div>
@@ -834,11 +912,31 @@
       </div>
     </div>
     <div class="status" id="otc-status">Loading OTC fin…</div>
+    <div class="otc-chips" id="otc-chips"></div>
     <div class="wrap">
+      <div class="table-scroll sm otc-tbl-wrap">
+        <table id="otc-table">
+          <thead>
+            <tr>
+              <th class="num">#</th>
+              <th>日期</th>
+              <th class="num">成數</th>
+              <th class="num">較前日</th>
+              <th class="num">市值</th>
+              <th class="num">較前日</th>
+              <th class="num">TAIEX</th>
+              <th class="num">較前日</th>
+              <th class="num">EWT</th>
+              <th>成數帶</th>
+            </tr>
+          </thead>
+          <tbody id="otc-tbody"></tbody>
+        </table>
+      </div>
       <p class="note">
-        研究對照，非投資建議。上櫃融資維持率與 TAIEX／加權取自
+        研究對照。藍線是
         <a href="https://twm-z3sodp.github.io/marginMonitor/" target="_blank" rel="noopener noreferrer">marginMonitor</a>
-        （TSE.close 與 OTC fin 同日）。EWT 為 Yahoo Finance 日收盤，美元計的台灣股票 ETF，對應 0050／正二。
+        上櫃融資風險指標（成本／成數，約近 60 個交易日）。紫線是 FinLab 上市+上櫃市值維持率 Σ(融資餘額×收盤價)／融資金額（2009 年起）。兩種口徑不互蓋；同日差距見上方統計。145／150、205／210 與 130 追繳線只畫在成數線的日期上。TAIEX／加權與 EWT 是價格疊圖（Yahoo ^TWII、EWT）。
       </p>
     </div>
   </div>
@@ -2250,8 +2348,10 @@
   }
 
   // ---- OTC fin pressure (斷頭壓力儀表) ----
-  // Reads docs/data/otc_fin_pressure.csv only. Window presets clamp to whatever
-  // dates are in that file; nothing here assumes the short marginMonitor seed.
+  // Reads docs/data/otc_fin_pressure.csv only. otc_fin is the short marginMonitor
+  // cost/成數 seed. mkt_fin is the long FinLab mark-to-market series behind
+  // 1Y/2Y/5Y/ALL. Bands 145/150 and 205/210 are drawn only across otc_fin dates.
+  // Presets clamp to the dates in the file.
   function otcShiftYears(iso, delta) {
     const p = iso.split("-");
     const dt = new Date(Date.UTC(+p[0] + delta, +p[1] - 1, +p[2]));
@@ -2362,6 +2462,47 @@
     return { lo: lo - pad, hi: hi + pad };
   }
 
+  // Shared percent scale. 145/210 stay in view only while the marginMonitor
+  // line is in the window, because those levels belong to that 口徑 alone.
+  function otcRatioDomain(rows) {
+    const vals = [];
+    let mm = false;
+    for (const r of rows) {
+      if (r.mkt_fin != null && isFinite(r.mkt_fin)) vals.push(r.mkt_fin);
+      if (r.otc_fin != null && isFinite(r.otc_fin)) { vals.push(r.otc_fin); mm = true; }
+    }
+    if (!vals.length) return null;
+    let lo = Math.min.apply(null, vals);
+    let hi = Math.max.apply(null, vals);
+    if (mm) {
+      lo = Math.min(lo, 130);
+      hi = Math.max(hi, 210);
+    }
+    if (hi === lo) { lo -= 1; hi += 1; }
+    const pad = (hi - lo) * 0.06;
+    return { lo: lo - pad, hi: hi + pad, mm: mm };
+  }
+
+  function otcMmSpan(rows, pad, step, plotW) {
+    let a = -1;
+    let b = -1;
+    for (let i = 0; i < rows.length; i++) {
+      const v = rows[i].otc_fin;
+      if (v == null || !isFinite(v)) continue;
+      if (a < 0) a = i;
+      b = i;
+    }
+    if (a < 0) return null;
+    const x0 = pad.l + a * step;
+    const x1 = pad.l + (b + 1) * step;
+    return {
+      x0: Math.max(pad.l, x0),
+      x1: Math.min(pad.l + plotW, x1),
+      i0: a,
+      i1: b,
+    };
+  }
+
   function otcTicks(lo, hi) {
     const span = hi - lo;
     if (!(span > 0)) return [];
@@ -2417,25 +2558,32 @@
     const plotH = cssH - pad.t - pad.b;
     if (!n) { otcOvGeom = null; return; }
     const vals = [];
-    for (const r of otcRows) if (r.otc_fin != null && isFinite(r.otc_fin)) vals.push(r.otc_fin);
+    for (const r of otcRows) {
+      if (r.mkt_fin != null && isFinite(r.mkt_fin)) vals.push(r.mkt_fin);
+      if (r.otc_fin != null && isFinite(r.otc_fin)) vals.push(r.otc_fin);
+    }
     let lo = vals.length ? Math.min.apply(null, vals) : 0;
     let hi = vals.length ? Math.max.apply(null, vals) : 1;
     if (hi === lo) { lo -= 1; hi += 1; }
     const yOf = (v) => pad.t + (1 - (v - lo) / (hi - lo)) * plotH;
     const xAt = (i) => n <= 1 ? pad.l : pad.l + (i / (n - 1)) * plotW;
-    ctx.beginPath();
-    let on = false;
-    for (let i = 0; i < n; i++) {
-      const v = otcRows[i].otc_fin;
-      if (v == null || !isFinite(v)) { on = false; continue; }
-      const x = xAt(i);
-      const y = yOf(v);
-      if (!on) { ctx.moveTo(x, y); on = true; }
-      else ctx.lineTo(x, y);
+    function strokeOv(key, color, width) {
+      ctx.beginPath();
+      let on = false;
+      for (let i = 0; i < n; i++) {
+        const v = otcRows[i][key];
+        if (v == null || !isFinite(v)) { on = false; continue; }
+        const x = xAt(i);
+        const y = yOf(v);
+        if (!on) { ctx.moveTo(x, y); on = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
     }
-    ctx.strokeStyle = mmCssColor("--accent");
-    ctx.lineWidth = 1.25;
-    ctx.stroke();
+    strokeOv("mkt_fin", mmCssColor("--otc-mkt"), 1.15);
+    strokeOv("otc_fin", mmCssColor("--accent"), 1.35);
     const w = otcWindow();
     const x0 = xAt(Math.max(0, w.i0));
     const x1 = xAt(Math.max(0, w.i1));
@@ -2491,9 +2639,10 @@
     const plotW = Math.max(10, viewW - pad.l - pad.r);
     const plotH = cssH - pad.t - pad.b;
     const step = plotW / rows.length;
-    const finDom = otcDomain(rows.map(r => r.otc_fin), 145, 210);
+    const finDom = otcRatioDomain(rows);
     const taiexDom = otcDomain(rows.map(r => r.taiex_close), null, null);
     const ewtDom = otcDomain(rows.map(r => r.ewt_close), null, null);
+    const mmSpan = finDom && finDom.mm ? otcMmSpan(rows, pad, step, plotW) : null;
     const greenDeep = mmCssColor("--mm-green-deep");
     const green = mmCssColor("--mm-green");
     const redLight = mmCssColor("--mm-red-light");
@@ -2504,55 +2653,94 @@
     const border = mmCssColor("--border");
     const plotBottom = pad.t + plotH;
 
-    if (finDom) {
+    if (finDom && mmSpan && (mmSpan.x1 - mmSpan.x0) >= 20) {
+      const y130 = otcY(finDom, 130, pad.t, plotH);
+      const y140 = otcY(finDom, 140, pad.t, plotH);
       const y145 = otcY(finDom, 145, pad.t, plotH);
       const y150 = otcY(finDom, 150, pad.t, plotH);
+      const y205 = otcY(finDom, 205, pad.t, plotH);
       const y210 = otcY(finDom, 210, pad.t, plotH);
-      ctx.fillStyle = mmRgba(green, 0.28);
-      ctx.fillRect(pad.l, y150, plotW, plotBottom - y150);
-      ctx.fillStyle = mmRgba(greenDeep, 0.55);
-      ctx.fillRect(pad.l, y145, plotW, plotBottom - y145);
-      ctx.fillStyle = mmRgba(redLight, 0.32);
-      ctx.fillRect(pad.l, pad.t, plotW, y210 - pad.t);
+      const bandX = mmSpan.x0;
+      const bandW = Math.max(1, mmSpan.x1 - mmSpan.x0);
       ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.l, pad.t, plotW, plotH);
+      ctx.clip();
+      ctx.fillStyle = mmRgba(green, 0.28);
+      ctx.fillRect(bandX, y150, bandW, plotBottom - y150);
+      ctx.fillStyle = mmRgba(greenDeep, 0.55);
+      ctx.fillRect(bandX, y145, bandW, plotBottom - y145);
+      ctx.fillStyle = mmRgba(redLight, 0.32);
+      ctx.fillRect(bandX, pad.t, bandW, y210 - pad.t);
       ctx.setLineDash([3, 3]);
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.strokeStyle = mmRgba(accent2, 0.75);
-      ctx.moveTo(pad.l, y150); ctx.lineTo(pad.l + plotW, y150);
+      ctx.strokeStyle = mmRgba(accent2, 0.9);
+      ctx.moveTo(bandX, y150); ctx.lineTo(bandX + bandW, y150);
       ctx.stroke();
       ctx.beginPath();
-      ctx.strokeStyle = mmRgba(mmCssColor("--drop"), 0.75);
-      ctx.moveTo(pad.l, y210); ctx.lineTo(pad.l + plotW, y210);
+      ctx.strokeStyle = mmRgba(mmCssColor("--drop"), 0.9);
+      ctx.moveTo(bandX, y210); ctx.lineTo(bandX + bandW, y210);
       ctx.stroke();
       ctx.lineWidth = 1.25;
       ctx.beginPath();
       ctx.strokeStyle = accent2;
-      const yS145 = otcY(finDom, 145, pad.t, plotH);
-      ctx.moveTo(pad.l, yS145); ctx.lineTo(pad.l + plotW, yS145);
+      ctx.moveTo(bandX, y145); ctx.lineTo(bandX + bandW, y145);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = mmCssColor("--drop");
-      const y205 = otcY(finDom, 205, pad.t, plotH);
-      ctx.moveTo(pad.l, y205); ctx.lineTo(pad.l + plotW, y205);
+      ctx.moveTo(bandX, y205); ctx.lineTo(bandX + bandW, y205);
+      ctx.stroke();
+      ctx.setLineDash([2, 3]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.strokeStyle = mmCssColor("--drop");
+      ctx.moveTo(bandX, y130); ctx.lineTo(bandX + bandW, y130);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = amber;
+      ctx.moveTo(bandX, y140); ctx.lineTo(bandX + bandW, y140);
       ctx.stroke();
       ctx.restore();
+      if (bandW >= 36) {
+        ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        const labs = [
+          { y: y130, text: "130", color: mmCssColor("--drop") },
+          { y: y140, text: "140", color: amber },
+          { y: y145, text: "145", color: accent2 },
+          { y: y205, text: "205", color: mmCssColor("--drop") },
+          { y: y150, text: "150", color: muted },
+          { y: y210, text: "210", color: muted },
+        ];
+        const placed = [];
+        for (const lab of labs) {
+          if (lab.y < pad.t + 14 || lab.y > plotBottom - 6) continue;
+          if (placed.some(y => Math.abs(y - lab.y) < 12)) continue;
+          ctx.fillStyle = lab.color;
+          ctx.fillText(lab.text, bandX + 4, lab.y);
+          placed.push(lab.y);
+        }
+        if (bandW >= 72) {
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = muted;
+          const tagX = Math.min(bandX + bandW / 2, pad.l + plotW - 28);
+          if (tagX > bandX + 24) ctx.fillText("僅成數", tagX, pad.t + 2);
+        }
+      }
+    }
+
+    if (finDom) {
       ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
-      const labs = [
-        { y: yS145, text: "145", color: accent2 },
-        { y: y205, text: "205", color: mmCssColor("--drop") },
-        { y: y150, text: "150", color: muted },
-        { y: y210, text: "210", color: muted },
-      ];
-      const placed = [];
-      for (const lab of labs) {
-        if (lab.y < pad.t + 6 || lab.y > plotBottom - 6) continue;
-        if (placed.some(y => Math.abs(y - lab.y) < 12)) continue;
-        ctx.fillStyle = lab.color;
-        ctx.fillText(lab.text, pad.l - 6, lab.y);
-        placed.push(lab.y);
+      ctx.fillStyle = muted;
+      for (const v of otcTicks(finDom.lo, finDom.hi)) {
+        const y = otcY(finDom, v, pad.t, plotH);
+        if (y < pad.t + 4 || y > plotBottom - 4) continue;
+        ctx.fillText(otcFmt(v, 0), pad.l - 6, y);
       }
     }
 
@@ -2597,7 +2785,8 @@
     }
     strokeKey("ewt_close", ewtDom, amber, 1.25);
     strokeKey("taiex_close", taiexDom, accent2, 1.6);
-    strokeKey("otc_fin", finDom, accent, 2.15);
+    strokeKey("mkt_fin", finDom, mmCssColor("--otc-mkt"), 1.75);
+    strokeKey("otc_fin", finDom, accent, 2.35);
 
     ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
     ctx.fillStyle = muted;
@@ -2635,7 +2824,8 @@
     const r = g.rows[otcIndexAt(x, g)];
     tip.hidden = false;
     tip.textContent = r.date
-      + "\n融資維持率 " + otcFmt(r.otc_fin, 2)
+      + "\n成數 · marginMonitor 上櫃 " + otcFmt(r.otc_fin, 2)
+      + "\n市值 · FinLab 上市+上櫃 " + otcFmt(r.mkt_fin, 2)
       + "\nTAIEX " + otcFmt(r.taiex_close, 2)
       + "\nEWT " + otcFmt(r.ewt_close, 2);
     tip.style.left = (clientX + 12) + "px";
@@ -2677,6 +2867,145 @@
     otcSetCustom(i0, i1);
   }
 
+  function otcEnds(key) {
+    let last = null;
+    let prev = null;
+    for (let i = otcRows.length - 1; i >= 0; i--) {
+      const v = otcRows[i][key];
+      if (v == null || !isFinite(v)) continue;
+      if (!last) last = otcRows[i];
+      else { prev = otcRows[i]; break; }
+    }
+    return { last: last, prev: prev };
+  }
+
+  // Cards share the latest marginMonitor session so TAIEX/EWT are not a later
+  // price-only print. Deltas use the previous 成數 session, same as the table.
+  function otcSessionPair() {
+    const sessions = [];
+    for (const r of otcRows) {
+      if (r.otc_fin != null && isFinite(r.otc_fin)) sessions.push(r);
+    }
+    return {
+      last: sessions.length ? sessions[sessions.length - 1] : null,
+      prev: sessions.length > 1 ? sessions[sessions.length - 2] : null,
+    };
+  }
+
+  function otcDeltaText(cur, prev, digits) {
+    if (cur == null || prev == null || !isFinite(cur) || !isFinite(prev)) return "—";
+    const d = cur - prev;
+    if (Math.abs(d) < 5e-3) return "0.00";
+    return (d > 0 ? "+" : "") + otcFmt(d, digits);
+  }
+
+  function otcFinBadge(v) {
+    if (v == null || !isFinite(v)) return "";
+    if (v < 130) return '<div class="otc-badge call">低於 130 追繳線</div>';
+    if (v < 140) return '<div class="otc-badge near">130–140 接近追繳</div>';
+    if (v <= 145) return '<div class="otc-badge low">≤145</div>';
+    if (v <= 150) return '<div class="otc-badge low">≤150</div>';
+    if (v >= 210) return '<div class="otc-badge call">≥210</div>';
+    if (v >= 205) return '<div class="otc-badge call">≥205</div>';
+    return "";
+  }
+
+  function otcBandCell(v) {
+    if (v == null || !isFinite(v)) return { text: "—", cls: "" };
+    if (v < 130) return { text: "追繳線", cls: "otc-call" };
+    if (v < 140) return { text: "接近追繳", cls: "otc-near" };
+    if (v <= 145) return { text: "≤145", cls: "otc-low" };
+    if (v <= 150) return { text: "≤150", cls: "otc-low" };
+    if (v >= 210) return { text: "≥210", cls: "otc-high" };
+    if (v >= 205) return { text: "≥205", cls: "otc-high" };
+    return { text: "—", cls: "" };
+  }
+
+  function otcKpi(label, value, digits, unit, row, prev, badge) {
+    const shown = value == null ? "—" : otcFmt(value, digits);
+    const unitHtml = value == null || !unit ? "" : '<span class="unit">' + unit + "</span>";
+    const when = row ? row.date : "—";
+    const delta = otcDeltaText(value, prev, digits);
+    return '<div class="otc-kpi"><div class="k">' + label + '</div><div class="v">' + shown + unitHtml
+      + '</div>' + (badge || "") + '<div class="sub">' + when + " · 較前日 " + delta + "</div></div>";
+  }
+
+  function otcFillBoard() {
+    const kpis = document.getElementById("otc-kpis");
+    const chips = document.getElementById("otc-chips");
+    const body = document.getElementById("otc-tbody");
+    if (!otcRows.length) {
+      if (kpis) kpis.innerHTML = "";
+      if (chips) chips.innerHTML = "";
+      if (body) body.innerHTML = "";
+      return;
+    }
+    const pair = otcSessionPair();
+    const row = pair.last;
+    const prev = pair.prev;
+    if (kpis) {
+      kpis.innerHTML = [
+        otcKpi("成數 · marginMonitor 上櫃", row && row.otc_fin, 2, "%", row, prev && prev.otc_fin, otcFinBadge(row && row.otc_fin)),
+        otcKpi("市值 · FinLab 上市+上櫃", row && row.mkt_fin, 2, "%", row, prev && prev.mkt_fin, ""),
+        otcKpi("TAIEX / 加權", row && row.taiex_close, 2, "", row, prev && prev.taiex_close, ""),
+        otcKpi("EWT", row && row.ewt_close, 2, "USD", row, prev && prev.ewt_close, ""),
+      ].join("");
+    }
+    const sessions = [];
+    for (const r of otcRows) {
+      if (r.otc_fin != null && isFinite(r.otc_fin)) sessions.push(r);
+    }
+    let n130 = 0, n140 = 0, n150 = 0, n205 = 0;
+    let finLo = null, finHi = null;
+    for (const r of sessions) {
+      const v = r.otc_fin;
+      if (finLo == null || v < finLo) finLo = v;
+      if (finHi == null || v > finHi) finHi = v;
+      if (v < 130) n130++;
+      else if (v < 140) n140++;
+      if (v <= 150) n150++;
+      if (v >= 205) n205++;
+    }
+    let gap = "—";
+    if (row && row.mkt_fin != null && isFinite(row.mkt_fin) && row.otc_fin != null) {
+      gap = otcFmt(row.mkt_fin - row.otc_fin, 2);
+    }
+    if (chips) {
+      chips.innerHTML = [
+        '<span class="otc-chip">成數 <b>' + sessions.length + "</b> 筆</span>",
+        '<span class="otc-chip call">低於 130：<b>' + n130 + "</b></span>",
+        '<span class="otc-chip near">130–140：<b>' + n140 + "</b></span>",
+        '<span class="otc-chip">≤150：<b>' + n150 + "</b></span>",
+        '<span class="otc-chip">≥205：<b>' + n205 + "</b></span>",
+        '<span class="otc-chip">成數區間 <b>' + otcFmt(finLo, 2) + " – " + otcFmt(finHi, 2) + "</b></span>",
+        '<span class="otc-chip">同日 市值−成數 <b>' + gap + "</b></span>",
+      ].join("");
+    }
+    if (!body) return;
+    if (!sessions.length) {
+      body.innerHTML = '<tr><td colspan="10">成數序列還沒有列。</td></tr>';
+      return;
+    }
+    const newestFirst = sessions.slice().reverse();
+    const html = [];
+    for (let i = 0; i < newestFirst.length; i++) {
+      const r = newestFirst[i];
+      const older = newestFirst[i + 1];
+      const band = otcBandCell(r.otc_fin);
+      const cls = band.cls ? " " + band.cls : "";
+      html.push("<tr><td class=\"num\">" + (i + 1) + "</td><td>" + r.date + "</td>"
+        + '<td class="num' + cls + '">' + otcFmt(r.otc_fin, 2) + "</td>"
+        + '<td class="num">' + otcDeltaText(r.otc_fin, older && older.otc_fin, 2) + "</td>"
+        + '<td class="num">' + otcFmt(r.mkt_fin, 2) + "</td>"
+        + '<td class="num">' + otcDeltaText(r.mkt_fin, older && older.mkt_fin, 2) + "</td>"
+        + '<td class="num">' + otcFmt(r.taiex_close, 2) + "</td>"
+        + '<td class="num">' + otcDeltaText(r.taiex_close, older && older.taiex_close, 2) + "</td>"
+        + '<td class="num">' + otcFmt(r.ewt_close, 2) + "</td>"
+        + "<td" + (band.cls ? ' class="' + band.cls + '"' : "") + ">" + band.text + "</td></tr>");
+    }
+    body.innerHTML = html.join("");
+  }
+
   function renderOtc() {
     const st = document.getElementById("otc-status");
     const asof = document.getElementById("otc-asof");
@@ -2686,22 +3015,32 @@
         st.classList.add("error");
       }
       if (asof) asof.textContent = "As of —";
+      otcFillBoard();
       otcSyncButtons();
       requestAnimationFrame(() => drawOtc(true));
       return;
     }
     if (st) st.classList.remove("error");
-    let last = otcRows[otcRows.length - 1];
-    for (let i = otcRows.length - 1; i >= 0; i--) {
-      if (otcRows[i].otc_fin != null) { last = otcRows[i]; break; }
-    }
-    const bits = ["As of " + last.date, "上櫃融資維持率 " + otcFmt(last.otc_fin, 2)];
-    if (last.taiex_close != null) bits.push("TAIEX " + otcFmt(last.taiex_close, 2));
-    if (last.ewt_close != null) bits.push("EWT " + otcFmt(last.ewt_close, 2));
+    const pair = otcSessionPair();
+    const mm = pair.last || otcEnds("mkt_fin").last;
+    const asofDate = (mm && mm.date) || otcRows[otcRows.length - 1].date;
+    const bits = ["As of " + asofDate];
+    if (mm && mm.otc_fin != null) bits.push("成數 " + otcFmt(mm.otc_fin, 2));
+    if (mm && mm.mkt_fin != null) bits.push("市值 " + otcFmt(mm.mkt_fin, 2));
+    if (mm && mm.taiex_close != null) bits.push("TAIEX " + otcFmt(mm.taiex_close, 2));
+    if (mm && mm.ewt_close != null) bits.push("EWT " + otcFmt(mm.ewt_close, 2));
     if (asof) asof.textContent = bits.join(" · ");
-    if (st) {
-      st.textContent = otcRows.length + " sessions · " + otcRows[0].date + " → " + otcRows[otcRows.length - 1].date;
+    let mmN = 0;
+    let mktN = 0;
+    for (const r of otcRows) {
+      if (r.otc_fin != null && isFinite(r.otc_fin)) mmN++;
+      if (r.mkt_fin != null && isFinite(r.mkt_fin)) mktN++;
     }
+    if (st) {
+      st.textContent = otcRows.length + " sessions · " + otcRows[0].date + " → " + otcRows[otcRows.length - 1].date
+        + " · 成數 " + mmN + " · 市值 " + mktN;
+    }
+    otcFillBoard();
     otcSyncButtons();
     requestAnimationFrame(() => drawOtc(true));
   }
@@ -2811,6 +3150,7 @@
           byDate.set(d, {
             date: d,
             otc_fin: numOrNull(rec.otc_fin),
+            mkt_fin: numOrNull(rec.mkt_fin),
             taiex_close: numOrNull(rec.taiex_close),
             ewt_close: numOrNull(rec.ewt_close),
           });

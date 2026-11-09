@@ -67,8 +67,9 @@ jobs:
           mkdir -p output/mm
           python src/mm_breadth.py --out output/mm/mm_breadth_daily.csv --rewrite-days 15
 
-      # Upserts marginMonitor's short OTC/TSE window into docs/data and joins EWT.
-      # Older rows already in the CSV stay. A longer file is a manual --merge.
+      # Upserts marginMonitor's short OTC window into otc_fin (cost/成數) and joins EWT.
+      # Older rows and mkt_fin stay. A Hermes file is a manual --merge and does not
+      # replace otc_fin unless --overwrite-otc-fin is passed.
       - name: OTC fin pressure cache
         continue-on-error: true
         run: python scripts/fetch_otc_fin.py

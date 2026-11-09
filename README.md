@@ -209,7 +209,7 @@ Interactive Friday browser (no build step). Tags live in a collapsible left side
   - `rs_friday_percentiles.csv` — wide Ticker × Friday Percentile
   - `fundamentals_latest.csv` — Ticker, Sector, Industry, MarketCap, updated_at
   - `xl_sector_etf_weekly.csv` — XL sector ETF Relative Strength + XlRank by Friday
-  - `otc_fin_pressure.csv` — 斷頭壓力儀表 (`date`, `otc_fin`, `taiex_close`, `ewt_close`). `otc_fin_pressure.json` is the same rows plus the column contract.
+  - `otc_fin_pressure.csv` — 斷頭壓力儀表 (`date`, `otc_fin`, `mkt_fin`, `taiex_close`, `ewt_close`). `otc_fin_pressure.json` is the same rows plus the column contract.
 
 ### Tab: Ranks
 
@@ -231,21 +231,29 @@ Daily Actions copies the three CSVs into `docs/data/` and commits `docs/` with t
 
 ### Tab: 斷頭壓力儀表
 
-Last tag in the rail. One chart: 上櫃融資維持率 (`otc_fin`, left axis), TAIEX / 加權 (`taiex_close`, right axis), and EWT (`ewt_close`, own scale). Hover shows the date plus all three. Buy zone is at or below 150, strict line 145; sell zone is at or above 210, strict line 205. Range buttons are 1Y / 2Y / 5Y / ALL. Drag the main plot to brush a custom window, drag the overview strip to pan or resize it, scroll to zoom, double-click to return to the last range button. Presets clamp to the dates actually in the CSV.
+Last tag in the rail. KPI cards (成數, 市值, TAIEX, EWT), a 追繳／買賣帶 legend that applies only to the marginMonitor 成數 line, one dual-line chart, summary chips, and a compact session table of that 成數 window. No per-stock rows. Two 口徑 share a percent scale, plus price overlays:
 
-**Index choice.** `taiex_close` is marginMonitor `series.TSE[].close`, so it shares session dates with OTC `fin`. EWT (iShares MSCI Taiwan ETF) is the USD daily close from Yahoo, a price proxy for the 0050 / 正二 thesis. The page does not scrape MacroMicro.
+- `otc_fin` — marginMonitor 上櫃融資風險指標 (cost / 成數). Short seed, about 60 sessions. Reference levels 145/150 and 205/210 are drawn only across this line.
+- `mkt_fin` — FinLab 上市+上櫃 mark-to-market, Σ(融資餘額×收盤價)/融資金額, from 2009. This is what 1Y / 2Y / 5Y / ALL show. The levels above are not applied to it.
+- `taiex_close` — TAIEX / 加權, right axis.
+- `ewt_close` — EWT, own scale.
 
-**Cache.** `docs/data/otc_fin_pressure.csv` is what the page reads. Columns: `date` (YYYY-MM-DD), `otc_fin` (上櫃融資維持率 / finRatio), `taiex_close` (TAIEX / 加權), `ewt_close` (EWT USD). `docs/data/otc_fin_pressure.json` repeats those rows and states the same contract (`schema`: `otc_fin_pressure.v1`).
+Hover names both fin 口徑 plus TAIEX and EWT. Range buttons are 1Y / 2Y / 5Y / ALL. Drag the main plot to brush a custom window, drag the overview strip to pan or resize it, scroll to zoom, double-click to return to the last range button. Presets clamp to the dates actually in the CSV. The two fin series are not averaged.
 
-marginMonitor `history.js` is only a short rolling seed. The script upserts it and keeps older dates. A longer history file (same columns, or aliases `fin` / `finRatio`, `taiex` / `tse_close`, `ewt`) merges through the same script:
+**Index choice.** On seed dates, `taiex_close` is marginMonitor `series.TSE[].close`. The longer history uses Yahoo `^TWII`. EWT (iShares MSCI Taiwan ETF) is the USD daily close from Yahoo, a price proxy for the 0050 / 正二 thesis. The page does not scrape MacroMicro.
+
+**Cache.** `docs/data/otc_fin_pressure.csv` is what the page reads. Columns: `date` (YYYY-MM-DD), `otc_fin` (marginMonitor cost / 成數), `mkt_fin` (FinLab mark-to-market), `taiex_close`, `ewt_close`. `docs/data/otc_fin_pressure.json` repeats those rows and states the same contract (`schema`: `otc_fin_pressure.v2`).
+
+marginMonitor `history.js` is only a short rolling seed. The script upserts it and keeps older dates, including `mkt_fin`. A longer history file merges through the same script:
 
 ```bash
 python scripts/fetch_otc_fin.py
 python scripts/fetch_otc_fin.py --merge path/to/longer.csv
 python scripts/fetch_otc_fin.py --merge path/to/longer.json --replace
+python scripts/fetch_otc_fin.py --merge path/to/hermes.csv --overwrite-otc-fin
 ```
 
-`--merge` lets non-empty incoming values replace that date. `--replace` starts from the file, then fills any dates it lacks from the seed. Without `--merge`, the seed refreshes `otc_fin` and `taiex_close` on dates it still publishes. Daily Actions runs the no-argument command (`continue-on-error`). Research series only, not investment advice.
+`--merge` lets non-empty incoming values replace that date. A Hermes dump (columns `tse_fin` or `source_otc_tse`) fills `mkt_fin` and prices, and does **not** copy its `otc_fin` onto the marginMonitor column unless `--overwrite-otc-fin` is set. That Hermes `otc_fin` is a partial mark-to-market self-calc, same formula as `mkt_fin`, not the cost / 成數 seed. Files without those markers still accept aliases `fin` / `finRatio`, `taiex` / `tse_close`, `ewt`. `--replace` starts from the file, then fills any dates it lacks from the seed. Without `--merge`, the seed refreshes only `otc_fin` and `taiex_close` on dates it still publishes. It does not write `mkt_fin` and does not delete older rows. `mkt_fin` arrives through `--merge`. Daily Actions runs the no-argument command (`continue-on-error`). Research series only.
 
 ### Fundamentals fill
 

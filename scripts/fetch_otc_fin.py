@@ -1,39 +1,49 @@
 #!/usr/bin/env python3
 """Cache the 斷頭壓力儀表 series for GitHub Pages.
 
-The page reads only docs/data/otc_fin_pressure.csv. It does not know whether
-a row came from the short public seed or from a longer history file.
+The page reads only docs/data/otc_fin_pressure.csv.
 
-Columns (otc_fin_pressure.v1), one row per session date:
+Columns (otc_fin_pressure.v2), one row per session date:
 
     date          YYYY-MM-DD
-    otc_fin       上櫃融資維持率 / finRatio
-    taiex_close   TAIEX / 加權. Prefer marginMonitor series.TSE[].close so the
-                  index shares dates with otc_fin. Not a stand-in ticker.
-    ewt_close     EWT (iShares MSCI Taiwan ETF) USD daily close. Yahoo chart
-                  API, joined on the US session date. USD proxy for the
-                  0050 / 正二 thesis.
+    otc_fin       marginMonitor 上櫃融資風險指標, cost / 成數.
+                  Short rolling seed (~60 sessions). Not the Hermes print.
+    mkt_fin       FinLab combined TSE+OTC mark-to-market percent,
+                  Σ(融資餘額×收盤價)/融資金額. Powers 1Y/2Y/5Y/ALL.
+    taiex_close   TAIEX / 加權. marginMonitor series.TSE[].close on seed
+                  dates; Yahoo ^TWII on the longer file.
+    ewt_close     EWT (iShares MSCI Taiwan ETF) USD daily close.
+
+These are two 口徑. On 2026-11-06 marginMonitor otc_fin is about 122 and
+mkt_fin is about 150. Do not average them. Leung's 145/150 and 205/210
+levels belong to the marginMonitor line only.
 
 Seed: https://twm-z3sodp.github.io/marginMonitor/history.js
       window.MARGIN_HISTORY series.OTC[].fin and series.TSE[].close.
-      That file is a short rolling window. This script upserts it into the
-      local cache and leaves older dates in place.
+      Without --merge, the seed overwrites otc_fin and taiex_close on
+      dates it still publishes and never deletes older rows or mkt_fin.
 
-Longer history (Hermes or any other dump) uses the same path:
+Longer history:
 
     python scripts/fetch_otc_fin.py --merge path/to/history.csv
     python scripts/fetch_otc_fin.py --merge path/to/history.json --replace
 
 --merge upserts by date. A non-empty incoming value replaces that field.
-Empty incoming cells do not wipe a cached value. --replace starts from the
-incoming file instead of the current cache, then fill-only from the seed
-for dates the file does not have. CSV or JSON. Aliases: fin, finRatio,
-taiex, tse_close, ewt.
+Empty incoming cells do not wipe a cached value.
 
-Without --merge, the seed overwrites otc_fin and taiex_close on dates it
-still publishes (daily tail refresh) and never deletes older rows.
+A Hermes / FinLab dump (header or keys include tse_fin or source_otc_tse)
+uses the same mark-to-market formula for its otc_fin and tse_fin columns.
+Those are partial self-calcs, not marginMonitor. Default --merge stores
+mkt_fin, taiex_close, and ewt_close from that file and leaves the cached
+marginMonitor otc_fin in place. --overwrite-otc-fin is the explicit switch
+that copies the file's otc_fin onto the marginMonitor column.
 
-EWT is filled from Yahoo for every cached date the chart API returns.
+A file without those Hermes markers keeps the old aliases (fin, finRatio,
+taiex, tse_close, ewt) and may write otc_fin. That is the marginMonitor-shaped
+history, including this cache itself (date, otc_fin, mkt_fin, taiex_close,
+ewt_close).
+
+EWT can be refilled from Yahoo for every cached date the chart API returns.
 No MacroMicro scrape.
 
     python scripts/fetch_otc_fin.py
@@ -44,6 +54,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -62,17 +73,27 @@ YAHOO_HOSTS = (
 )
 NY = ZoneInfo("America/New_York")
 UA = "Mozilla/5.0 (compatible; rs-us-daily-otc/1.0)"
-FIELDS = ("date", "otc_fin", "taiex_close", "ewt_close")
-SCHEMA = "otc_fin_pressure.v1"
+FIELDS = ("date", "otc_fin", "mkt_fin", "taiex_close", "ewt_close")
+VALUE_KEYS = ("otc_fin", "mkt_fin", "taiex_close", "ewt_close")
+# Nightly `python scripts/fetch_otc_fin.py` may refresh these only.
+# mkt_fin is written by --merge, never by the marginMonitor seed.
+SEED_KEYS = ("otc_fin", "taiex_close")
+SCHEMA = "otc_fin_pressure.v2"
+# Present on the Hermes long file. Absent on this cache and on marginMonitor-shaped merges.
+HERMES_MARKERS = ("tse_fin", "source_otc_tse")
 
 INDEX_CHOICE = (
-    "taiex_close is marginMonitor series.TSE[].close (TAIEX / 加權), "
-    "date-aligned with OTC fin. ewt_close is Yahoo EWT, the USD Taiwan "
-    "equity ETF proxy for the 0050/正二 thesis."
+    "otc_fin is marginMonitor series.OTC[].fin (上櫃, cost / 成數, short seed). "
+    "mkt_fin is the FinLab TSE+OTC mark-to-market ratio "
+    "Σ(融資餘額×收盤價)/融資金額, used for 1Y/2Y/5Y/ALL. "
+    "taiex_close prefers marginMonitor series.TSE[].close on seed dates and "
+    "Yahoo ^TWII otherwise. ewt_close is Yahoo EWT, the USD Taiwan equity ETF "
+    "proxy for the 0050/正二 thesis. The two fin columns are different 口徑."
 )
 
 DATE_KEYS = ("date", "d", "Date", "DATE", "asof", "asof_date")
 FIN_KEYS = ("otc_fin", "fin", "finRatio", "fin_ratio", "otc_fin_ratio")
+MKT_KEYS = ("mkt_fin", "finlab_mkt", "combined_mkt_fin")
 TAIEX_KEYS = ("taiex_close", "taiex", "tse_close", "twse_close", "taiex_px")
 EWT_KEYS = ("ewt_close", "ewt", "EWT")
 
@@ -104,7 +125,13 @@ def num(value):
 
 
 def blank_row(date: str) -> dict:
-    return {"date": date, "otc_fin": None, "taiex_close": None, "ewt_close": None}
+    return {
+        "date": date,
+        "otc_fin": None,
+        "mkt_fin": None,
+        "taiex_close": None,
+        "ewt_close": None,
+    }
 
 
 def pick(raw: dict, keys: tuple[str, ...]):
@@ -114,34 +141,63 @@ def pick(raw: dict, keys: tuple[str, ...]):
     return None
 
 
-def row_from_mapping(raw: dict) -> dict | None:
+def table_is_hermes(fieldnames) -> bool:
+    names = {str(name).strip() for name in (fieldnames or []) if name}
+    return any(marker in names for marker in HERMES_MARKERS)
+
+
+def mapping_is_hermes(payload, fieldnames=None) -> bool:
+    """True when this table is a Hermes mark-to-market dump, not our cache."""
+    if table_is_hermes(fieldnames):
+        return True
+    sample = []
+    if isinstance(payload, list):
+        sample = payload[:30]
+    elif isinstance(payload, dict):
+        if table_is_hermes(payload.keys()):
+            return True
+        for key in ("rows", "series", "data", "history"):
+            block = payload.get(key)
+            if isinstance(block, list):
+                sample = block[:30]
+                break
+    for item in sample:
+        if isinstance(item, dict) and table_is_hermes(item.keys()):
+            return True
+    return False
+
+
+def row_from_mapping(raw: dict, *, hermes: bool = False, overwrite_otc: bool = False) -> dict | None:
     if not isinstance(raw, dict):
         return None
     date = norm_date(pick(raw, DATE_KEYS))
     if not date:
         return None
+    # Hermes otc_fin is a partial self-calc of the mkt_fin formula. It must not
+    # replace marginMonitor's cost/成數 value unless the caller opted in.
+    otc = None if hermes and not overwrite_otc else num(pick(raw, FIN_KEYS))
     return {
         "date": date,
-        "otc_fin": num(pick(raw, FIN_KEYS)),
+        "otc_fin": otc,
+        "mkt_fin": num(pick(raw, MKT_KEYS)),
         "taiex_close": num(pick(raw, TAIEX_KEYS)),
         "ewt_close": num(pick(raw, EWT_KEYS)),
     }
 
 
-def upsert(base: dict[str, dict], rows: list[dict], overwrite: bool) -> None:
-    """Insert or update by date. None never clears a stored number."""
+def upsert(base: dict[str, dict], rows: list[dict], overwrite: bool, keys=VALUE_KEYS) -> None:
+    """Insert or update by date. None never clears a stored number.
+
+    keys limits which fields this writer may touch. The nightly seed passes
+    SEED_KEYS so a marginMonitor refresh cannot blank or replace mkt_fin.
+    """
     for row in rows:
         date = row["date"]
         current = base.get(date)
         if current is None:
-            base[date] = {
-                "date": date,
-                "otc_fin": row.get("otc_fin"),
-                "taiex_close": row.get("taiex_close"),
-                "ewt_close": row.get("ewt_close"),
-            }
-            continue
-        for key in ("otc_fin", "taiex_close", "ewt_close"):
+            base[date] = blank_row(date)
+            current = base[date]
+        for key in keys:
             value = row.get(key)
             if value is None:
                 continue
@@ -193,22 +249,24 @@ def iter_json_rows(payload):
     raise ValueError("JSON must be a list or an object with rows/series/data")
 
 
-def load_table(path: Path) -> list[dict]:
+def load_table(path: Path, overwrite_otc: bool = False) -> list[dict]:
     text = path.read_text(encoding="utf-8")
     if path.suffix.lower() == ".json" or text.lstrip().startswith(("{", "[")):
         payload = json.loads(text)
+        hermes = mapping_is_hermes(payload)
         mapped = []
         for item in iter_json_rows(payload):
-            row = row_from_mapping(item)
+            row = row_from_mapping(item, hermes=hermes, overwrite_otc=overwrite_otc)
             if row:
                 mapped.append(row)
         return mapped
     reader = csv.DictReader(text.splitlines())
     if not reader.fieldnames:
         raise ValueError(f"{path} has no header")
+    hermes = table_is_hermes(reader.fieldnames)
     mapped = []
     for raw in reader:
-        row = row_from_mapping(raw)
+        row = row_from_mapping(raw, hermes=hermes, overwrite_otc=overwrite_otc)
         if row:
             mapped.append(row)
     return mapped
@@ -232,6 +290,12 @@ def sorted_rows(base: dict[str, dict]) -> list[dict]:
     return [base[key] for key in sorted(base)]
 
 
+def json_num(value, places: int):
+    if value is None:
+        return None
+    return round(float(value), places)
+
+
 def write_cache(base: dict[str, dict], generated: str | None) -> list[dict]:
     rows = sorted_rows(base)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -242,35 +306,49 @@ def write_cache(base: dict[str, dict], generated: str | None) -> list[dict]:
             writer.writerow([
                 row["date"],
                 fmt(row.get("otc_fin"), 2),
+                fmt(row.get("mkt_fin"), 2),
                 fmt(row.get("taiex_close"), 2),
                 fmt(row.get("ewt_close"), 4),
             ])
-    last = next((row for row in reversed(rows) if row.get("otc_fin") is not None), None)
+    last_otc = next((row for row in reversed(rows) if row.get("otc_fin") is not None), None)
+    last_mkt = next((row for row in reversed(rows) if row.get("mkt_fin") is not None), None)
     payload = {
         "schema": SCHEMA,
         "columns": {
             "date": "YYYY-MM-DD session date",
-            "otc_fin": "OTC (上櫃) margin maintenance ratio / finRatio",
-            "taiex_close": "TAIEX / 加權 close",
+            "otc_fin": "marginMonitor OTC fin (cost / 成數). Short seed. Bands 145/150 and 205/210 apply only here.",
+            "mkt_fin": "FinLab TSE+OTC mark-to-market percent, Σ(融資餘額×收盤價)/融資金額. Long series for 1Y/2Y/5Y/ALL.",
+            "taiex_close": "TAIEX / 加權 close (marginMonitor TSE.close on seed dates, Yahoo ^TWII otherwise)",
             "ewt_close": "EWT USD daily close",
+        },
+        "calibers": {
+            "otc_fin": "marginMonitor cost / 成數",
+            "mkt_fin": "FinLab / Hermes mark-to-market",
         },
         "index_choice": INDEX_CHOICE,
         "page": "docs/index.html reads the CSV only. This JSON is the same rows plus the column contract.",
         "merge": (
-            "python scripts/fetch_otc_fin.py --merge FILE "
-            "[--replace]. Same four columns. Aliases: fin, finRatio, taiex, tse_close, ewt."
+            "python scripts/fetch_otc_fin.py --merge FILE [--replace] [--overwrite-otc-fin]. "
+            "Hermes files (tse_fin or source_otc_tse) fill mkt_fin and prices but do not "
+            "replace marginMonitor otc_fin unless --overwrite-otc-fin. "
+            "Aliases on non-Hermes files: fin, finRatio, taiex, tse_close, ewt."
         ),
         "seed": HISTORY_URL,
         "generated_note": generated,
-        "asof": None if last is None else last["date"],
-        "otc_fin": None if last is None else last.get("otc_fin"),
+        "asof": None if last_otc is None else last_otc["date"],
+        "otc_fin": None if last_otc is None else json_num(last_otc.get("otc_fin"), 2),
+        "mkt_asof": None if last_mkt is None else last_mkt["date"],
+        "mkt_fin": None if last_mkt is None else json_num(last_mkt.get("mkt_fin"), 2),
         "row_count": len(rows),
+        "otc_fin_count": sum(1 for row in rows if row.get("otc_fin") is not None),
+        "mkt_fin_count": sum(1 for row in rows if row.get("mkt_fin") is not None),
         "rows": [
             {
                 "date": row["date"],
-                "otc_fin": row.get("otc_fin"),
-                "taiex_close": row.get("taiex_close"),
-                "ewt_close": row.get("ewt_close"),
+                "otc_fin": json_num(row.get("otc_fin"), 2),
+                "mkt_fin": json_num(row.get("mkt_fin"), 2),
+                "taiex_close": json_num(row.get("taiex_close"), 2),
+                "ewt_close": json_num(row.get("ewt_close"), 4),
             }
             for row in rows
         ],
@@ -355,6 +433,7 @@ def self_test() -> None:
     upsert(base, [{
         "date": "2020-01-02",
         "otc_fin": 180.0,
+        "mkt_fin": 160.0,
         "taiex_close": 12000.0,
         "ewt_close": 40.0,
     }], True)
@@ -365,7 +444,9 @@ def self_test() -> None:
         "ewt_close": None,
     }], True)
     assert base["2020-01-02"]["otc_fin"] == 180.0
+    assert base["2020-01-02"]["mkt_fin"] == 160.0
     assert base["2026-11-06"]["otc_fin"] == 122.03
+    assert base["2026-11-06"]["mkt_fin"] is None
     upsert(base, [{
         "date": "2020-01-02",
         "otc_fin": 175.5,
@@ -374,14 +455,17 @@ def self_test() -> None:
     }], True)
     assert base["2020-01-02"]["otc_fin"] == 175.5
     assert base["2020-01-02"]["taiex_close"] == 12000.0
+    assert base["2020-01-02"]["mkt_fin"] == 160.0
     assert "2026-11-06" in base
     upsert(base, [{
         "date": "2020-01-02",
         "otc_fin": 1.0,
+        "mkt_fin": 1.0,
         "taiex_close": 1.0,
         "ewt_close": 1.0,
     }], False)
     assert base["2020-01-02"]["otc_fin"] == 175.5
+    assert base["2020-01-02"]["mkt_fin"] == 160.0
     upsert(base, [{
         "date": "2019-06-03",
         "otc_fin": 160.0,
@@ -398,6 +482,7 @@ def self_test() -> None:
     assert seeded == [{
         "date": "2026-11-06",
         "otc_fin": 122.03,
+        "mkt_fin": None,
         "taiex_close": 39701.64,
         "ewt_close": None,
     }]
@@ -410,20 +495,111 @@ def self_test() -> None:
     assert aliased == {
         "date": "2024-01-02",
         "otc_fin": 151.2,
+        "mkt_fin": None,
         "taiex_close": 18000.0,
         "ewt_close": 48.5,
     }
-    # Short seed must not drop a longer cached date.
+    # Short seed must not drop a longer cached date or clear mkt_fin.
     longer: dict[str, dict] = {}
     upsert(longer, [{
         "date": "2018-01-02",
         "otc_fin": 170.0,
+        "mkt_fin": 155.0,
         "taiex_close": 10800.0,
         "ewt_close": 39.0,
     }], True)
     upsert(longer, seeded, overwrite=False)
     upsert(longer, seeded, overwrite=True)
     assert "2018-01-02" in longer and longer["2026-11-06"]["otc_fin"] == 122.03
+    assert longer["2018-01-02"]["mkt_fin"] == 155.0
+    # Hermes otc_fin (mark-to-market self-calc) must not wipe marginMonitor.
+    hermes_row = row_from_mapping({
+        "date": "2026-11-06",
+        "otc_fin": "144.2367",
+        "tse_fin": "152.1394",
+        "mkt_fin": "149.98",
+        "taiex_close": "39701.64",
+        "ewt_close": "89.24",
+        "source_otc_tse": "twse_tpex_selfcalc",
+    }, hermes=True, overwrite_otc=False)
+    assert hermes_row["otc_fin"] is None
+    assert hermes_row["mkt_fin"] == 149.98
+    assert hermes_row["taiex_close"] == 39701.64
+    assert hermes_row["ewt_close"] == 89.24
+    allowed = row_from_mapping({
+        "date": "2026-11-06",
+        "otc_fin": "144.2367",
+        "tse_fin": "152.1394",
+        "mkt_fin": "149.98",
+        "source_otc_tse": "twse_tpex_selfcalc",
+    }, hermes=True, overwrite_otc=True)
+    assert allowed["otc_fin"] == 144.2367
+    protected: dict[str, dict] = {}
+    upsert(protected, seeded, overwrite=True)
+    upsert(protected, [hermes_row], overwrite=True)
+    assert protected["2026-11-06"]["otc_fin"] == 122.03
+    assert protected["2026-11-06"]["mkt_fin"] == 149.98
+    # Our own v2 cache has mkt_fin and otc_fin, and is not a Hermes dump.
+    cache_row = row_from_mapping({
+        "date": "2026-11-06",
+        "otc_fin": "122.03",
+        "mkt_fin": "149.98",
+        "taiex_close": "39701.64",
+        "ewt_close": "89.24",
+    })
+    assert cache_row["otc_fin"] == 122.03 and cache_row["mkt_fin"] == 149.98
+    hermes_csv = (
+        "date,otc_fin,tse_fin,mkt_fin,taiex_close,ewt_close,source_otc_tse\n"
+        "2026-11-06,144.2367,152.1394,149.98,39701.64,89.24,twse_tpex_selfcalc\n"
+        "2009-01-05,,,149.60,5000.00,16.1000,\n"
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "hermes.csv"
+        path.write_text(hermes_csv, encoding="utf-8")
+        loaded = load_table(path)
+        by_date = {row["date"]: row for row in loaded}
+        assert by_date["2026-11-06"]["otc_fin"] is None
+        assert by_date["2026-11-06"]["mkt_fin"] == 149.98
+        assert by_date["2009-01-05"]["mkt_fin"] == 149.60
+        forced = load_table(path, overwrite_otc=True)
+        assert {row["date"]: row for row in forced}["2026-11-06"]["otc_fin"] == 144.2367
+        cache_csv = (
+            "date,otc_fin,mkt_fin,taiex_close,ewt_close\n"
+            "2026-11-06,122.03,149.98,39701.64,89.2400\n"
+        )
+        cache_path = Path(tmp) / "cache.csv"
+        cache_path.write_text(cache_csv, encoding="utf-8")
+        cached = load_table(cache_path)
+        assert cached[0]["otc_fin"] == 122.03
+        assert cached[0]["mkt_fin"] == 149.98
+    # No-arg daily refresh: seed may update otc_fin and taiex_close only.
+    daily: dict[str, dict] = {}
+    upsert(daily, [{
+        "date": "2009-01-05",
+        "mkt_fin": 149.60,
+        "taiex_close": 5000.0,
+        "ewt_close": 16.1,
+    }], True)
+    upsert(daily, [{
+        "date": "2026-11-06",
+        "otc_fin": 122.03,
+        "mkt_fin": 149.98,
+        "taiex_close": 39701.64,
+        "ewt_close": 89.24,
+    }], True)
+    upsert(daily, [{
+        "date": "2026-11-06",
+        "otc_fin": 121.50,
+        "mkt_fin": 1.0,
+        "taiex_close": 39700.0,
+        "ewt_close": 1.0,
+    }], True, keys=SEED_KEYS)
+    assert daily["2026-11-06"]["otc_fin"] == 121.50
+    assert daily["2026-11-06"]["taiex_close"] == 39700.0
+    assert daily["2026-11-06"]["mkt_fin"] == 149.98
+    assert daily["2026-11-06"]["ewt_close"] == 89.24
+    assert daily["2009-01-05"]["mkt_fin"] == 149.60
+    assert daily["2009-01-05"]["otc_fin"] is None
     print("self-test ok")
 
 
@@ -433,6 +609,11 @@ def main() -> None:
     parser.add_argument("--replace", action="store_true", help="Ignore the current cache and start from --merge")
     parser.add_argument("--no-seed", action="store_true", help="Do not read marginMonitor history.js")
     parser.add_argument("--seed-overwrite", action="store_true", help="Let the seed replace cached fin/TAIEX even when --merge is set")
+    parser.add_argument(
+        "--overwrite-otc-fin",
+        action="store_true",
+        help="On a Hermes dump (tse_fin or source_otc_tse), copy that file's otc_fin onto the marginMonitor column",
+    )
     parser.add_argument("--no-ewt", action="store_true", help="Do not call Yahoo for EWT")
     parser.add_argument("--self-test", action="store_true", help="Run merge checks and exit")
     args = parser.parse_args()
@@ -456,15 +637,18 @@ def main() -> None:
         if not seeded:
             raise SystemExit("marginMonitor history.js returned no OTC/TSE rows")
         overwrite = args.seed_overwrite or not args.merge
-        upsert(base, seeded, overwrite=overwrite)
-        print(f"  seed rows={len(seeded)} overwrite={overwrite} generated={generated}")
+        upsert(base, seeded, overwrite=overwrite, keys=SEED_KEYS)
+        print(f"  seed rows={len(seeded)} overwrite={overwrite} keys={','.join(SEED_KEYS)} generated={generated}")
 
     if args.merge:
-        incoming = load_table(args.merge)
+        incoming = load_table(args.merge, overwrite_otc=args.overwrite_otc_fin)
         if not incoming:
             raise SystemExit(f"no rows in {args.merge}")
         upsert(base, incoming, overwrite=True)
-        print(f"merged {len(incoming)} rows from {args.merge} replace={args.replace}")
+        print(
+            f"merged {len(incoming)} rows from {args.merge} "
+            f"replace={args.replace} overwrite_otc_fin={args.overwrite_otc_fin}"
+        )
 
     if not base:
         raise SystemExit("cache is empty (no seed and no --merge)")
@@ -484,9 +668,14 @@ def main() -> None:
 
     rows = write_cache(base, str(generated) if generated else None)
     last = next((row for row in reversed(rows) if row.get("otc_fin") is not None), None)
-    print(f"wrote {CSV_PATH} rows={len(rows)} first={rows[0]['date']} last={rows[-1]['date']}")
+    last_mkt = next((row for row in reversed(rows) if row.get("mkt_fin") is not None), None)
+    otc_n = sum(1 for row in rows if row.get("otc_fin") is not None)
+    mkt_n = sum(1 for row in rows if row.get("mkt_fin") is not None)
+    print(f"wrote {CSV_PATH} rows={len(rows)} otc_fin={otc_n} mkt_fin={mkt_n} first={rows[0]['date']} last={rows[-1]['date']}")
     if last:
-        print(f"asof {last['date']} otc_fin {last.get('otc_fin')} taiex {last.get('taiex_close')} ewt {last.get('ewt_close')}")
+        print(f"otc asof {last['date']} otc_fin {last.get('otc_fin')} taiex {last.get('taiex_close')} ewt {last.get('ewt_close')}")
+    if last_mkt:
+        print(f"mkt asof {last_mkt['date']} mkt_fin {last_mkt.get('mkt_fin')}")
     print(f"wrote {JSON_PATH}")
 
 

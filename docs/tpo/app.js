@@ -5159,18 +5159,23 @@
     home.id = "btnHomeDay";
     home.className = "settings-fab home-fab show";
     home.textContent = "首頁";
-    home.title = "跳到最近一個交易日（保持當前縮放）";
-    home.setAttribute("aria-label", "首頁");
+    home.title = "返回 RS US Daily 主頁";
+    home.setAttribute("aria-label", "返回 RS US Daily 主頁");
     cluster.appendChild(home);
     cluster.appendChild(settings);
     home.addEventListener("click", (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
-      const beforeX = zoomX;
-      const beforeY = zoomY;
-      jumpToLatestTradingDay();
-      zoomX = beforeX;
-      zoomY = beforeY;
+      const url = "https://ronaldo8282.github.io/rs-us-daily/";
+      // Main-site #tpo / #tpo-ym / #tpo-nq embed this page. Move the outer
+      // window so the site does not load inside the letter-wall frame.
+      let inFrame = false;
+      try { inFrame = window.top !== window; } catch (_) { inFrame = true; }
+      if (inFrame) {
+        window.top.location.href = url;
+        return;
+      }
+      window.location.href = url;
     });
   }
   installHomeButton();

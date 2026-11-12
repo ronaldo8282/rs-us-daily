@@ -51,6 +51,7 @@
   }
   installHgCandleCss();
   installCompactChromeCss();
+  installHgUxCss();
 
   // Stats are exactly two lines. POC/VA chips stay visible when the info stack is collapsed.
   function installCompactChromeCss() {
@@ -62,7 +63,39 @@
       "#stats.stats{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0.08rem;width:100%;max-width:100%;min-width:0;margin:0;padding:0.12rem 0 0.18rem;font-size:0.78rem;line-height:1.35;font-variant-numeric:tabular-nums;white-space:normal;overflow:hidden}",
       "#stats .stats-line{display:block;min-width:0;max-width:100%;line-height:1.35;overflow:hidden}",
       "#stats .stats-line-text{display:inline-block;white-space:nowrap;line-height:1.35;max-width:none}",
-      "#legendBar.legend-always{display:flex !important;margin-top:0.2rem}",
+      "#legendBar.legend-always{display:flex !important;flex:1 1 auto;width:auto;min-width:0;max-width:100%;margin:0 !important;align-items:center}",
+    ].join("");
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  // Layout, home, and fullscreen zoom. Injected here so YM/NQ pick it up
+  // from the packed app.js (the packer does not copy each page's <style>).
+  function installHgUxCss() {
+    if (typeof document === "undefined" || document.getElementById("hg-ux-css")) return;
+    const style = document.createElement("style");
+    style.id = "hg-ux-css";
+    style.textContent = [
+      /* 資訊 and the color legend share one row. Stats stay on the next row. */
+      ".chrome-info-toolbar{display:flex;flex-flow:row nowrap;align-items:center;gap:0.45rem 0.65rem;width:100%;min-width:0}",
+      ".chrome-info-toolbar .info-toggle{flex:0 0 auto}",
+      "#legendBar.legend-always{flex-wrap:wrap;gap:0.45rem 0.75rem}",
+      /* Both sits on the 連動 row. The global select{width:100%} rule was wrapping it alone. */
+      ".zoom-bar{align-items:center}",
+      ".zoom-bar .fit-axis-select,.zoom-bar .zoom-select{width:auto;max-width:9rem;flex:0 0 auto}",
+      /* Stats strip and other chrome bars scroll away; they are not pinned. */
+      ".main-chrome{position:static;top:auto}",
+      "header{padding-right:12.5rem}",
+      ".hg-fab-cluster{position:fixed;z-index:1000;top:max(0.65rem,env(safe-area-inset-top));right:max(0.65rem,env(safe-area-inset-right));display:flex;flex-flow:row nowrap;align-items:center;gap:0.4rem}",
+      ".hg-fab-cluster .settings-fab,.hg-fab-cluster .home-fab{position:static;display:inline-flex;top:auto;right:auto;left:auto;bottom:auto;width:auto}",
+      ".hg-fs-zoom{position:absolute;z-index:80;top:0.55rem;left:50%;transform:translateX(-50%);display:none;flex-flow:row nowrap;align-items:center;gap:0.35rem}",
+      ".hg-fs-zoom button{width:auto;min-width:2.6rem;min-height:2.5rem;padding:0.35rem 0.75rem;font-size:1.25rem;font-weight:800;line-height:1;border-radius:8px;background:#1a2332;color:#e7ecf3;border:1px solid #60a5fa;box-shadow:0 6px 18px #000c}",
+      ".hg-fs-zoom button.hg-fs-exit{font-size:0.85rem;font-weight:700;min-width:3.4rem}",
+      "#chartStage:fullscreen .hg-fs-zoom,#chartStage:-webkit-full-screen .hg-fs-zoom,#chartStage.is-pseudo-fs .hg-fs-zoom{display:flex}",
+      "#chartStage:fullscreen,#chartStage:-webkit-full-screen,#chartStage.is-pseudo-fs{display:flex;flex-direction:column;width:100%;height:100%;box-sizing:border-box;background:#0f1419;padding:0.55rem 0.7rem 0.7rem}",
+      "#chartStage:fullscreen .hg-wrap,#chartStage:-webkit-full-screen .hg-wrap,#chartStage.is-pseudo-fs .hg-wrap{flex:1 1 auto;min-height:0;height:auto}",
+      "#chartStage.is-pseudo-fs{position:fixed;inset:0;z-index:1400}",
+      "body.hg-fs-open .hg-fab-cluster{visibility:hidden}",
+      ".zoom-bar button.btn-hg-fs{white-space:nowrap}",
     ].join("");
     (document.head || document.documentElement).appendChild(style);
   }
@@ -5097,17 +5130,185 @@
     });
   }
 
-  // POC / VA chips stay on screen when the stats strip is collapsed.
+  // POC / VA chips stay on the same row as 「資訊」, outside the collapsible stats.
   function pinLegendAlwaysVisible() {
     const legend = $("legendBar");
     const info = $("chromeInfo");
     const tip = $("legendTip");
+    const toolbar = document.querySelector(".chrome-info-toolbar");
     if (!legend || !info) return;
     legend.classList.add("legend-always");
-    if (legend.parentElement === info) info.insertAdjacentElement("afterend", legend);
-    if (tip && tip.parentElement === info) legend.insertAdjacentElement("afterend", tip);
+    if (toolbar && legend.parentElement !== toolbar) toolbar.appendChild(legend);
+    else if (legend.parentElement === info) info.insertAdjacentElement("afterend", legend);
+    if (tip && (tip.parentElement === info || tip.parentElement === toolbar)) {
+      const wrap = $("chromeInfoWrap") || legend.parentElement;
+      if (wrap && tip.parentElement !== wrap) wrap.appendChild(tip);
+    }
   }
   pinLegendAlwaysVisible();
+
+  function installHomeButton() {
+    const settings = $("btnExpandSettings");
+    if (!settings || $("btnHomeDay")) return;
+    const cluster = document.createElement("div");
+    cluster.id = "hgFabCluster";
+    cluster.className = "hg-fab-cluster";
+    settings.parentNode.insertBefore(cluster, settings);
+    const home = document.createElement("button");
+    home.type = "button";
+    home.id = "btnHomeDay";
+    home.className = "settings-fab home-fab show";
+    home.textContent = "首頁";
+    home.title = "跳到最近一個交易日（保持當前縮放）";
+    home.setAttribute("aria-label", "首頁");
+    cluster.appendChild(home);
+    cluster.appendChild(settings);
+    home.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const beforeX = zoomX;
+      const beforeY = zoomY;
+      jumpToLatestTradingDay();
+      zoomX = beforeX;
+      zoomY = beforeY;
+    });
+  }
+  installHomeButton();
+
+  function hgFullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+
+  function hgFsFrame() {
+    return $("chartStage");
+  }
+
+  function hgFsActive() {
+    const frame = hgFsFrame();
+    if (!frame) return false;
+    return frame.classList.contains("is-pseudo-fs") || hgFullscreenElement() === frame;
+  }
+
+  function syncHgFsButton() {
+    const on = hgFsActive();
+    document.body.classList.toggle("hg-fs-open", on);
+    const btn = $("btnHgFullscreen");
+    if (btn) {
+      btn.textContent = on ? "還原" : "全螢幕";
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.title = on ? "離開全螢幕" : "HG 全螢幕（＋／－ 縮放）";
+    }
+    const exit = $("btnFsExit");
+    if (exit) exit.hidden = !on;
+  }
+
+  function relayoutAfterFs() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try { scheduleRender(); } catch (_) {}
+        try { updateTrendChart(); } catch (_) {}
+      });
+    });
+  }
+
+  async function setHgFullscreen(on) {
+    const frame = hgFsFrame();
+    if (!frame) return;
+    const active = hgFullscreenElement();
+    if (!on) {
+      frame.classList.remove("is-pseudo-fs");
+      if (active === frame) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) {
+          try { await exit.call(document); } catch (_) {}
+        }
+      }
+      syncHgFsButton();
+      relayoutAfterFs();
+      return;
+    }
+    if (active && active !== frame) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) {
+        try { await exit.call(document); } catch (_) {}
+      }
+    }
+    const req = frame.requestFullscreen || frame.webkitRequestFullscreen;
+    if (req) {
+      try {
+        await req.call(frame);
+        syncHgFsButton();
+        relayoutAfterFs();
+        return;
+      } catch (_) { /* CSS fallback below */ }
+    }
+    frame.classList.add("is-pseudo-fs");
+    syncHgFsButton();
+    relayoutAfterFs();
+  }
+
+  function installFullscreenZoom() {
+    const frame = hgFsFrame();
+    const bar = $("zoomBar");
+    if (!frame || $("hgFsZoom")) return;
+    const zoom = document.createElement("div");
+    zoom.id = "hgFsZoom";
+    zoom.className = "hg-fs-zoom";
+    zoom.innerHTML =
+      '<button type="button" id="btnFsZoomOut" title="縮小" aria-label="縮小">−</button>' +
+      '<button type="button" id="btnFsZoomIn" title="放大" aria-label="放大">+</button>' +
+      '<button type="button" id="btnFsExit" class="hg-fs-exit" title="離開全螢幕">還原</button>';
+    frame.appendChild(zoom);
+    $("btnFsZoomIn").addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      zoomStep(1, zoomStepAxisFromEvent(ev));
+    });
+    $("btnFsZoomOut").addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      zoomStep(-1, zoomStepAxisFromEvent(ev));
+    });
+    $("btnFsExit").addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      setHgFullscreen(false);
+    });
+    if (bar && !$("btnHgFullscreen")) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.id = "btnHgFullscreen";
+      btn.className = "btn-hg-fs";
+      btn.textContent = "全螢幕";
+      btn.title = "HG 全螢幕（＋／－ 縮放）";
+      const anchor = $("btnZoomIn");
+      if (anchor && anchor.parentElement === bar) anchor.insertAdjacentElement("afterend", btn);
+      else bar.appendChild(btn);
+      btn.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setHgFullscreen(!hgFsActive());
+      });
+    }
+    document.addEventListener("fullscreenchange", () => {
+      syncHgFsButton();
+      relayoutAfterFs();
+    });
+    document.addEventListener("webkitfullscreenchange", () => {
+      syncHgFsButton();
+      relayoutAfterFs();
+    });
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Escape") return;
+      const frameNow = hgFsFrame();
+      if (!frameNow || !frameNow.classList.contains("is-pseudo-fs")) return;
+      frameNow.classList.remove("is-pseudo-fs");
+      syncHgFsButton();
+      relayoutAfterFs();
+    });
+    syncHgFsButton();
+  }
+  installFullscreenZoom();
 
   const scForSelect = $("profilesScroll");
   if (scForSelect) {

@@ -972,6 +972,7 @@ CARR,Industrials,Building Products & Equipment,46302334976.0,2026-10-21T00:19:30
 CARS,Communication Services,Internet Content & Information,564234752.0,2026-10-21T00:19:30Z
 CART,Consumer Cyclical,Internet Retail,12047043584.0,2026-10-21T00:19:30Z
 CASH,Financial Services,Banks - Regional,1535670912.0,2026-10-21T00:19:30Z
+CASK,,,,
 CASS,Industrials,Specialty Business Services,699869248.0,2026-10-21T00:19:30Z
 CASY,Consumer Cyclical,Specialty Retail,25299605504.0,2026-10-21T00:19:30Z
 CAT,Industrials,Farm & Heavy Construction Machinery,333374619648.0,2026-10-21T00:19:30Z
@@ -1337,6 +1338,7 @@ CRL,Healthcare,Diagnostics & Research,15194510336.0,2026-10-21T00:19:30Z
 CRM,Technology,Software - Application,199519879168.0,2026-10-21T00:19:30Z
 CRMD,Healthcare,Biotechnology,590038528.0,2026-10-21T00:19:30Z
 CRML,Basic Materials,Other Industrial Metals & Mining,940088000.0,2026-10-21T00:19:30Z
+CRMN,,,,
 CRMT,Consumer Cyclical,Auto & Truck Dealerships,6587398.0,2026-10-21T00:19:30Z
 CRNC,Technology,Software - Application,401644672.0,2026-10-21T00:19:30Z
 CRNT,Technology,Communication Equipment,181648224.0,2026-10-21T00:19:30Z

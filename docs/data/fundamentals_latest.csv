@@ -46,8 +46,8 @@ ACEL,Consumer Cyclical,Gambling,879325312.0,2026-10-21T00:19:30Z
 ACET,Healthcare,Biotechnology,42313936.0,2026-10-21T00:19:30Z
 ACFN,Technology,Scientific & Technical Instruments,46435960.0,2026-10-21T00:19:30Z
 ACGL,Financial Services,Insurance - Diversified,34563096576.0,2026-10-21T00:19:30Z
-ACGLN,Financial Services,Insurance - Diversified,,2026-11-11T02:08:28Z
-ACGLO,Financial Services,Insurance - Diversified,,2026-11-11T02:08:28Z
+ACGLN,Financial Services,Insurance - Diversified,,2026-11-14T02:13:12Z
+ACGLO,Financial Services,Insurance - Diversified,,2026-11-14T02:13:12Z
 ACH,Healthcare,Medical Distribution,19641462.0,2026-10-21T00:19:30Z
 ACHC,Healthcare,Medical Care Facilities,2926141696.0,2026-10-21T00:19:30Z
 ACHR,Industrials,Aerospace & Defense,3064706816.0,2026-10-21T00:19:30Z
@@ -81,10 +81,10 @@ ADAM,Real Estate,REIT - Mortgage,676794816.0,2026-10-21T00:19:30Z
 ADAMG,,,,2026-10-21T01:19:05Z
 ADAMH,,,,2026-10-21T01:19:05Z
 ADAMI,,,,2026-10-21T01:19:05Z
-ADAML,Real Estate,REIT - Mortgage,,2026-11-11T02:08:28Z
-ADAMM,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-ADAMN,Real Estate,REIT - Mortgage,,2026-11-11T02:08:28Z
-ADAMZ,Real Estate,REIT - Mortgage,,2026-11-11T02:08:28Z
+ADAML,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+ADAMM,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+ADAMN,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+ADAMZ,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
 ADBE,Technology,Software - Application,99919323136.0,2026-10-21T00:19:30Z
 ADC,Real Estate,REIT - Retail,8366682624.0,2026-10-21T00:19:30Z
 ADCT,Healthcare,Drug Manufacturers - Specialty & Generic,194054896.0,2026-10-21T00:19:30Z
@@ -158,12 +158,12 @@ AGM,Financial Services,Credit Services,2179541760.0,2026-10-21T00:19:30Z
 AGM-A,Financial Services,Credit Services,1528891648.0,2026-10-21T00:19:30Z
 AGMH,Technology,Computer Hardware,1993686.0,2026-10-21T00:19:30Z
 AGNC,Real Estate,REIT - Mortgage,10432237568.0,2026-10-21T00:19:30Z
-AGNCL,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-AGNCM,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-AGNCN,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-AGNCO,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-AGNCP,Real Estate,REIT - Mortgage,,2026-11-12T02:53:53Z
-AGNCZ,Real Estate,REIT - Mortgage,,2026-11-11T02:08:28Z
+AGNCL,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+AGNCM,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+AGNCN,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+AGNCO,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+AGNCP,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
+AGNCZ,Real Estate,REIT - Mortgage,,2026-11-14T02:13:12Z
 AGNT,Real Estate,Real Estate Services,681841152.0,2026-10-21T00:19:30Z
 AGO,Financial Services,Insurance - Specialty,3078984448.0,2026-10-21T00:19:30Z
 AGPU,Technology,Software - Infrastructure,96206328.0,2026-10-21T00:19:30Z
@@ -201,7 +201,7 @@ AIRJ,Industrials,Building Products & Equipment,223709536.0,2026-10-21T00:19:30Z
 AIRO,Industrials,Aerospace & Defense,156832896.0,2026-10-21T00:19:30Z
 AIRS,Healthcare,Medical Care Facilities,93723768.0,2026-10-21T00:19:30Z
 AIRT,Industrials,Conglomerates,71403560.0,2026-10-21T00:19:30Z
-AIRTP,Industrials,Conglomerates,,2026-11-12T02:53:53Z
+AIRTP,Industrials,Conglomerates,,2026-11-14T02:13:12Z
 AISP,Technology,Software - Infrastructure,74389456.0,2026-10-21T00:19:30Z
 AIT,Industrials,Industrial Distribution,12151572480.0,2026-10-21T00:19:30Z
 AIV,Real Estate,REIT - Residential,257637568.0,2026-10-21T00:19:30Z
@@ -227,7 +227,7 @@ ALDFU,Financial Services,Shell Companies,,2026-11-06T02:19:44Z
 ALDX,Healthcare,Biotechnology,44297692.0,2026-10-21T00:19:30Z
 ALEC,Healthcare,Biotechnology,219964128.0,2026-10-21T00:19:30Z
 ALF,Financial Services,Shell Companies,132510456.0,2026-10-21T00:19:30Z
-ALFUU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+ALFUU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 ALG,Industrials,Farm & Heavy Construction Machinery,1812865152.0,2026-10-21T00:19:30Z
 ALGM,Technology,Semiconductors,6320893440.0,2026-10-21T00:19:30Z
 ALGN,Healthcare,Medical Instruments & Supplies,10691142656.0,2026-10-21T00:19:30Z
@@ -343,7 +343,7 @@ AOSL,Technology,Semiconductors,697925824.0,2026-10-21T00:19:30Z
 AOUT,Consumer Cyclical,Leisure,225541296.0,2026-10-21T00:19:30Z
 AP,Industrials,Metal Fabrication,175598272.0,2026-10-21T00:19:30Z
 APA,Energy,Oil & Gas E&P,17480790016.0,2026-10-21T00:19:30Z
-APACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+APACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 APAM,Financial Services,Asset Management,2340042240.0,2026-10-21T00:19:30Z
 APD,Basic Materials,Specialty Chemicals,67380187136.0,2026-10-21T00:19:30Z
 APEI,Consumer Defensive,Education & Training Services,888723008.0,2026-10-21T00:19:30Z
@@ -366,7 +366,7 @@ APTV,Consumer Cyclical,Auto Parts,9355958272.0,2026-10-21T00:19:30Z
 APUS,Healthcare,Drug Manufacturers - Specialty & Generic,5146092.0,2026-10-21T00:19:30Z
 APVO,Healthcare,Biotechnology,2923497.0,2026-10-21T00:19:30Z
 APWC,Industrials,Electrical Equipment & Parts,51952896.0,2026-10-21T00:19:30Z
-APXTU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+APXTU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 APYX,Healthcare,Medical Devices,102782624.0,2026-10-21T00:19:30Z
 AQB,Consumer Defensive,Farm Products,5919284.0,2026-10-21T00:19:30Z
 AQMS,Industrials,Waste Management,5060214.0,2026-10-21T00:19:30Z
@@ -435,7 +435,7 @@ ASML,Technology,Semiconductor Equipment & Materials,628554661888.0,2026-10-21T00
 ASND,Healthcare,Biotechnology,15419766784.0,2026-10-21T00:19:30Z
 ASO,Consumer Cyclical,Specialty Retail,3673180928.0,2026-10-21T00:19:30Z
 ASPC,Financial Services,Shell Companies,25175748.0,2026-10-21T00:19:30Z
-ASPCU,Financial Services,Shell Companies,,2026-11-11T02:08:28Z
+ASPCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 ASPI,Basic Materials,Specialty Chemicals,311218016.0,2026-10-21T00:19:30Z
 ASPN,Basic Materials,Specialty Chemicals,442330208.0,2026-10-21T00:19:30Z
 ASPS,Real Estate,Real Estate Services,61326504.0,2026-10-21T00:19:30Z
@@ -467,7 +467,7 @@ ATII,Financial Services,Shell Companies,212160304.0,2026-10-21T00:19:30Z
 ATIIU,Financial Services,Shell Companies,,2026-10-21T00:26:39Z
 ATLC,Financial Services,Credit Services,1374708864.0,2026-10-21T00:19:30Z
 ATLCL,,,,2026-10-21T00:26:39Z
-ATLCP,Financial Services,Credit Services,,2026-11-11T02:08:28Z
+ATLCP,Financial Services,Credit Services,,2026-11-14T02:13:12Z
 ATLCZ,,,,2026-10-21T00:26:39Z
 ATLO,Financial Services,Banks - Regional,285999648.0,2026-10-21T00:19:30Z
 ATLX,Basic Materials,Other Industrial Metals & Mining,61704596.0,2026-10-21T00:19:30Z
@@ -536,7 +536,7 @@ AXG,Financial Services,Capital Markets,18479812.0,2026-10-21T00:19:30Z
 AXGN,Healthcare,Medical Devices,2122148480.0,2026-10-21T00:19:30Z
 AXIL,Technology,Consumer Electronics,38207012.0,2026-10-21T00:19:30Z
 AXIN,Financial Services,Shell Companies,282755360.0,2026-10-21T00:19:30Z
-AXINU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+AXINU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 AXNX,Industrials,Engineering & Construction,6346034.0,2026-10-21T00:19:30Z
 AXON,Industrials,Aerospace & Defense,31897059328.0,2026-10-21T00:19:30Z
 AXP,Financial Services,Credit Services,214978134016.0,2026-10-21T00:19:30Z
@@ -562,7 +562,7 @@ BA,Industrials,Aerospace & Defense,150541778944.0,2026-10-21T00:19:30Z
 BABA,Consumer Cyclical,Internet Retail,270193983488.0,2026-10-21T00:19:30Z
 BAC,Financial Services,Banks - Diversified,354112765952.0,2026-10-21T00:19:30Z
 BACC,Financial Services,Shell Companies,291645376.0,2026-10-21T00:19:30Z
-BACCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BACCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BAER,Industrials,Security & Protection Services,32524974.0,2026-10-21T00:19:30Z
 BAFN,Financial Services,Banks - Regional,180920496.0,2026-10-21T00:19:30Z
 BAH,Industrials,Consulting Services,9017764864.0,2026-10-21T00:19:30Z
@@ -630,7 +630,7 @@ BCYC,Healthcare,Biotechnology,251974336.0,2026-10-21T00:19:30Z
 BDAI,Technology,Information Technology Services,17983720.0,2026-10-21T00:19:30Z
 BDC,Technology,Communication Equipment,4116887552.0,2026-10-21T00:19:30Z
 BDCI,Financial Services,Shell Companies,352678656.0,2026-10-21T00:19:30Z
-BDCIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BDCIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BDCZ,,,,2026-10-21T00:26:39Z
 BDJ,Financial Services,Asset Management,1691591296.0,2026-10-21T00:19:30Z
 BDL,Consumer Cyclical,Restaurants,90683392.0,2026-10-23T00:44:21Z
@@ -642,7 +642,7 @@ BDTX,Healthcare,Biotechnology,118614672.0,2026-10-21T00:19:30Z
 BDX,Healthcare,Medical Instruments & Supplies,52788563968.0,2026-10-21T00:19:30Z
 BE,Industrials,Electrical Equipment & Parts,65576513536.0,2026-10-21T00:19:30Z
 BEAG,Financial Services,Shell Companies,331344448.0,2026-10-21T00:19:30Z
-BEAGU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BEAGU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BEAM,Healthcare,Biotechnology,2574961408.0,2026-10-21T00:19:30Z
 BEAT,Healthcare,Health Information Services,23148240.0,2026-10-21T00:19:30Z
 BEEM,Technology,Solar,19690986.0,2026-10-21T00:19:30Z
@@ -694,10 +694,10 @@ BHC,Healthcare,Drug Manufacturers - Specialty & Generic,2401019392.0,2026-10-21T
 BHE,Technology,Electronic Components,2529840896.0,2026-10-21T00:19:30Z
 BHF,Financial Services,Insurance - Life,2739850752.0,2026-10-21T00:19:30Z
 BHFAL,,,,2026-10-21T00:26:39Z
-BHFAM,Financial Services,Insurance - Life,,2026-11-11T02:08:28Z
-BHFAN,Financial Services,Insurance - Life,,2026-11-11T02:08:28Z
+BHFAM,Financial Services,Insurance - Life,,2026-11-14T02:13:12Z
+BHFAN,Financial Services,Insurance - Life,,2026-11-14T02:13:12Z
 BHFAO,Financial Services,Insurance - Life,,2026-11-11T02:08:28Z
-BHFAP,Financial Services,Insurance - Life,,2026-11-11T02:08:28Z
+BHFAP,Financial Services,Insurance - Life,,2026-11-14T02:13:12Z
 BHK,Financial Services,Asset Management,615350400.0,2026-10-28T01:15:24Z
 BHM,Real Estate,REIT - Residential,91787456.0,2026-10-21T00:19:30Z
 BHP,Basic Materials,Other Industrial Metals & Mining,208070721536.0,2026-10-21T00:19:30Z
@@ -760,12 +760,12 @@ BLRX,Healthcare,Biotechnology,11024259.0,2026-10-21T00:19:30Z
 BLSH,Technology,Software - Infrastructure,4353824256.0,2026-10-21T00:19:30Z
 BLTE,Healthcare,Biotechnology,6220032512.0,2026-10-21T00:19:30Z
 BLUW,Financial Services,Shell Companies,335357056.0,2026-10-21T00:19:30Z
-BLUWU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BLUWU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BLW,Financial Services,Asset Management,452767168.0,2026-10-21T00:19:30Z
 BLX,Financial Services,Banks - Regional,2007080448.0,2026-10-24T00:32:34Z
 BLZE,Technology,Software - Infrastructure,567622976.0,2026-10-21T00:19:30Z
 BLZR,Financial Services,Shell Companies,352687520.0,2026-11-06T02:19:44Z
-BLZRU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BLZRU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BMA,Financial Services,Banks - Regional,4046701312.0,2026-10-21T00:19:30Z
 BMBL,Communication Services,Internet Content & Information,911639744.0,2026-10-21T00:19:30Z
 BME,Financial Services,Asset Management,583006272.0,2026-10-24T00:32:34Z
@@ -819,9 +819,9 @@ BPOP,Financial Services,Banks - Regional,10258771968.0,2026-10-21T00:19:30Z
 BPOPM,,,,2026-10-21T00:26:39Z
 BPRN,Financial Services,Banks - Regional,298350080.0,2026-10-21T00:19:30Z
 BPYPM,,,,2026-10-21T00:26:39Z
-BPYPN,Real Estate,Real Estate Services,,2026-11-12T02:53:53Z
-BPYPO,Real Estate,Real Estate Services,,2026-11-12T02:53:53Z
-BPYPP,Real Estate,Real Estate Services,,2026-11-12T02:53:53Z
+BPYPN,Real Estate,Real Estate Services,,2026-11-14T02:13:12Z
+BPYPO,Real Estate,Real Estate Services,,2026-11-14T02:13:12Z
+BPYPP,Real Estate,Real Estate Services,,2026-11-14T02:13:12Z
 BQ,Consumer Cyclical,Specialty Retail,4117824.0,2026-10-21T00:19:30Z
 BR,Technology,Information Technology Services,20320876544.0,2026-10-21T00:19:30Z
 BRAG,Consumer Cyclical,Gambling,36033548.0,2026-10-21T00:19:30Z
@@ -837,7 +837,7 @@ BRID,Consumer Defensive,Packaged Foods,49831804.0,2026-10-21T00:19:30Z
 BRK-A,Financial Services,Insurance - Diversified,1155348299776.0,2026-10-21T00:19:30Z
 BRK-B,Financial Services,Insurance - Diversified,1155597991936.0,2026-10-21T00:19:30Z
 BRKR,Healthcare,Medical Devices,8521456128.0,2026-10-21T00:19:30Z
-BRKRP,Healthcare,Medical Devices,,2026-11-12T02:53:53Z
+BRKRP,Healthcare,Medical Devices,,2026-11-14T02:13:12Z
 BRLS,Consumer Defensive,Packaged Foods,19746244.0,2026-10-21T00:19:30Z
 BRLT,Consumer Cyclical,Luxury Goods,154812320.0,2026-10-21T00:19:30Z
 BRN,Energy,Oil & Gas E&P,13128005.0,2026-10-21T00:19:30Z
@@ -853,7 +853,7 @@ BRW,Financial Services,Asset Management,297226816.0,2026-10-21T00:19:30Z
 BRX,Real Estate,REIT - Retail,8506500608.0,2026-10-21T00:19:30Z
 BRZE,Technology,Software - Application,5176041984.0,2026-10-21T00:19:30Z
 BSAA,Financial Services,Shell Companies,22315100.0,2026-10-21T00:19:30Z
-BSAAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+BSAAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 BSAC,Financial Services,Banks - Regional,15593916416.0,2026-10-21T00:19:30Z
 BSBK,Financial Services,Banks - Regional,116383176.0,2026-10-21T00:19:30Z
 BSBR,Financial Services,Banks - Regional,21040416768.0,2026-10-21T00:19:30Z
@@ -883,7 +883,7 @@ BTO,Financial Services,Asset Management,725889984.0,2026-10-21T00:19:30Z
 BTOC,Industrials,Integrated Freight & Logistics,7980939.0,2026-10-21T00:19:30Z
 BTQ,Technology,Software - Infrastructure,329460704.0,2026-10-21T00:19:30Z
 BTSG,Healthcare,Health Information Services,12350685184.0,2026-10-21T00:19:30Z
-BTSGU,Healthcare,Health Information Services,,2026-11-12T02:53:53Z
+BTSGU,Healthcare,Health Information Services,,2026-11-14T02:13:12Z
 BTT,Financial Services,Asset Management,1402304128.0,2026-10-21T00:19:30Z
 BTTC,,,5046602.0,2026-10-21T00:19:30Z
 BTU,Energy,Thermal Coal,2761035008.0,2026-10-21T00:19:30Z
@@ -897,7 +897,7 @@ BUR,Financial Services,Asset Management,676354432.0,2026-10-21T00:19:30Z
 BURL,Consumer Cyclical,Apparel Retail,16260340736.0,2026-10-21T00:19:30Z
 BURU,Industrials,Specialty Industrial Machinery,4262531.0,2026-10-21T00:19:30Z
 BUSE,Financial Services,Banks - Regional,2469051136.0,2026-10-21T00:19:30Z
-BUSEP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+BUSEP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 BUUU,Industrials,Specialty Business Services,806484544.0,2026-10-21T00:19:30Z
 BV,Industrials,Specialty Business Services,973226048.0,2026-10-21T00:19:30Z
 BVC,Technology,Software - Application,2333520128.0,2026-10-21T00:19:30Z
@@ -908,7 +908,7 @@ BW,Industrials,Specialty Industrial Machinery,680770432.0,2026-10-21T00:19:30Z
 BWA,Consumer Cyclical,Auto Parts,11928737792.0,2026-10-21T00:19:30Z
 BWAY,Healthcare,Medical Devices,484243424.0,2026-10-21T00:19:30Z
 BWB,Financial Services,Banks - Regional,574685632.0,2026-10-21T00:19:30Z
-BWBBP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+BWBBP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 BWEN,Industrials,Specialty Industrial Machinery,74284152.0,2026-10-21T00:19:30Z
 BWFG,Financial Services,Banks - Regional,528621440.0,2026-10-21T00:19:30Z
 BWG,Financial Services,Asset Management,114352400.0,2026-10-31T01:33:33Z
@@ -961,7 +961,7 @@ CANF,Healthcare,Biotechnology,5729624.0,2026-10-21T00:19:30Z
 CANG,Financial Services,Capital Markets,88607456.0,2026-10-21T00:19:30Z
 CAPL,Energy,Oil & Gas Refining & Marketing,829123072.0,2026-10-21T00:19:30Z
 CAPN,Financial Services,Shell Companies,59649676.0,2026-10-21T00:19:30Z
-CAPNU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CAPNU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CAPR,Healthcare,Biotechnology,384298720.0,2026-10-21T00:19:30Z
 CAPS,Basic Materials,Building Materials,2339393.0,2026-10-21T00:19:30Z
 CAR,Industrials,Rental & Leasing Services,3619123200.0,2026-10-21T00:19:30Z
@@ -972,7 +972,7 @@ CARR,Industrials,Building Products & Equipment,46302334976.0,2026-10-21T00:19:30
 CARS,Communication Services,Internet Content & Information,564234752.0,2026-10-21T00:19:30Z
 CART,Consumer Cyclical,Internet Retail,12047043584.0,2026-10-21T00:19:30Z
 CASH,Financial Services,Banks - Regional,1535670912.0,2026-10-21T00:19:30Z
-CASK,,,,
+CASK,Consumer Defensive,Beverages - Wineries & Distilleries,363529088.0,2026-11-14T02:13:12Z
 CASS,Industrials,Specialty Business Services,699869248.0,2026-10-21T00:19:30Z
 CASY,Consumer Cyclical,Specialty Retail,25299605504.0,2026-10-21T00:19:30Z
 CAT,Industrials,Farm & Heavy Construction Machinery,333374619648.0,2026-10-21T00:19:30Z
@@ -1000,7 +1000,7 @@ CBZ,Industrials,Specialty Business Services,3015682816.0,2026-10-21T00:19:30Z
 CC,Basic Materials,Specialty Chemicals,1951971968.0,2026-10-21T00:19:30Z
 CCAP,Financial Services,Asset Management,317612096.0,2026-10-21T00:19:30Z
 CCAQ,Financial Services,Shell Companies,77748240.0,2026-10-21T00:19:30Z
-CCAQU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CCAQU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CCB,Financial Services,Banks - Regional,666483840.0,2026-10-21T00:19:30Z
 CCBG,Financial Services,Banks - Regional,845567936.0,2026-10-21T00:19:30Z
 CCC,Technology,Software - Application,4494029312.0,2026-10-21T00:19:30Z
@@ -1013,10 +1013,10 @@ CCG,Communication Services,Internet Content & Information,13905115.0,2026-10-21T
 CCGWW,,,,2026-10-21T00:26:39Z
 CCHH,Consumer Cyclical,Restaurants,16961240.0,2026-10-21T00:19:30Z
 CCI,Real Estate,REIT - Specialty,35458179072.0,2026-10-21T00:19:30Z
-CCID,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+CCID,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 CCIF,Financial Services,Asset Management,40597320.0,2026-10-21T00:19:30Z
 CCII,Financial Services,Shell Companies,356994400.0,2026-10-21T00:19:30Z
-CCIIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CCIIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CCIIW,,,,2026-10-21T00:26:39Z
 CCJ,Energy,Uranium,35064762368.0,2026-10-21T00:19:30Z
 CCK,Consumer Cyclical,Packaging & Containers,12417187840.0,2026-10-21T00:19:30Z
@@ -1024,7 +1024,7 @@ CCL,Consumer Cyclical,Travel Services,36385148928.0,2026-10-21T00:19:30Z
 CCLD,Healthcare,Health Information Services,77338824.0,2026-10-21T00:19:30Z
 CCM,Healthcare,Medical Care Facilities,17931316.0,2026-10-21T00:19:30Z
 CCNE,Financial Services,Banks - Regional,1024290240.0,2026-10-21T00:19:30Z
-CCNEP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+CCNEP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 CCOI,Communication Services,Telecom Services,395385472.0,2026-10-21T00:19:30Z
 CCS,Real Estate,Real Estate - Development,1577172992.0,2026-10-21T00:19:30Z
 CCSI,Technology,Software - Infrastructure,656215488.0,2026-10-21T00:19:30Z
@@ -1046,7 +1046,7 @@ CDTG,Industrials,Waste Management,3534601.0,2026-10-21T00:19:30Z
 CDW,Technology,Information Technology Services,19376451584.0,2026-10-21T00:19:30Z
 CDXS,Healthcare,Biotechnology,134692096.0,2026-10-21T00:19:30Z
 CDZI,Industrials,Pollution & Treatment Controls,338708288.0,2026-10-21T00:19:30Z
-CDZIP,Industrials,Pollution & Treatment Controls,,2026-11-12T02:53:53Z
+CDZIP,Industrials,Pollution & Treatment Controls,,2026-11-14T02:13:12Z
 CE,Basic Materials,Chemicals,5215268864.0,2026-10-21T00:19:30Z
 CEE,Financial Services,Asset Management,122579640.0,2026-10-24T00:32:34Z
 CEG,Utilities,Utilities - Independent Power Producers,91708923904.0,2026-10-21T00:19:30Z
@@ -1092,14 +1092,15 @@ CGTX,Healthcare,Biotechnology,69779792.0,2026-10-21T00:19:30Z
 CHA,Consumer Cyclical,Restaurants,2380726272.0,2026-10-21T00:19:30Z
 CHAI,Communication Services,Internet Content & Information,5248383.0,2026-10-21T00:19:30Z
 CHAR,Financial Services,Shell Companies,120395696.0,2026-10-21T00:19:30Z
-CHARU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CHARU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CHCI,Real Estate,Real Estate Services,178391872.0,2026-10-21T00:19:30Z
 CHCO,Financial Services,Banks - Regional,1996789248.0,2026-10-21T00:19:30Z
 CHCT,Real Estate,REIT - Healthcare Facilities,376798016.0,2026-10-21T00:19:30Z
 CHD,Consumer Defensive,Household & Personal Products,25134125056.0,2026-10-21T00:19:30Z
 CHDN,Consumer Cyclical,Gambling,5786862592.0,2026-10-21T00:19:30Z
 CHE,Healthcare,Medical Care Facilities,6745014784.0,2026-10-21T00:19:30Z
-CHECU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CHEC,Financial Services,Shell Companies,179656544.0,2026-11-14T02:13:12Z
+CHECU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CHEF,Consumer Defensive,Food Distribution,4523469824.0,2026-10-21T00:19:30Z
 CHGA,Real Estate,Real Estate Services,1568302.0,2026-10-21T00:19:30Z
 CHGG,Consumer Defensive,Education & Training Services,77952392.0,2026-10-21T00:19:30Z
@@ -1111,18 +1112,18 @@ CHMI,Real Estate,REIT - Mortgage,93322968.0,2026-10-21T00:19:30Z
 CHNR,Basic Materials,Other Industrial Metals & Mining,4925041.0,2026-10-21T00:19:30Z
 CHOW,Technology,Software - Infrastructure,10242414.0,2026-10-21T00:19:30Z
 CHPG,Financial Services,Shell Companies,104866504.0,2026-10-21T00:19:30Z
-CHPGU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CHPGU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CHPT,Consumer Cyclical,Specialty Retail,210238032.0,2026-10-21T00:19:30Z
 CHR,Communication Services,Advertising Agencies,3025634.0,2026-10-21T00:19:30Z
 CHRD,Energy,Oil & Gas E&P,8326110208.0,2026-10-21T00:19:30Z
 CHRN,Technology,Information Technology Services,2295246336.0,2026-10-21T00:19:30Z
 CHRS,Healthcare,Biotechnology,154500960.0,2026-10-21T00:19:30Z
 CHRW,Industrials,Integrated Freight & Logistics,16397273088.0,2026-10-21T00:19:30Z
-CHSCL,Consumer Defensive,Farm Products,,2026-11-12T02:53:53Z
-CHSCM,Consumer Defensive,Farm Products,,2026-11-11T02:08:28Z
-CHSCN,Consumer Defensive,Farm Products,,2026-11-11T02:08:28Z
-CHSCO,Consumer Defensive,Farm Products,,2026-11-12T02:53:53Z
-CHSCP,Consumer Defensive,Farm Products,,2026-11-11T02:08:28Z
+CHSCL,Consumer Defensive,Farm Products,,2026-11-14T02:13:12Z
+CHSCM,Consumer Defensive,Farm Products,,2026-11-14T02:13:12Z
+CHSCN,Consumer Defensive,Farm Products,,2026-11-14T02:13:12Z
+CHSCO,Consumer Defensive,Farm Products,,2026-11-14T02:13:12Z
+CHSCP,Consumer Defensive,Farm Products,,2026-11-14T02:13:12Z
 CHSN,Consumer Cyclical,Restaurants,2036969.0,2026-10-21T00:19:30Z
 CHT,Communication Services,Telecom Services,36917686272.0,2026-10-21T00:19:30Z
 CHTR,Communication Services,Telecom Services,14299234304.0,2026-10-21T00:19:30Z
@@ -1236,7 +1237,7 @@ CNMD,Healthcare,Medical Devices,1425080448.0,2026-10-21T00:19:30Z
 CNNE,Consumer Cyclical,Restaurants,700060032.0,2026-10-21T00:19:30Z
 CNO,Financial Services,Insurance - Life,5075722240.0,2026-10-21T00:19:30Z
 CNOB,Financial Services,Banks - Regional,1557398784.0,2026-10-21T00:19:30Z
-CNOBP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+CNOBP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 CNP,Utilities,Utilities - Regulated Electric,26506903552.0,2026-10-21T00:19:30Z
 CNQ,Energy,Oil & Gas E&P,111692070912.0,2026-10-21T00:19:30Z
 CNR,Energy,Thermal Coal,4333741568.0,2026-10-21T00:19:30Z
@@ -1308,10 +1309,10 @@ CPT,Real Estate,REIT - Residential,11546638336.0,2026-10-21T00:19:30Z
 CPZ,Financial Services,Asset Management,248347248.0,2026-10-21T00:19:30Z
 CQP,Energy,Oil & Gas Midstream,31294330880.0,2026-10-21T00:19:30Z
 CR,Industrials,Specialty Industrial Machinery,11633477632.0,2026-10-21T00:19:30Z
-CRACU,Financial Services,Shell Companies,,2026-11-11T02:08:28Z
+CRACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CRAI,Industrials,Consulting Services,1129144320.0,2026-10-21T00:19:30Z
 CRAQ,Financial Services,Shell Companies,325789344.0,2026-10-21T00:19:30Z
-CRAQU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CRAQU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CRBD,,,,2026-10-21T00:26:39Z
 CRBG,Financial Services,Asset Management,15579613184.0,2026-10-21T00:19:30Z
 CRBP,Healthcare,Biotechnology,85488512.0,2026-10-21T00:19:30Z
@@ -1398,7 +1399,7 @@ CUB,Financial Services,Shell Companies,286221376.0,2026-10-21T01:40:07Z
 CUBB,,,,2026-10-21T00:26:39Z
 CUBE,Real Estate,REIT - Industrial,8907146240.0,2026-10-21T01:43:09Z
 CUBI,Financial Services,Banks - Regional,2568244480.0,2026-10-21T01:40:07Z
-CUBWU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+CUBWU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 CUE,Healthcare,Biotechnology,123785624.0,2026-10-21T01:51:56Z
 CULP,Consumer Cyclical,Textile Manufacturing,48903644.0,2026-10-21T01:37:13Z
 CUPR,Healthcare,Medical Instruments & Supplies,13517253.0,2026-10-21T02:07:27Z
@@ -1456,7 +1457,7 @@ CZR,Consumer Cyclical,Resorts & Casinos,5927964160.0,2026-10-21T01:32:00Z
 CZWI,Financial Services,Banks - Regional,204874400.0,2026-10-21T01:32:00Z
 D,Utilities,Utilities - Regulated Electric,55269412864.0,2026-10-21T01:43:09Z
 DAAQ,Financial Services,Shell Companies,241039984.0,2026-10-21T01:40:07Z
-DAAQU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DAAQU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DAC,Industrials,Marine Shipping,2882352896.0,2026-10-23T00:44:21Z
 DAIC,Technology,Information Technology Services,2665054.0,2026-10-21T02:10:51Z
 DAIO,Technology,Electronic Components,26820716.0,2026-10-21T01:51:56Z
@@ -1557,18 +1558,18 @@ DLXY,Energy,Oil & Gas Refining & Marketing,6278400.0,2026-10-21T01:23:01Z
 DLY,Financial Services,Asset Management,635861632.0,2026-10-21T01:45:49Z
 DMA,Financial Services,Asset Management,62742672.0,2026-10-21T01:49:07Z
 DMAA,Financial Services,Shell Companies,263890032.0,2026-10-21T01:40:07Z
-DMAAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DMAAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DMAC,Healthcare,Biotechnology,467535776.0,2026-10-21T01:27:23Z
 DMB,Financial Services,Asset Management,179826352.0,2026-10-21T01:49:07Z
 DMC,Consumer Defensive,Farm Products,1383270016.0,2026-10-21T01:51:56Z
-DMIIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DMIIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DMLP,Energy,Oil & Gas E&P,1480596864.0,2026-10-21T01:27:23Z
 DMO,Financial Services,Asset Management,110500328.0,2026-10-21T01:45:49Z
 DMRA,Healthcare,Biotechnology,1276073216.0,2026-10-21T01:40:07Z
 DMRC,Technology,Software - Application,174299536.0,2026-10-21T01:32:00Z
 DNA,Healthcare,Biotechnology,663975168.0,2026-10-21T01:32:00Z
 DNLI,Healthcare,Biotechnology,3025911552.0,2026-10-21T01:45:49Z
-DNMXU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DNMXU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DNN,Energy,Uranium,2054934784.0,2026-10-21T02:01:38Z
 DNOW,Industrials,Industrial Distribution,2850993664.0,2026-10-21T01:32:00Z
 DNP,Financial Services,Asset Management,3803178240.0,2026-10-21T01:43:09Z
@@ -1595,7 +1596,7 @@ DPZ,Consumer Cyclical,Restaurants,10405351424.0,2026-10-21T01:51:56Z
 DQ,Technology,Semiconductor Equipment & Materials,698314496.0,2026-10-21T02:04:26Z
 DRD,Basic Materials,Gold,2197954048.0,2026-10-21T01:43:09Z
 DRDB,Financial Services,Shell Companies,329666688.0,2026-10-21T01:40:07Z
-DRDBU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DRDBU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DRH,Real Estate,REIT - Hotel & Motel,2832315648.0,2026-10-21T01:23:01Z
 DRI,Consumer Cyclical,Restaurants,24664092672.0,2026-10-21T01:32:00Z
 DRIO,Healthcare,Health Information Services,39981880.0,2026-10-21T02:10:51Z
@@ -1627,7 +1628,7 @@ DTIL,Healthcare,Biotechnology,181066192.0,2026-10-21T01:40:07Z
 DTK,,,,2026-10-21T00:26:39Z
 DTM,Energy,Oil & Gas Midstream,12494833664.0,2026-10-21T01:45:49Z
 DTSQ,Financial Services,Shell Companies,42032472.0,2026-10-21T01:37:13Z
-DTSQU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DTSQU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DTSS,Technology,Software - Infrastructure,5725039.0,2026-10-21T02:07:27Z
 DTST,Technology,Information Technology Services,6896327.0,2026-10-21T01:58:34Z
 DTW,,,,2026-10-21T00:26:39Z
@@ -1657,7 +1658,7 @@ DYAI,Healthcare,Biotechnology,15428533.0,2026-10-21T02:10:51Z
 DYN,Healthcare,Biotechnology,3038364416.0,2026-10-21T01:55:48Z
 DYNC,Financial Services,Shell Companies,240367984.0,2026-10-21T01:40:07Z
 DYNCU,Financial Services,Shell Companies,,2026-10-30T01:52:58Z
-DYORU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+DYORU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 DZZ,,,,2026-10-21T00:26:39Z
 E,Energy,Oil & Gas Integrated,84283899904.0,2026-10-21T01:23:01Z
 EAD,Financial Services,Asset Management,351599392.0,2026-10-21T01:45:49Z
@@ -1674,7 +1675,7 @@ EC,Energy,Oil & Gas Integrated,36347158528.0,2026-10-21T01:23:01Z
 ECAT,Financial Services,Asset Management,1333869952.0,2026-10-21T01:43:09Z
 ECBK,Financial Services,Banks - Regional,172394864.0,2026-10-21T01:32:00Z
 ECC,Financial Services,Asset Management,367109664.0,2026-10-21T02:01:38Z
-ECCC,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+ECCC,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 ECCU,,,,2026-10-21T00:26:39Z
 ECCV,,,,2026-10-21T00:26:39Z
 ECF,Financial Services,Asset Management,156519568.0,2026-10-21T01:45:49Z
@@ -1688,7 +1689,7 @@ ECVT,Basic Materials,Specialty Chemicals,1102346752.0,2026-10-21T01:51:56Z
 ECX,Consumer Cyclical,Auto Parts,347089536.0,2026-10-21T02:04:26Z
 ED,Utilities,Utilities - Regulated Electric,41413410816.0,2026-10-21T01:37:13Z
 EDBL,Consumer Defensive,Farm Products,1772165.0,2026-10-21T02:16:54Z
-EDD,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+EDD,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 EDF,Financial Services,Asset Management,143175120.0,2026-10-21T01:45:49Z
 EDHL,Communication Services,Advertising Agencies,33908276.0,2026-10-21T01:27:23Z
 EDIT,Healthcare,Biotechnology,396236480.0,2026-10-21T01:49:07Z
@@ -1719,7 +1720,7 @@ EGAN,Technology,Software - Application,148653936.0,2026-10-21T02:01:38Z
 EGBN,Financial Services,Banks - Regional,870622208.0,2026-10-21T01:32:00Z
 EGG,Industrials,Consulting Services,140026000.0,2026-10-21T01:51:56Z
 EGHA,Financial Services,Shell Companies,213610000.0,2026-10-21T01:40:07Z
-EGHAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+EGHAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 EGHT,Technology,Software - Application,306203264.0,2026-10-21T01:27:23Z
 EGO,Basic Materials,Gold,9175307264.0,2026-10-21T01:37:13Z
 EGP,Real Estate,REIT - Industrial,10821879808.0,2026-10-21T01:40:07Z
@@ -1866,7 +1867,7 @@ ETY,Financial Services,Asset Management,2198072320.0,2026-10-28T01:15:24Z
 EU,Energy,Uranium,153481968.0,2026-10-21T02:10:51Z
 EUDA,Real Estate,Real Estate Services,44615440.0,2026-10-21T01:37:13Z
 EURK,Financial Services,Shell Companies,25070442.0,2026-10-21T01:40:07Z
-EURKU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+EURKU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 EVAC,Financial Services,Shell Companies,603181888.0,2026-10-21T01:40:07Z
 EVAX,Healthcare,Biotechnology,36537008.0,2026-10-21T01:43:09Z
 EVC,Communication Services,Advertising Agencies,584184960.0,2026-10-21T01:23:01Z
@@ -1883,6 +1884,7 @@ EVLV,Industrials,Security & Protection Services,769849664.0,2026-10-21T02:01:38Z
 EVMN,Healthcare,Biotechnology,277634656.0,2026-11-10T04:19:44Z
 EVN,Financial Services,Asset Management,388848800.0,2026-10-21T01:49:07Z
 EVO,Healthcare,Drug Manufacturers - Specialty & Generic,525975904.0,2026-10-21T02:07:27Z
+EVOXU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 EVR,Financial Services,Capital Markets,9695205376.0,2026-10-21T01:58:34Z
 EVRG,Utilities,Utilities - Regulated Electric,19104796672.0,2026-10-21T01:40:07Z
 EVT,Financial Services,Asset Management,2043217664.0,2026-10-21T01:32:00Z
@@ -1917,7 +1919,7 @@ FA,Industrials,Specialty Business Services,3359502080.0,2026-10-21T01:27:23Z
 FABC,Technology,Semiconductors,15197841.0,2026-10-21T02:01:38Z
 FAC,Industrials,Electrical Equipment & Parts,509688864.0,2026-10-21T02:04:26Z
 FACT,,,261455680.0,2026-10-21T01:40:07Z
-FACTU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+FACTU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 FAF,Financial Services,Insurance - Specialty,6765146112.0,2026-10-21T01:40:07Z
 FAMI,Consumer Defensive,Packaged Foods,4193050.0,2026-10-21T02:16:54Z
 FANG,Energy,Oil & Gas E&P,56681603072.0,2026-10-21T01:27:23Z
@@ -1928,7 +1930,7 @@ FAX,Financial Services,Asset Management,533784384.0,2026-10-21T01:49:07Z
 FBGL,Industrials,Engineering & Construction,3348000.0,2026-10-21T02:10:51Z
 FBIN,Industrials,Building Products & Equipment,4865978368.0,2026-10-21T01:55:48Z
 FBIO,Healthcare,Biotechnology,64700928.0,2026-10-21T02:04:26Z
-FBIOP,Healthcare,Biotechnology,,2026-11-12T02:53:53Z
+FBIOP,Healthcare,Biotechnology,,2026-11-14T02:13:12Z
 FBIZ,Financial Services,Banks - Regional,594150720.0,2026-10-21T01:27:23Z
 FBK,Financial Services,Banks - Regional,2583415552.0,2026-10-21T01:49:07Z
 FBLA,Financial Services,Banks - Regional,240303968.0,2026-10-21T01:27:23Z
@@ -1948,8 +1950,8 @@ FCFS,Financial Services,Credit Services,9315395584.0,2026-10-21T01:32:00Z
 FCHL,Consumer Defensive,Education & Training Services,1177504.0,2026-10-21T02:10:51Z
 FCN,Industrials,Consulting Services,4160512000.0,2026-10-21T01:49:07Z
 FCNCA,Financial Services,Banks - Regional,23945818112.0,2026-10-21T01:37:13Z
-FCNCO,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
-FCNCP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+FCNCO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+FCNCP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 FCPT,Real Estate,REIT - Retail,2399275264.0,2026-10-21T01:51:56Z
 FCUV,Technology,Scientific & Technical Instruments,3343750.0,2026-10-21T02:01:38Z
 FCX,Basic Materials,Copper,98898534400.0,2026-10-21T01:27:23Z
@@ -1970,7 +1972,7 @@ FENC,Healthcare,Biotechnology,366802496.0,2026-10-21T01:27:23Z
 FENG,Communication Services,Internet Content & Information,16694978.0,2026-10-21T01:55:48Z
 FER,Industrials,Engineering & Construction,35435364352.0,2026-10-21T01:58:34Z
 FERA,Financial Services,Shell Companies,330176032.0,2026-10-21T01:40:07Z
-FERAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+FERAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 FERG,Industrials,Industrial Distribution,43929243648.0,2026-10-21T01:45:49Z
 FET,Energy,Oil & Gas Equipment & Services,966001216.0,2026-10-21T01:23:01Z
 FF,Basic Materials,Specialty Chemicals,240370992.0,2026-10-21T01:27:23Z
@@ -1984,9 +1986,9 @@ FFR,Technology,Computer Hardware,22797596.0,2026-10-21T01:55:48Z
 FFTT,Industrials,Engineering & Construction,8171154.0,2026-10-30T01:52:58Z
 FG,Financial Services,Insurance - Life,2637035008.0,2026-10-21T02:01:38Z
 FGBI,Financial Services,Banks - Regional,137109088.0,2026-10-21T01:45:49Z
-FGBIP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+FGBIP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 FGC,Financial Services,Asset Management,28483220.0,2026-10-21T02:01:38Z
-FGCPP,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+FGCPP,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 FGI,Consumer Cyclical,"Furnishings, Fixtures & Appliances",13905151.0,2026-10-21T01:27:23Z
 FGL,Industrials,Engineering & Construction,186628.0,2026-10-21T02:16:54Z
 FGN,,,,2026-10-21T00:19:30Z
@@ -2002,7 +2004,7 @@ FIG,Technology,Software - Application,12104653824.0,2026-10-21T01:49:07Z
 FIGR,Financial Services,Capital Markets,5770998784.0,2026-10-21T02:01:38Z
 FIGS,Consumer Cyclical,Apparel Manufacturing,3299545344.0,2026-10-21T01:23:01Z
 FIGX,Financial Services,Shell Companies,200446976.0,2026-10-21T01:40:07Z
-FIGXU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+FIGXU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 FINS,Financial Services,Asset Management,392313824.0,2026-10-21T01:43:09Z
 FINV,Financial Services,Credit Services,684672640.0,2026-10-21T02:07:27Z
 FINW,Financial Services,Banks - Regional,146739920.0,2026-10-21T02:01:38Z
@@ -2090,7 +2092,7 @@ FRD,Basic Materials,Steel,306543616.0,2026-10-21T01:23:01Z
 FRGT,Technology,Software - Application,94676.0,2026-10-21T02:10:51Z
 FRHC,Financial Services,Financial Conglomerates,10991890432.0,2026-10-21T01:32:00Z
 FRME,Financial Services,Banks - Regional,2518965248.0,2026-10-21T01:40:07Z
-FRMEP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+FRMEP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 FRMI,Real Estate,REIT - Specialty,1885303552.0,2026-10-21T02:10:51Z
 FRMM,Technology,Software - Application,42896580.0,2026-10-21T02:07:27Z
 FRNM,Healthcare,Diagnostics & Research,1510702336.0,2026-10-21T01:32:00Z
@@ -2106,7 +2108,7 @@ FSBC,Financial Services,Banks - Regional,1060963200.0,2026-10-21T01:37:13Z
 FSBW,Financial Services,Banks - Regional,352617312.0,2026-10-21T01:32:00Z
 FSCO,Financial Services,Asset Management,1033597952.0,2026-10-21T01:43:09Z
 FSHP,Financial Services,Shell Companies,39721156.0,2026-10-21T01:40:07Z
-FSHPU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+FSHPU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 FSI,Basic Materials,Specialty Chemicals,81373552.0,2026-10-21T01:43:09Z
 FSK,Financial Services,Asset Management,2799327232.0,2026-10-21T01:49:07Z
 FSLR,Technology,Solar,18745954304.0,2026-10-21T01:55:48Z
@@ -2119,7 +2121,7 @@ FSUN,Financial Services,Banks - Regional,1685057152.0,2026-10-21T01:37:13Z
 FSV,Real Estate,Real Estate Services,6048699392.0,2026-10-21T01:49:07Z
 FT,Financial Services,Asset Management,182457552.0,2026-10-29T01:44:18Z
 FTAI,Industrials,Aerospace & Defense,16222583808.0,2026-10-21T02:01:38Z
-FTAIM,Industrials,Aerospace & Defense,,2026-11-12T02:53:53Z
+FTAIM,Industrials,Aerospace & Defense,,2026-11-14T02:13:12Z
 FTCI,Technology,Solar,23956024.0,2026-10-21T02:10:51Z
 FTDR,Consumer Cyclical,Personal Services,5544534016.0,2026-10-21T01:27:23Z
 FTEK,Industrials,Pollution & Treatment Controls,43079168.0,2026-10-21T01:55:48Z
@@ -2141,7 +2143,7 @@ FUFU,Financial Services,Capital Markets,191701136.0,2026-10-21T02:07:27Z
 FUL,Basic Materials,Specialty Chemicals,2722138624.0,2026-10-21T01:51:56Z
 FULC,Healthcare,Biotechnology,284140864.0,2026-10-21T02:04:26Z
 FULT,Financial Services,Banks - Regional,4320396288.0,2026-10-21T01:37:13Z
-FULTP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+FULTP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 FUN,Consumer Cyclical,Leisure,804206208.0,2026-10-21T02:10:51Z
 FUNC,Financial Services,Banks - Regional,270093024.0,2026-10-21T01:37:13Z
 FUND,Financial Services,Asset Management,290724736.0,2026-10-21T01:37:13Z
@@ -2152,7 +2154,7 @@ FUSEW,,,,
 FUTU,Financial Services,Capital Markets,14791921664.0,2026-10-21T01:58:34Z
 FVCB,Financial Services,Banks - Regional,319746432.0,2026-10-21T01:32:00Z
 FVN,Financial Services,Shell Companies,84982496.0,2026-10-21T01:37:13Z
-FVNNU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+FVNNU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 FVR,Real Estate,REIT - Diversified,525877056.0,2026-10-21T01:40:07Z
 FVRR,Communication Services,Internet Content & Information,307378720.0,2026-10-21T02:01:38Z
 FWDI,Financial Services,Asset Management,534780416.0,2026-10-21T01:27:23Z
@@ -2166,7 +2168,7 @@ G,Technology,Information Technology Services,6471685120.0,2026-10-21T01:32:00Z
 GAB,Financial Services,Asset Management,1792440576.0,2026-10-21T01:45:49Z
 GABC,Financial Services,Banks - Regional,1892468736.0,2026-10-21T01:27:23Z
 GAIA,Communication Services,Entertainment,35596108.0,2026-10-21T02:07:27Z
-GAIN,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+GAIN,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 GAINI,,,,2026-10-21T00:19:30Z
 GAINZ,,,,2026-10-21T00:19:30Z
 GALT,Healthcare,Biotechnology,345914304.0,2026-10-21T01:37:13Z
@@ -2264,7 +2266,7 @@ GIPR,Real Estate,REIT - Diversified,1107098.0,2026-10-21T02:16:54Z
 GIS,Consumer Defensive,Packaged Foods,17874591744.0,2026-10-21T01:51:56Z
 GITS,Communication Services,Internet Content & Information,5926376.0,2026-10-21T01:49:07Z
 GIW,Financial Services,Shell Companies,371650240.0,2026-10-30T01:52:58Z
-GIWWU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GIWWU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GJH,,,,2026-10-21T00:19:30Z
 GJO,,,,2026-10-21T00:19:30Z
 GJP,,,,2026-10-21T00:19:30Z
@@ -2320,7 +2322,7 @@ GOGO,Communication Services,Telecom Services,280501248.0,2026-10-21T02:10:51Z
 GOLD,Financial Services,Capital Markets,1111193472.0,2026-10-21T01:40:07Z
 GOLF,Consumer Cyclical,Leisure,4724383744.0,2026-10-21T01:55:48Z
 GOOD,Real Estate,REIT - Diversified,585420608.0,2026-10-21T01:40:07Z
-GOODN,Real Estate,REIT - Diversified,,2026-11-11T02:08:28Z
+GOODN,Real Estate,REIT - Diversified,,2026-11-14T02:13:12Z
 GOODO,,,,2026-10-21T00:19:30Z
 GOOG,Communication Services,Internet Content & Information,4114150064128.0,2026-10-21T01:37:13Z
 GOOGL,Communication Services,Internet Content & Information,4161540980736.0,2026-10-21T01:37:13Z
@@ -2332,7 +2334,7 @@ GOVX,Healthcare,Biotechnology,2294362.0,2026-10-21T02:16:54Z
 GOW,Energy,Oil & Gas Equipment & Services,188830320.0,2026-10-21T02:10:51Z
 GP,Industrials,Farm & Heavy Construction Machinery,3193077.0,2026-10-21T01:37:13Z
 GPAT,Financial Services,Shell Companies,179066400.0,2026-10-21T01:40:07Z
-GPATU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GPATU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GPC,Consumer Cyclical,Auto Parts,17028436992.0,2026-10-21T01:40:07Z
 GPCR,Healthcare,Biotechnology,1631569408.0,2026-10-21T02:07:27Z
 GPGI,Industrials,Metal Fabrication,3696098560.0,2026-10-21T01:58:34Z
@@ -2380,7 +2382,7 @@ GSBC,Financial Services,Banks - Regional,856435008.0,2026-10-21T01:32:00Z
 GSBD,Financial Services,Asset Management,961339776.0,2026-10-21T01:43:09Z
 GSHD,Financial Services,Insurance Brokers,1680052352.0,2026-10-21T01:55:48Z
 GSHR,Financial Services,Shell Companies,217018080.0,2026-10-21T01:40:07Z
-GSHRU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GSHRU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GSIT,Technology,Semiconductors,154883360.0,2026-10-21T02:04:26Z
 GSIW,Financial Services,Capital Markets,15033461.0,2026-10-21T02:10:51Z
 GSK,Healthcare,Drug Manufacturers - General,101437980672.0,2026-10-21T01:37:13Z
@@ -2388,16 +2390,16 @@ GSL,Industrials,Marine Shipping,1508082816.0,2026-10-24T00:32:34Z
 GSM,Basic Materials,Other Industrial Metals & Mining,745573440.0,2026-10-24T00:32:34Z
 GSRF,Financial Services,Shell Companies,301994496.0,2026-10-23T00:44:21Z
 GSRFR,,,,
-GSRFU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GSRFU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GSUN,Consumer Defensive,Education & Training Services,1895456.0,2026-10-21T02:10:51Z
 GT,Consumer Cyclical,Auto Parts,1220690688.0,2026-10-21T02:07:27Z
 GTBP,Healthcare,Biotechnology,15066290.0,2026-10-21T01:23:01Z
 GTE,Energy,Oil & Gas E&P,400147808.0,2026-10-21T01:23:01Z
 GTEC,Consumer Cyclical,Auto Parts,16837000.0,2026-10-21T01:55:48Z
 GTEN,Financial Services,Shell Companies,469681504.0,2026-10-21T01:43:09Z
-GTENU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GTENU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GTERA,Financial Services,Shell Companies,248184416.0,2026-10-21T01:40:07Z
-GTERU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+GTERU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 GTES,Industrials,Specialty Industrial Machinery,6607245824.0,2026-10-21T01:40:07Z
 GTIM,Consumer Cyclical,Restaurants,13725264.0,2026-10-21T01:43:09Z
 GTLB,Technology,Software - Infrastructure,9163825152.0,2026-10-21T01:23:01Z
@@ -2431,12 +2433,12 @@ HAO,Communication Services,Advertising Agencies,783509.0,2026-10-21T02:16:54Z
 HAPN,Financial Services,Banks - Regional,1682640768.0,2026-10-21T01:55:48Z
 HAS,Consumer Cyclical,Leisure,15447189504.0,2026-10-21T01:27:23Z
 HASI,Financial Services,Asset Management,4583444480.0,2026-10-21T01:40:07Z
-HAVAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+HAVAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 HAYW,Industrials,Electrical Equipment & Parts,2562404608.0,2026-10-21T01:55:48Z
 HBAN,Financial Services,Banks - Regional,31397246976.0,2026-10-21T01:49:07Z
-HBANL,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-HBANM,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
-HBANP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+HBANL,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+HBANM,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+HBANP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 HBB,Consumer Cyclical,"Furnishings, Fixtures & Appliances",464835872.0,2026-10-21T01:23:01Z
 HBCP,Financial Services,Banks - Regional,468073504.0,2026-10-21T01:45:49Z
 HBIO,Healthcare,Medical Instruments & Supplies,37966224.0,2026-10-21T01:23:01Z
@@ -2453,7 +2455,7 @@ HCI,Financial Services,Insurance - Property & Casualty,2541011712.0,2026-10-21T0
 HCKT,Technology,Information Technology Services,294802784.0,2026-10-21T01:49:07Z
 HCM,Healthcare,Drug Manufacturers - Specialty & Generic,2562020864.0,2026-10-21T01:32:00Z
 HCMA,Financial Services,Shell Companies,347116000.0,2026-10-21T01:43:09Z
-HCMAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+HCMAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 HCSG,Healthcare,Medical Care Facilities,1475592320.0,2026-10-21T01:37:13Z
 HCTI,Healthcare,Health Information Services,5899883.0,2026-10-21T02:16:54Z
 HCWB,Healthcare,Biotechnology,2616499.0,2026-10-21T02:10:51Z
@@ -2600,7 +2602,7 @@ HURN,Industrials,Consulting Services,2876700160.0,2026-10-21T01:23:01Z
 HUT,Financial Services,Capital Markets,8509834240.0,2026-10-21T01:45:49Z
 HUYA,Communication Services,Entertainment,525242016.0,2026-10-21T01:55:48Z
 HVMC,Financial Services,Shell Companies,302628896.0,2026-10-21T01:40:07Z
-HVMCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+HVMCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 HVT,Consumer Cyclical,Home Improvement Retail,445042112.0,2026-10-21T01:27:23Z
 HVT-A,Consumer Cyclical,Home Improvement Retail,452215168.0,2026-10-21T01:32:00Z
 HWBK,Financial Services,Banks - Regional,283116384.0,2026-10-21T01:32:00Z
@@ -2702,7 +2704,7 @@ IMNN,Healthcare,Biotechnology,5639460.0,2026-10-21T02:10:51Z
 IMO,Energy,Oil & Gas Integrated,67027681280.0,2026-10-24T00:32:34Z
 IMOS,Technology,Semiconductors,2119286656.0,2026-10-21T01:23:01Z
 IMPP,Energy,Oil & Gas Midstream,221094768.0,2026-10-21T01:32:00Z
-IMPPP,Energy,Oil & Gas Midstream,,2026-11-12T02:53:53Z
+IMPPP,Energy,Oil & Gas Midstream,,2026-11-14T02:13:12Z
 IMRN,Healthcare,Biotechnology,8232626.0,2026-10-21T01:51:56Z
 IMRX,Healthcare,Biotechnology,241321296.0,2026-10-21T01:58:34Z
 IMSR,Utilities,Utilities - Regulated Electric,296618720.0,2026-10-21T02:10:51Z
@@ -2713,7 +2715,7 @@ IMVT,Healthcare,Biotechnology,5905341440.0,2026-10-21T01:40:07Z
 IMXI,Technology,Software - Infrastructure,292750656.0,2026-10-21T02:01:38Z
 INAB,Healthcare,Biotechnology,11238556.0,2026-10-21T02:01:38Z
 INAC,Financial Services,Shell Companies,153304448.0,2026-10-21T01:40:07Z
-INACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+INACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 INBK,Financial Services,Banks - Regional,226985584.0,2026-10-21T01:32:00Z
 INBKZ,,,,2026-10-21T00:19:30Z
 INBS,Healthcare,Medical Devices,5539061.0,2026-10-21T02:07:27Z
@@ -2920,7 +2922,7 @@ KBR,Industrials,Engineering & Construction,4644336128.0,2026-10-21T01:45:49Z
 KBSX,Consumer Cyclical,Leisure,60322188.0,2026-10-21T01:27:23Z
 KC,Technology,Software - Application,2631459328.0,2026-10-21T01:58:34Z
 KCHV,Financial Services,Shell Companies,360387680.0,2026-10-21T01:40:07Z
-KCHVU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+KCHVU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 KD,Technology,Information Technology Services,3025495552.0,2026-10-21T01:51:56Z
 KDK,Technology,Software - Infrastructure,244754176.0,2026-10-21T02:16:54Z
 KDP,Consumer Defensive,Beverages - Non-Alcoholic,47125405696.0,2026-10-21T01:27:23Z
@@ -2988,7 +2990,7 @@ KOPN,Technology,Electronic Components,619521728.0,2026-10-21T01:40:07Z
 KOS,Energy,Oil & Gas E&P,1643545984.0,2026-10-21T01:23:01Z
 KOSS,Technology,Consumer Electronics,33700520.0,2026-10-21T01:55:48Z
 KOYN,Financial Services,Shell Companies,323153056.0,2026-10-21T01:40:07Z
-KOYNU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+KOYNU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 KPLT,Technology,Software - Infrastructure,675398464.0,2026-10-21T01:40:07Z
 KPRX,Healthcare,Biotechnology,10308821.0,2026-10-21T01:45:49Z
 KPTI,Healthcare,Biotechnology,8133571.0,2026-10-21T02:16:54Z
@@ -3041,19 +3043,19 @@ LAC,Basic Materials,Other Industrial Metals & Mining,776911936.0,2026-10-21T02:0
 LAD,Consumer Cyclical,Auto & Truck Dealerships,6584602624.0,2026-10-21T01:45:49Z
 LADR,Real Estate,REIT - Mortgage,1148131072.0,2026-10-21T01:49:07Z
 LAES,Technology,Semiconductors,373384736.0,2026-10-21T02:07:27Z
-LAFAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LAFAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LAKE,Consumer Cyclical,Apparel Manufacturing,94347784.0,2026-10-21T01:55:48Z
 LAMR,Real Estate,REIT - Specialty,15622402048.0,2026-10-21T01:32:00Z
 LAND,Real Estate,REIT - Specialty,383484128.0,2026-10-21T01:43:09Z
-LANDO,Real Estate,REIT - Specialty,,2026-11-11T02:08:28Z
-LANDP,Real Estate,REIT - Specialty,,2026-11-11T02:08:28Z
+LANDO,Real Estate,REIT - Specialty,,2026-11-14T02:13:12Z
+LANDP,Real Estate,REIT - Specialty,,2026-11-14T02:13:12Z
 LANV,Consumer Cyclical,Luxury Goods,119228760.0,2026-10-21T02:07:27Z
 LAR,Basic Materials,Other Industrial Metals & Mining,731886016.0,2026-10-21T02:01:38Z
 LARK,Financial Services,Banks - Regional,190336672.0,2026-10-21T01:32:00Z
 LASE,Industrials,Specialty Industrial Machinery,42833256.0,2026-10-21T02:07:27Z
 LASR,Technology,Semiconductors,2089538944.0,2026-10-21T02:01:38Z
 LATA,Financial Services,Shell Companies,235289984.0,2026-11-12T02:53:53Z
-LATAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LATAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LAUR,Consumer Defensive,Education & Training Services,5366714880.0,2026-10-21T01:32:00Z
 LAW,Technology,Software - Application,299507680.0,2026-10-21T01:40:07Z
 LAWR,Industrials,Consulting Services,172350000.0,2026-10-21T01:40:07Z
@@ -3066,7 +3068,7 @@ LBTYA,Communication Services,Telecom Services,2721878784.0,2026-10-21T02:01:38Z
 LBTYB,Communication Services,Telecom Services,4113516032.0,2026-10-21T01:40:07Z
 LBTYK,Communication Services,Telecom Services,2657072128.0,2026-10-21T02:01:38Z
 LCCC,Financial Services,Shell Companies,40330404.0,2026-10-21T01:40:07Z
-LCCCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LCCCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LCFY,Communication Services,Internet Content & Information,2806021.0,2026-10-21T02:10:51Z
 LCID,Consumer Cyclical,Auto Manufacturers,1288609408.0,2026-10-21T02:10:51Z
 LCII,Consumer Cyclical,Recreational Vehicles,2004483712.0,2026-10-21T01:58:34Z
@@ -3093,7 +3095,7 @@ LEVI,Consumer Cyclical,Apparel Manufacturing,7995343872.0,2026-10-21T01:49:07Z
 LEXX,Healthcare,Biotechnology,5582299.0,2026-10-21T02:16:54Z
 LFCR,Healthcare,Drug Manufacturers - Specialty & Generic,241460240.0,2026-10-21T01:32:00Z
 LFMD,Healthcare,Health Information Services,108334344.0,2026-10-21T02:07:27Z
-LFMDP,Healthcare,Health Information Services,,2026-11-11T02:08:28Z
+LFMDP,Healthcare,Health Information Services,,2026-11-14T02:13:12Z
 LFS,Communication Services,Entertainment,59907820.0,2026-10-21T01:49:07Z
 LFST,Healthcare,Medical Care Facilities,4645483520.0,2026-10-21T01:23:01Z
 LFT,Real Estate,REIT - Mortgage,22392290.0,2026-10-21T02:10:51Z
@@ -3140,7 +3142,7 @@ LKFN,Financial Services,Banks - Regional,1456420864.0,2026-10-21T01:43:09Z
 LKFT,Healthcare,Biotechnology,2013653632.0,2026-10-21T01:43:09Z
 LKQ,Consumer Cyclical,Auto Parts,5447134720.0,2026-10-21T01:58:34Z
 LKSP,Financial Services,Shell Companies,161876720.0,2026-11-10T04:19:44Z
-LKSPU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LKSPU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LLY,Healthcare,Drug Manufacturers - General,1144692801536.0,2026-10-21T01:27:23Z
 LLYVA,Communication Services,Entertainment,8896000000.0,2026-10-21T01:37:13Z
 LLYVK,Communication Services,Entertainment,9245620224.0,2026-10-21T01:37:13Z
@@ -3176,9 +3178,9 @@ LOVE,Consumer Cyclical,"Furnishings, Fixtures & Appliances",211880224.0,2026-10-
 LOW,Consumer Cyclical,Home Improvement Retail,111386050560.0,2026-10-21T01:51:56Z
 LPA,Real Estate,Real Estate - Development,87488232.0,2026-10-21T01:51:56Z
 LPAA,Financial Services,Shell Companies,81706416.0,2026-10-21T01:40:07Z
-LPAAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LPAAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LPBB,Financial Services,Shell Companies,310212512.0,2026-10-21T01:40:07Z
-LPBBU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LPBBU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LPCN,Healthcare,Biotechnology,13355690.0,2026-10-21T02:07:27Z
 LPG,Energy,Oil & Gas Midstream,2227694080.0,2026-10-21T01:23:01Z
 LPL,Technology,Consumer Electronics,2640000000.0,2026-10-21T02:04:26Z
@@ -3223,7 +3225,7 @@ LVS,Consumer Cyclical,Resorts & Casinos,24722753536.0,2026-10-21T01:58:34Z
 LVWR,Consumer Cyclical,Recreational Vehicles,334822304.0,2026-10-21T01:37:13Z
 LW,Consumer Defensive,Packaged Foods,7409832448.0,2026-10-21T01:32:00Z
 LWAC,Financial Services,Shell Companies,310975520.0,2026-10-21T01:40:07Z
-LWACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+LWACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 LWAY,Consumer Defensive,Packaged Foods,338693280.0,2026-10-21T01:55:48Z
 LWLG,Basic Materials,Specialty Chemicals,641335744.0,2026-10-21T02:01:38Z
 LX,Financial Services,Credit Services,103734216.0,2026-10-21T02:10:51Z
@@ -3249,7 +3251,7 @@ MAA,Real Estate,REIT - Residential,13961590784.0,2026-10-21T01:49:07Z
 MAAS,Technology,Information Technology Services,5700220928.0,2026-10-21T01:23:01Z
 MAC,Real Estate,REIT - Retail,6856505856.0,2026-10-21T01:32:00Z
 MACI,Financial Services,Shell Companies,106051000.0,2026-10-21T01:40:07Z
-MACIU,Financial Services,Shell Companies,,2026-11-04T02:13:04Z
+MACIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 MAGH,Industrials,Engineering & Construction,236600016.0,2026-10-21T01:23:01Z
 MAGN,Consumer Defensive,Household & Personal Products,396861120.0,2026-10-21T01:45:49Z
 MAIA,Healthcare,Biotechnology,69150976.0,2026-10-21T01:58:34Z
@@ -3280,17 +3282,17 @@ MBBC,Financial Services,Banks - Regional,43493096.0,2026-10-21T01:32:00Z
 MBC,Consumer Cyclical,"Furnishings, Fixtures & Appliances",1361351424.0,2026-10-21T02:01:38Z
 MBI,Financial Services,Insurance - Specialty,225492688.0,2026-10-21T02:01:38Z
 MBIN,Financial Services,Banks - Regional,2224321536.0,2026-10-21T01:27:23Z
-MBINL,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-MBINM,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-MBINN,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+MBINL,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+MBINM,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+MBINN,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 MBIO,Healthcare,Biotechnology,2875663.0,2026-10-21T02:07:27Z
 MBLY,Consumer Cyclical,Auto Parts,6206369280.0,2026-10-21T01:58:34Z
-MBNKO,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+MBNKO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 MBOT,Healthcare,Medical Devices,63638648.0,2026-10-21T02:07:27Z
 MBRX,Healthcare,Biotechnology,6309399.0,2026-10-21T02:16:54Z
 MBUU,Consumer Cyclical,Recreational Vehicles,434879776.0,2026-10-21T01:58:34Z
 MBVI,Financial Services,Shell Companies,441600000.0,2026-10-21T01:40:07Z
-MBVIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+MBVIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 MBWM,Financial Services,Banks - Regional,1020561216.0,2026-10-21T01:32:00Z
 MBX,Healthcare,Biotechnology,2576565248.0,2026-10-21T01:23:01Z
 MC,Financial Services,Capital Markets,3989256192.0,2026-10-21T01:55:48Z
@@ -3299,7 +3301,7 @@ MCBS,Financial Services,Banks - Regional,1004177024.0,2026-10-21T01:32:00Z
 MCD,Consumer Cyclical,Restaurants,174447788032.0,2026-10-21T01:51:56Z
 MCFT,Consumer Cyclical,Recreational Vehicles,476078112.0,2026-10-21T01:55:48Z
 MCGA,Financial Services,Shell Companies,245009216.0,2026-10-21T01:40:07Z
-MCGAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+MCGAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 MCHB,Financial Services,Banks - Regional,3232827136.0,2026-10-21T01:37:13Z
 MCHP,Technology,Semiconductors,41187209216.0,2026-10-21T01:43:09Z
 MCHPP,Technology,Semiconductors,,2026-11-07T01:41:04Z
@@ -3406,7 +3408,7 @@ MKC-V,Consumer Defensive,Packaged Foods,12909713408.0,2026-10-21T01:51:56Z
 MKDW,Consumer Cyclical,Auto Parts,23938908.0,2026-10-21T02:16:54Z
 MKL,Financial Services,Insurance - Property & Casualty,23343919104.0,2026-10-21T01:45:49Z
 MKLY,Financial Services,Shell Companies,250016512.0,2026-10-21T01:40:07Z
-MKLYU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+MKLYU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 MKSI,Technology,Scientific & Technical Instruments,14276771840.0,2026-10-21T01:49:07Z
 MKTW,Financial Services,Financial Data & Stock Exchanges,52558820.0,2026-10-21T01:32:00Z
 MKTX,Financial Services,Capital Markets,5789586944.0,2026-10-21T01:32:00Z
@@ -3433,7 +3435,7 @@ MMM,Industrials,Conglomerates,88379351040.0,2026-10-21T01:37:13Z
 MMS,Industrials,Specialty Business Services,3198535936.0,2026-10-21T01:51:56Z
 MMSI,Healthcare,Medical Instruments & Supplies,5444396032.0,2026-10-21T01:27:23Z
 MMT,Financial Services,Asset Management,230721376.0,2026-10-21T01:43:09Z
-MMTXU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+MMTXU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 MMU,Financial Services,Asset Management,520004928.0,2026-10-21T01:45:49Z
 MMYT,Consumer Cyclical,Travel Services,4318233088.0,2026-10-21T01:58:34Z
 MNDO,Technology,Software - Application,18364464.0,2026-10-21T01:51:56Z
@@ -3445,7 +3447,7 @@ MNPR,Healthcare,Biotechnology,498244544.0,2026-10-21T01:45:49Z
 MNR,Energy,Oil & Gas E&P,1796361600.0,2026-10-21T01:49:07Z
 MNRO,Consumer Cyclical,Auto Parts,448326624.0,2026-10-21T01:55:48Z
 MNSB,Financial Services,Banks - Regional,170051296.0,2026-10-21T01:32:00Z
-MNSBP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+MNSBP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 MNSO,Consumer Cyclical,Specialty Retail,2980919552.0,2026-10-21T02:04:26Z
 MNST,Consumer Defensive,Beverages - Non-Alcoholic,92153798656.0,2026-10-21T01:32:00Z
 MNTK,Basic Materials,Specialty Chemicals,290375904.0,2026-10-21T01:27:23Z
@@ -3505,7 +3507,7 @@ MSA,Industrials,Security & Protection Services,7029349888.0,2026-10-21T01:37:13Z
 MSAI,Technology,Electronic Components,9418117.0,2026-10-21T02:04:26Z
 MSB,Basic Materials,Steel,,2026-10-21T02:01:38Z
 MSBI,Financial Services,Banks - Regional,675688768.0,2026-10-21T01:23:01Z
-MSBIP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+MSBIP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 MSC,Consumer Cyclical,Resorts & Casinos,161282976.0,2026-10-21T02:10:51Z
 MSCI,Financial Services,Financial Data & Stock Exchanges,43015864320.0,2026-10-21T01:37:13Z
 MSD,Financial Services,Asset Management,135549600.0,2026-10-21T01:45:49Z
@@ -3660,7 +3662,7 @@ NEWT,Financial Services,Banks - Regional,323220128.0,2026-10-21T01:51:56Z
 NEWTG,,,,2026-10-21T00:19:30Z
 NEWTH,,,,2026-10-21T00:19:30Z
 NEWTI,,,,2026-10-21T00:19:30Z
-NEWTP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+NEWTP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 NEXA,Basic Materials,Other Industrial Metals & Mining,1630319360.0,2026-10-21T01:32:00Z
 NEXM,Basic Materials,Other Industrial Metals & Mining,54185208.0,2026-10-21T02:07:27Z
 NEXN,Communication Services,Advertising Agencies,517688512.0,2026-10-21T01:32:00Z
@@ -3717,7 +3719,7 @@ NMIH,Financial Services,Insurance - Specialty,3132071168.0,2026-10-21T01:37:13Z
 NML,Financial Services,Asset Management,575654720.0,2026-10-21T01:32:00Z
 NMM,Industrials,Marine Shipping,2514230784.0,2026-10-21T01:23:01Z
 NMP,Financial Services,Shell Companies,165777264.0,2026-10-21T01:40:07Z
-NMPAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+NMPAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 NMR,Financial Services,Capital Markets,26683262976.0,2026-10-21T01:37:13Z
 NMRA,Healthcare,Biotechnology,87371600.0,2026-10-21T02:16:54Z
 NMRK,Real Estate,Real Estate Services,2848726272.0,2026-10-21T02:01:38Z
@@ -3740,7 +3742,7 @@ NOAH,Financial Services,Asset Management,486698464.0,2026-10-21T01:58:34Z
 NOC,Industrials,Aerospace & Defense,75861655552.0,2026-10-21T01:49:07Z
 NODK,Financial Services,Insurance - Property & Casualty,300969664.0,2026-10-21T01:37:13Z
 NOEM,Financial Services,Shell Companies,39338784.0,2026-10-21T01:40:07Z
-NOEMU,Financial Services,Shell Companies,,2026-11-11T02:08:28Z
+NOEMU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 NOG,Energy,Oil & Gas E&P,2934363136.0,2026-10-21T01:27:23Z
 NOK,Technology,Communication Equipment,50499776512.0,2026-10-21T01:32:00Z
 NOMA,Consumer Cyclical,Leisure,22940750.0,2026-11-06T02:19:44Z
@@ -3752,7 +3754,7 @@ NOVTU,Technology,Scientific & Technical Instruments,,2026-11-11T02:08:28Z
 NOW,Technology,Software - Application,154603716608.0,2026-10-21T01:27:23Z
 NP,Financial Services,Insurance Brokers,4047003648.0,2026-10-21T01:37:13Z
 NPAC,Financial Services,Shell Companies,403679520.0,2026-10-21T01:40:07Z
-NPACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+NPACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 NPB,Financial Services,Banks - Regional,545701440.0,2026-10-21T01:49:07Z
 NPCE,Healthcare,Medical Devices,463720928.0,2026-10-21T01:45:49Z
 NPCT,Financial Services,Asset Management,258219888.0,2026-10-21T01:45:49Z
@@ -3804,12 +3806,12 @@ NTRA,Healthcare,Diagnostics & Research,58511007744.0,2026-10-21T01:23:01Z
 NTRB,Healthcare,Biotechnology,71110744.0,2026-10-21T01:23:01Z
 NTRP,Consumer Cyclical,Travel Services,18405044.0,2026-10-21T02:07:27Z
 NTRS,Financial Services,Asset Management,30268182528.0,2026-10-21T01:37:13Z
-NTRSO,Financial Services,Asset Management,,2026-11-11T02:08:28Z
+NTRSO,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 NTSK,Technology,Software - Infrastructure,8098208768.0,2026-10-21T01:23:01Z
 NTST,Real Estate,REIT - Retail,1737909376.0,2026-10-21T01:51:56Z
 NTWK,Technology,Software - Application,78169792.0,2026-10-21T01:23:01Z
 NTWO,Financial Services,Shell Companies,261421520.0,2026-10-21T01:40:07Z
-NTWOU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+NTWOU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 NU,Financial Services,Banks - Regional,72895094784.0,2026-10-21T01:43:09Z
 NUAI,Technology,Software - Infrastructure,340647744.0,2026-10-21T02:07:27Z
 NUE,Basic Materials,Steel,59327991808.0,2026-10-21T01:23:01Z
@@ -3876,9 +3878,9 @@ NZF,Financial Services,Asset Management,2160257024.0,2026-10-21T01:49:07Z
 O,Real Estate,REIT - Retail,53309923328.0,2026-10-21T01:49:07Z
 OABI,Healthcare,Biotechnology,721136384.0,2026-10-21T01:23:01Z
 OACC,Financial Services,Shell Companies,262052304.0,2026-10-21T01:43:09Z
-OACCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+OACCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 OBA,Financial Services,Shell Companies,327318752.0,2026-10-21T01:40:07Z
-OBAWU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+OBAWU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 OBDC,Financial Services,Asset Management,4923349504.0,2026-10-21T01:49:07Z
 OBE,Energy,Oil & Gas E&P,788028992.0,2026-10-21T01:23:01Z
 OBIO,Healthcare,Biotechnology,349811392.0,2026-10-21T01:23:01Z
@@ -3886,8 +3888,8 @@ OBT,Financial Services,Banks - Regional,503603104.0,2026-10-21T01:27:23Z
 OC,Industrials,Building Products & Equipment,8838432768.0,2026-10-21T01:51:56Z
 OCC,Technology,Communication Equipment,116095776.0,2026-10-21T01:23:01Z
 OCCI,Financial Services,Asset Management,46261532.0,2026-10-21T02:07:27Z
-OCCIM,Financial Services,Asset Management,,2026-11-12T02:53:53Z
-OCCIN,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+OCCIM,Financial Services,Asset Management,,2026-11-14T02:13:12Z
+OCCIN,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 OCFC,Financial Services,Banks - Regional,1555021568.0,2026-10-21T01:51:56Z
 OCG,Consumer Cyclical,Internet Retail,3101299.0,2026-10-21T02:04:26Z
 OCGN,Healthcare,Biotechnology,275527200.0,2026-10-21T02:07:27Z
@@ -3945,11 +3947,11 @@ OMH,Real Estate,Real Estate Services,6133342.0,2026-10-21T02:16:54Z
 OMSE,Energy,Oil & Gas Equipment & Services,170643792.0,2026-10-21T01:45:49Z
 ON,Technology,Semiconductors,29440274432.0,2026-10-21T01:37:13Z
 ONB,Financial Services,Banks - Regional,9694323712.0,2026-10-21T01:37:13Z
-ONBPO,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-ONBPP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+ONBPO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+ONBPP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 ONC,Healthcare,Biotechnology,43743985664.0,2026-10-21T01:27:23Z
 ONCH,Financial Services,Shell Companies,222740624.0,2026-10-21T01:43:09Z
-ONCHU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+ONCHU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 ONCO,Healthcare,Biotechnology,2130140.0,2026-10-21T02:16:54Z
 ONCY,Healthcare,Biotechnology,65376792.0,2026-10-21T02:07:27Z
 ONDS,Technology,Communication Equipment,3552046592.0,2026-10-21T02:01:38Z
@@ -4014,7 +4016,7 @@ OSW,Consumer Cyclical,Leisure,2432924160.0,2026-10-21T01:37:13Z
 OTEX,Technology,Software - Application,6430552576.0,2026-10-21T01:37:13Z
 OTF,Financial Services,Asset Management,4077849600.0,2026-10-21T01:55:48Z
 OTGA,Financial Services,Shell Companies,302941248.0,2026-11-06T02:19:44Z
-OTGAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+OTGAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 OTIS,Industrials,Specialty Industrial Machinery,27434840064.0,2026-10-21T01:49:07Z
 OTLK,Healthcare,Biotechnology,126592720.0,2026-10-21T01:58:34Z
 OTLY,Consumer Defensive,Packaged Foods,407838656.0,2026-10-21T01:32:00Z
@@ -4033,8 +4035,8 @@ OXLC,Financial Services,Asset Management,714640512.0,2026-10-21T01:58:34Z
 OXLCG,,,,2026-10-21T00:19:30Z
 OXLCI,,,,2026-10-21T00:19:30Z
 OXLCL,,,,2026-10-21T00:19:30Z
-OXLCN,Financial Services,Asset Management,,2026-11-12T02:53:53Z
-OXLCO,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+OXLCN,Financial Services,Asset Management,,2026-11-14T02:13:12Z
+OXLCO,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 OXLCZ,,,,2026-10-21T00:19:30Z
 OXM,Consumer Cyclical,Apparel Manufacturing,403215136.0,2026-10-21T02:01:38Z
 OXSQ,Financial Services,Asset Management,138943024.0,2026-10-21T01:51:56Z
@@ -4043,10 +4045,10 @@ OXSQH,,,,2026-10-21T00:19:30Z
 OXY,Energy,Oil & Gas E&P,62897180672.0,2026-10-21T01:27:23Z
 OYSE,Financial Services,Shell Companies,353386496.0,2026-10-21T01:40:07Z
 OYSER,,,,2026-10-21T00:19:30Z
-OYSEU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+OYSEU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 OZ,Real Estate,Real Estate - Development,146945392.0,2026-10-21T02:01:38Z
 OZK,Financial Services,Banks - Regional,5033176576.0,2026-10-21T01:45:49Z
-OZKAP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+OZKAP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 P,Technology,Computer Hardware,42159910912.0,2026-10-21T01:23:01Z
 PAA,Energy,Oil & Gas Midstream,17984888832.0,2026-10-21T01:27:23Z
 PAAI,Communication Services,Internet Content & Information,38564628.0,2026-10-21T02:07:27Z
@@ -4054,7 +4056,7 @@ PAAS,Basic Materials,Gold,18363430912.0,2026-10-21T01:49:07Z
 PAC,Industrials,Airports & Air Services,12936291328.0,2026-10-21T01:49:07Z
 PACB,Healthcare,Medical Devices,609228288.0,2026-10-21T01:27:23Z
 PACH,Financial Services,Shell Companies,327634976.0,2026-10-21T01:40:07Z
-PACHU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+PACHU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 PACK,Consumer Cyclical,Packaging & Containers,290720608.0,2026-10-21T02:04:26Z
 PACS,Healthcare,Medical Care Facilities,7555776000.0,2026-10-21T01:23:01Z
 PAG,Consumer Cyclical,Auto & Truck Dealerships,13936944128.0,2026-10-21T01:27:23Z
@@ -4102,7 +4104,7 @@ PBT,Energy,Oil & Gas Midstream,1580970240.0,2026-10-21T01:23:01Z
 PBYI,Healthcare,Biotechnology,555431872.0,2026-10-21T01:23:01Z
 PC,Industrials,Specialty Business Services,274480000.0,2026-10-21T01:43:09Z
 PCAP,Financial Services,Shell Companies,329472000.0,2026-10-21T01:40:07Z
-PCAPU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+PCAPU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 PCAR,Industrials,Farm & Heavy Construction Machinery,57936990208.0,2026-10-21T01:49:07Z
 PCB,Financial Services,Banks - Regional,395636448.0,2026-10-21T01:32:00Z
 PCF,Financial Services,Asset Management,93020752.0,2026-10-21T01:49:07Z
@@ -4129,7 +4131,7 @@ PDI,Financial Services,Asset Management,6739357184.0,2026-10-21T01:51:56Z
 PDLB,Financial Services,Banks - Regional,487386176.0,2026-10-21T01:32:00Z
 PDM,Real Estate,REIT - Office,1157478656.0,2026-10-21T01:37:13Z
 PDO,Financial Services,Asset Management,1714799104.0,2026-10-21T01:45:49Z
-PDPA,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+PDPA,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 PDS,Energy,Oil & Gas Drilling,1149487744.0,2026-10-21T01:27:23Z
 PDSB,Healthcare,Biotechnology,69611480.0,2026-10-21T01:37:13Z
 PDT,Financial Services,Asset Management,584320448.0,2026-10-28T01:15:24Z
@@ -4174,7 +4176,7 @@ PFX,Financial Services,Asset Management,84976016.0,2026-10-21T01:40:07Z
 PFXNZ,,,,2026-10-21T00:19:30Z
 PG,Consumer Defensive,Household & Personal Products,370048172032.0,2026-10-21T01:37:13Z
 PGAC,Financial Services,Shell Companies,55319096.0,2026-10-21T01:40:07Z
-PGACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+PGACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 PGC,Financial Services,Banks - Regional,778257088.0,2026-10-21T01:27:23Z
 PGEN,Healthcare,Biotechnology,2445380608.0,2026-10-21T01:23:01Z
 PGNY,Healthcare,Healthcare Plans,2192851968.0,2026-10-21T01:27:23Z
@@ -4221,7 +4223,7 @@ PLD,Real Estate,REIT - Industrial,123912486912.0,2026-10-21T01:45:49Z
 PLG,Basic Materials,Other Precious Metals & Mining,148346720.0,2026-10-21T02:04:26Z
 PLGO,Financial Services,Insurance - Diversified,2104608896.0,2026-10-21T01:27:23Z
 PLMK,Financial Services,Shell Companies,113660456.0,2026-10-21T01:43:09Z
-PLMKU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+PLMKU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 PLMR,Financial Services,Insurance - Property & Casualty,3724589056.0,2026-10-21T01:32:00Z
 PLNT,Consumer Cyclical,Leisure,4016974848.0,2026-10-21T01:58:34Z
 PLOW,Consumer Cyclical,Auto Parts,926774144.0,2026-10-21T01:40:07Z
@@ -4249,7 +4251,7 @@ PMN,Healthcare,Biotechnology,72548640.0,2026-10-21T02:01:38Z
 PMO,Financial Services,Asset Management,277496256.0,2026-10-28T01:15:24Z
 PMT,Real Estate,REIT - Mortgage,,2026-11-07T01:41:04Z
 PMTR,Financial Services,Shell Companies,321818208.0,2026-10-21T01:43:09Z
-PMTRU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+PMTRU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 PMTS,Financial Services,Credit Services,313447200.0,2026-10-21T01:23:01Z
 PMTU,,,,2026-10-21T00:19:30Z
 PMTV,,,,2026-10-21T00:19:30Z
@@ -4271,7 +4273,7 @@ PODD,Healthcare,Medical Devices,9892682752.0,2026-10-21T02:01:38Z
 POET,Technology,Semiconductors,962202944.0,2026-10-21T02:01:38Z
 POLA,Industrials,Electrical Equipment & Parts,3076853.0,2026-10-21T02:10:51Z
 POLE,Financial Services,Shell Companies,147363776.0,2026-10-21T01:43:09Z
-POLEU,Financial Services,Shell Companies,,2026-11-11T02:08:28Z
+POLEU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 POM,Healthcare,Pharmaceutical Retailers,6161137.0,2026-10-21T02:10:51Z
 PONY,Technology,Information Technology Services,2297772544.0,2026-10-21T02:07:27Z
 POOL,Industrials,Industrial Distribution,6240070144.0,2026-10-21T01:58:34Z
@@ -4280,7 +4282,7 @@ POST,Consumer Defensive,Packaged Foods,3440059648.0,2026-10-21T01:58:34Z
 POWI,Technology,Semiconductors,2624368896.0,2026-10-21T01:55:48Z
 POWL,Industrials,Electrical Equipment & Parts,6009187328.0,2026-10-21T01:45:49Z
 POWW,Industrials,Aerospace & Defense,263458304.0,2026-10-21T01:32:00Z
-POWWP,Industrials,Aerospace & Defense,,2026-11-12T02:53:53Z
+POWWP,Industrials,Aerospace & Defense,,2026-11-14T02:13:12Z
 PPBT,Healthcare,Biotechnology,1765150.0,2026-10-21T02:10:51Z
 PPC,Consumer Defensive,Packaged Foods,6719422464.0,2026-10-21T01:55:48Z
 PPCB,Healthcare,Biotechnology,3155788.0,2026-10-21T02:16:54Z
@@ -4401,7 +4403,7 @@ QQQX,Financial Services,Asset Management,1482869504.0,2026-10-21T01:32:00Z
 QRHC,Industrials,Waste Management,25100500.0,2026-10-21T01:51:56Z
 QS,Consumer Cyclical,Auto Parts,2464071936.0,2026-10-21T02:07:27Z
 QSEA,Financial Services,Shell Companies,108644056.0,2026-10-21T01:40:07Z
-QSEAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+QSEAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 QSI,Healthcare,Medical Devices,253905328.0,2026-10-21T01:32:00Z
 QSR,Consumer Cyclical,Restaurants,34408714240.0,2026-10-21T01:37:13Z
 QTEX,Technology,Computer Hardware,97929568.0,2026-10-21T01:23:01Z
@@ -4415,7 +4417,7 @@ QUCY,Healthcare,Diagnostics & Research,93324584.0,2026-10-21T01:32:00Z
 QUIK,Technology,Semiconductors,169072736.0,2026-10-21T01:51:56Z
 QUIT,Healthcare,Biotechnology,665011008.0,2026-11-12T02:53:53Z
 QUMS,Financial Services,Shell Companies,118401032.0,2026-10-21T01:40:07Z
-QUMSU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+QUMSU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 QURE,Healthcare,Biotechnology,1575658112.0,2026-10-21T01:58:34Z
 QXL,Technology,Information Technology Services,80016632.0,2026-10-21T01:27:23Z
 QXO,Industrials,Industrial Distribution,10852152320.0,2026-10-21T02:04:26Z
@@ -4430,7 +4432,7 @@ RAL,Technology,Electronic Components,7407348224.0,2026-10-21T01:27:23Z
 RAMP,Technology,Software - Infrastructure,2322368512.0,2026-10-21T01:27:23Z
 RAND,Financial Services,Asset Management,28374792.0,2026-10-21T01:51:56Z
 RANG,Financial Services,Shell Companies,73007880.0,2026-10-21T01:40:07Z
-RANGU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RANGU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RANI,Healthcare,Biotechnology,91731144.0,2026-10-21T02:04:26Z
 RAPP,Healthcare,Biotechnology,1409122304.0,2026-10-21T01:49:07Z
 RARE,Healthcare,Biotechnology,1579393792.0,2026-10-21T02:04:26Z
@@ -4461,9 +4463,9 @@ RCS,Financial Services,Asset Management,231521936.0,2026-10-21T01:51:56Z
 RCT,Technology,Software - Application,6354987.0,2026-10-21T02:16:54Z
 RCUS,Healthcare,Biotechnology,2987112448.0,2026-10-21T01:40:07Z
 RDAC,Financial Services,Shell Companies,17107734.0,2026-10-21T02:01:38Z
-RDACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RDACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RDAG,Financial Services,Shell Companies,391875008.0,2026-10-21T01:40:07Z
-RDAGU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RDAGU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RDCM,Communication Services,Telecom Services,170898832.0,2026-10-21T01:58:34Z
 RDDT,Communication Services,Internet Content & Information,29946515456.0,2026-10-21T01:51:56Z
 RDGT,Healthcare,Pharmaceutical Retailers,3015421.0,2026-10-21T02:10:51Z
@@ -4486,8 +4488,8 @@ REED,Consumer Defensive,Beverages - Non-Alcoholic,5449516.0,2026-10-21T02:16:54Z
 REFI,Real Estate,REIT - Mortgage,232640000.0,2026-10-21T01:51:56Z
 REFR,Technology,Electronic Components,17521062.0,2026-10-21T02:04:26Z
 REG,Real Estate,REIT - Retail,13685379072.0,2026-10-21T01:45:49Z
-REGCO,Real Estate,REIT - Retail,,2026-11-11T02:08:28Z
-REGCP,Real Estate,REIT - Retail,,2026-11-11T02:08:28Z
+REGCO,Real Estate,REIT - Retail,,2026-11-14T02:13:12Z
+REGCP,Real Estate,REIT - Retail,,2026-11-14T02:13:12Z
 REGN,Healthcare,Biotechnology,83134095360.0,2026-10-21T01:27:23Z
 REI,Energy,Oil & Gas E&P,359544640.0,2026-10-21T01:27:23Z
 REKR,Technology,Software - Application,44387768.0,2026-10-21T02:10:51Z
@@ -4508,7 +4510,7 @@ REYN,Consumer Cyclical,Packaging & Containers,4839760384.0,2026-10-21T01:43:09Z
 REZI,Industrials,Industrial Distribution,2592034560.0,2026-10-21T02:04:26Z
 RF,Financial Services,Banks - Regional,23726237696.0,2026-10-21T01:40:07Z
 RFAI,Financial Services,Shell Companies,265999216.0,2026-10-21T01:23:01Z
-RFAIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RFAIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RFI,Financial Services,Asset Management,280729568.0,2026-10-21T01:45:49Z
 RFIL,Industrials,Electrical Equipment & Parts,77669968.0,2026-10-21T02:04:26Z
 RFL,Real Estate,Real Estate Services,67079992.0,2026-10-21T01:55:48Z
@@ -4530,7 +4532,7 @@ RHI,Industrials,Staffing & Employment Services,3464947712.0,2026-10-21T01:37:13Z
 RHLD,Industrials,Specialty Business Services,876420224.0,2026-10-21T01:51:56Z
 RHP,Real Estate,REIT - Hotel & Motel,8966577152.0,2026-10-21T01:27:23Z
 RIBB,Financial Services,Shell Companies,30080676.0,2026-10-21T02:07:27Z
-RIBBU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RIBBU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RICK,Consumer Cyclical,Restaurants,200744576.0,2026-10-21T01:40:07Z
 RIG,Energy,Oil & Gas Drilling,6500242432.0,2026-10-21T01:27:23Z
 RIGL,Healthcare,Biotechnology,898688256.0,2026-10-21T01:23:01Z
@@ -4579,7 +4581,7 @@ RNAC,Healthcare,Biotechnology,193482976.0,2026-10-21T01:55:48Z
 RNAZ,Healthcare,Biotechnology,28443642.0,2026-10-21T02:16:54Z
 RNG,Technology,Software - Application,6815773184.0,2026-10-21T01:23:01Z
 RNGR,Energy,Oil & Gas Equipment & Services,349715520.0,2026-10-21T01:43:09Z
-RNGTU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+RNGTU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RNP,Financial Services,Asset Management,888481472.0,2026-10-21T01:49:07Z
 RNR,Financial Services,Insurance - Reinsurance,14723081216.0,2026-10-21T01:27:23Z
 RNST,Financial Services,Banks - Regional,3687256064.0,2026-10-21T01:37:13Z
@@ -4622,7 +4624,7 @@ RSKD,Technology,Software - Application,1157970944.0,2026-10-21T01:23:01Z
 RSSS,Technology,Software - Application,66850084.0,2026-10-21T01:58:34Z
 RSVR,Communication Services,Entertainment,627001408.0,2026-10-21T01:37:13Z
 RTAC,Financial Services,Shell Companies,325947072.0,2026-10-21T01:43:09Z
-RTACU,Financial Services,Shell Companies,,2026-11-11T02:08:28Z
+RTACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 RTACW,,,,2026-10-21T00:19:30Z
 RTB,Technology,Software - Application,112099992.0,2026-10-21T01:51:56Z
 RTO,Industrials,Specialty Business Services,10673889280.0,2026-10-21T02:01:38Z
@@ -4690,7 +4692,7 @@ SANM,Technology,Electronic Components,9098686464.0,2026-10-21T01:45:49Z
 SAP,Technology,Software - Application,264289697792.0,2026-10-21T01:27:23Z
 SAR,Financial Services,Asset Management,221102464.0,2026-10-21T02:01:38Z
 SARO,Industrials,Aerospace & Defense,7091603456.0,2026-10-21T01:58:34Z
-SATA,Financial Services,Asset Management,,2026-11-10T04:19:44Z
+SATA,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 SATL,Industrials,Aerospace & Defense,567300224.0,2026-10-21T01:45:49Z
 SAY,,,,2026-10-21T00:19:30Z
 SAZ,,,,2026-10-21T00:19:30Z
@@ -4738,7 +4740,7 @@ SDEV,Financial Services,Asset Management,42953628.0,2026-10-21T02:10:51Z
 SDGR,Healthcare,Health Information Services,1750451712.0,2026-10-21T01:23:01Z
 SDHC,Real Estate,Real Estate - Development,83924840.0,2026-10-21T02:04:26Z
 SDHI,Financial Services,Shell Companies,368237664.0,2026-10-21T01:40:07Z
-SDHIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SDHIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SDHY,Financial Services,Asset Management,373056608.0,2026-10-21T01:45:49Z
 SDOT,Consumer Defensive,Farm Products,12738614.0,2026-10-21T02:16:54Z
 SDRL,Energy,Oil & Gas Drilling,2985728768.0,2026-10-21T01:27:23Z
@@ -4815,13 +4817,13 @@ SIFY,Communication Services,Telecom Services,833722432.0,2026-10-21T01:55:48Z
 SIG,Consumer Cyclical,Luxury Goods,4434071552.0,2026-10-21T01:27:23Z
 SIGA,Healthcare,Drug Manufacturers - Specialty & Generic,226326592.0,2026-10-21T02:01:38Z
 SIGI,Financial Services,Insurance - Property & Casualty,5327862272.0,2026-10-21T01:37:13Z
-SIGIP,Financial Services,Insurance - Property & Casualty,,2026-11-11T02:08:28Z
+SIGIP,Financial Services,Insurance - Property & Casualty,,2026-11-14T02:13:12Z
 SII,Financial Services,Asset Management,2725605120.0,2026-10-21T01:43:09Z
 SILC,Technology,Communication Equipment,233123104.0,2026-10-21T01:23:01Z
 SILO,Healthcare,Biotechnology,2463900.0,2026-10-21T02:16:54Z
 SIM,Basic Materials,Steel,4287960832.0,2026-10-21T01:45:49Z
 SIMA,Financial Services,Shell Companies,90495984.0,2026-10-21T01:40:07Z
-SIMAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SIMAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SIMO,Technology,Semiconductors,7246190080.0,2026-10-21T01:23:01Z
 SINT,Healthcare,Medical Devices,12999886.0,2026-10-21T01:58:34Z
 SION,Healthcare,Biotechnology,187373872.0,2026-10-21T02:16:54Z
@@ -4860,13 +4862,13 @@ SLGL,Healthcare,Biotechnology,215461872.0,2026-10-21T01:43:09Z
 SLGN,Consumer Cyclical,Packaging & Containers,4216712704.0,2026-10-21T01:49:07Z
 SLI,Basic Materials,Other Industrial Metals & Mining,370176256.0,2026-10-21T02:07:27Z
 SLM,Financial Services,Credit Services,4184880128.0,2026-10-21T01:51:56Z
-SLMBP,Financial Services,Credit Services,,2026-11-11T02:08:28Z
+SLMBP,Financial Services,Credit Services,,2026-11-14T02:13:12Z
 SLMT,Technology,Software - Infrastructure,31706768.0,2026-10-21T02:10:51Z
 SLN,Healthcare,Biotechnology,1218841728.0,2026-10-21T01:23:01Z
 SLND,Industrials,Engineering & Construction,42034904.0,2026-10-21T02:01:38Z
 SLNG,Energy,Oil & Gas Integrated,85542976.0,2026-10-21T01:37:13Z
 SLNH,Financial Services,Capital Markets,141128768.0,2026-10-21T02:10:51Z
-SLNHP,Financial Services,Capital Markets,,2026-11-12T02:53:53Z
+SLNHP,Financial Services,Capital Markets,,2026-11-14T02:13:12Z
 SLQT,Financial Services,Insurance Brokers,54477664.0,2026-10-21T02:10:51Z
 SLRC,Financial Services,Asset Management,606647488.0,2026-10-21T01:55:48Z
 SLS,Healthcare,Biotechnology,2419309568.0,2026-10-21T01:23:01Z
@@ -4926,7 +4928,7 @@ SOAR,Industrials,Airports & Air Services,13676478.0,2026-10-21T01:32:00Z
 SOBO,Energy,Oil & Gas Midstream,7187946496.0,2026-10-21T01:32:00Z
 SOC,Energy,Oil & Gas Drilling,606307840.0,2026-10-21T02:10:51Z
 SOCA,Financial Services,Shell Companies,244114496.0,2026-10-21T01:40:07Z
-SOCAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SOCAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SOFI,Financial Services,Credit Services,18960252928.0,2026-10-21T02:01:38Z
 SOGP,Communication Services,Internet Content & Information,42433172.0,2026-10-21T01:55:48Z
 SOHU,Communication Services,Electronic Gaming & Multimedia,377922080.0,2026-10-21T01:51:56Z
@@ -4936,7 +4938,7 @@ SOJE,,,,2026-10-21T00:19:30Z
 SOJF,,,,2026-10-21T00:19:30Z
 SOLS,Basic Materials,Specialty Chemicals,10323490816.0,2026-10-21T22:56:21Z
 SOLV,Healthcare,Medical Instruments & Supplies,14705628160.0,2026-10-21T01:32:00Z
-SOMN,Utilities,Utilities - Regulated Electric,,2026-11-12T02:53:53Z
+SOMN,Utilities,Utilities - Regulated Electric,,2026-11-14T02:13:12Z
 SON,Consumer Cyclical,Packaging & Containers,5025816576.0,2026-10-21T01:40:07Z
 SONM,Financial Services,Capital Markets,4599356.0,2026-10-21T02:01:38Z
 SONO,Technology,Consumer Electronics,2054766464.0,2026-10-21T01:32:00Z
@@ -4955,7 +4957,7 @@ SPCB,Industrials,Security & Protection Services,56838092.0,2026-10-21T01:49:07Z
 SPCE,Industrials,Aerospace & Defense,359282272.0,2026-10-21T01:58:34Z
 SPE,Financial Services,Asset Management,134240976.0,2026-10-21T01:49:07Z
 SPEG,Financial Services,Shell Companies,159773328.0,2026-10-21T01:40:07Z
-SPEGU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SPEGU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SPFI,Financial Services,Banks - Regional,824775936.0,2026-10-21T01:37:13Z
 SPG,Real Estate,REIT - Retail,78578270208.0,2026-10-21T01:37:13Z
 SPGI,Financial Services,Financial Data & Stock Exchanges,129157775360.0,2026-10-21T01:43:09Z
@@ -4963,9 +4965,9 @@ SPH,Utilities,Utilities - Regulated Gas,1161462656.0,2026-10-21T01:45:49Z
 SPHL,Consumer Cyclical,Residential Construction,5496614.0,2026-10-21T01:58:34Z
 SPHR,Communication Services,Entertainment,4052491520.0,2026-10-21T01:32:00Z
 SPIR,Industrials,Specialty Business Services,343038976.0,2026-10-21T02:01:38Z
-SPMA,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+SPMA,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 SPMC,Financial Services,Asset Management,127628472.0,2026-10-21T02:04:26Z
-SPME,Financial Services,Asset Management,,2026-11-12T02:53:53Z
+SPME,Financial Services,Asset Management,,2026-11-14T02:13:12Z
 SPNT,Financial Services,Insurance - Reinsurance,2964531200.0,2026-10-21T01:32:00Z
 SPOK,Healthcare,Health Information Services,220686336.0,2026-10-21T01:49:07Z
 SPOT,Communication Services,Internet Content & Information,108153741312.0,2026-10-21T01:43:09Z
@@ -4982,7 +4984,7 @@ SPWR,Technology,Solar,74950280.0,2026-10-21T02:16:54Z
 SPXC,Industrials,Building Products & Equipment,8226101760.0,2026-10-21T01:58:34Z
 SPXX,Financial Services,Asset Management,337599520.0,2026-10-21T01:32:00Z
 SQFT,Real Estate,REIT - Diversified,1144246.0,2026-10-21T02:16:54Z
-SQFTP,Real Estate,REIT - Diversified,,2026-11-12T02:53:53Z
+SQFTP,Real Estate,REIT - Diversified,,2026-11-14T02:13:12Z
 SQM,Basic Materials,Specialty Chemicals,17152550912.0,2026-10-21T01:49:07Z
 SQNS,Technology,Semiconductors,36301868.0,2026-10-21T02:01:38Z
 SR,Utilities,Utilities - Regulated Gas,4899860480.0,2026-10-21T01:43:09Z
@@ -5007,7 +5009,7 @@ SSB,Financial Services,Banks - Regional,9951526912.0,2026-10-21T01:37:13Z
 SSBI,Financial Services,Banks - Regional,81131728.0,2026-10-21T01:49:07Z
 SSD,Basic Materials,Lumber & Wood Production,7401833472.0,2026-10-21T01:43:09Z
 SSEA,Financial Services,Shell Companies,79489424.0,2026-10-21T01:40:07Z
-SSEAU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SSEAU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SSII,Healthcare,Medical Devices,509240608.0,2026-10-21T02:07:27Z
 SSL,Basic Materials,Specialty Chemicals,10211730432.0,2026-10-21T01:23:01Z
 SSM,Consumer Cyclical,Auto Manufacturers,1713855.0,2026-10-21T02:16:54Z
@@ -5048,14 +5050,14 @@ STNE,Technology,Software - Infrastructure,2783289088.0,2026-10-21T01:43:09Z
 STNG,Energy,Oil & Gas Midstream,4046072576.0,2026-10-21T01:27:23Z
 STOK,Healthcare,Biotechnology,1717043328.0,2026-10-21T01:51:56Z
 STRA,Consumer Defensive,Education & Training Services,1794370944.0,2026-10-21T01:40:07Z
-STRC,Technology,Software - Application,,2026-11-12T02:53:53Z
-STRD,Technology,Software - Application,,2026-11-12T02:53:53Z
-STRF,Technology,Software - Application,,2026-11-12T02:53:53Z
-STRK,Technology,Software - Application,,2026-11-12T02:53:53Z
+STRC,Technology,Software - Application,,2026-11-14T02:13:12Z
+STRD,Technology,Software - Application,,2026-11-14T02:13:12Z
+STRF,Technology,Software - Application,,2026-11-14T02:13:12Z
+STRK,Technology,Software - Application,,2026-11-14T02:13:12Z
 STRL,Industrials,Engineering & Construction,12610116608.0,2026-10-21T01:51:56Z
 STRO,Healthcare,Biotechnology,191346720.0,2026-10-21T02:04:26Z
 STRR,Industrials,Staffing & Employment Services,36672664.0,2026-10-21T01:45:49Z
-STRRP,Industrials,Staffing & Employment Services,,2026-11-11T02:08:28Z
+STRRP,Industrials,Staffing & Employment Services,,2026-11-14T02:13:12Z
 STRT,Consumer Cyclical,Auto Parts,240967376.0,2026-10-21T01:58:34Z
 STRW,Real Estate,REIT - Healthcare Facilities,707057664.0,2026-10-21T01:43:09Z
 STRZ,Communication Services,Entertainment,398650720.0,2026-10-21T01:23:01Z
@@ -5080,7 +5082,7 @@ SURG,Communication Services,Telecom Services,6349010.0,2026-10-21T02:16:54Z
 SUZ,Basic Materials,Paper & Paper Products,10406687744.0,2026-10-21T01:45:49Z
 SVC,Real Estate,REIT - Hotel & Motel,773171648.0,2026-10-21T02:04:26Z
 SVCC,Financial Services,Shell Companies,231279680.0,2026-10-21T01:40:07Z
-SVCCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SVCCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 SVCO,Technology,Software - Application,220257440.0,2026-10-21T01:43:09Z
 SVIA,Financial Services,Capital Markets,295674176.0,2026-10-21T01:23:01Z
 SVIAW,,,,2026-10-21T00:19:30Z
@@ -5115,13 +5117,13 @@ SYPR,Consumer Cyclical,Auto Parts,40756784.0,2026-10-21T02:01:38Z
 SYRE,Healthcare,Biotechnology,8541515776.0,2026-10-21T01:23:01Z
 SYY,Consumer Defensive,Food Distribution,40774746112.0,2026-10-21T01:37:13Z
 SZZL,Financial Services,Shell Companies,328612672.0,2026-10-21T01:40:07Z
-SZZLU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+SZZLU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 T,Communication Services,Telecom Services,160482869248.0,2026-10-21T01:43:09Z
 TAC,Utilities,Utilities - Independent Power Producers,4102411008.0,2026-10-21T01:45:49Z
 TACH,Financial Services,Shell Companies,363629984.0,2026-10-21T01:40:07Z
-TACHU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TACHU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TACO,Financial Services,Shell Companies,393008928.0,2026-10-21T01:40:07Z
-TACOU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TACOU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TACT,Technology,Computer Hardware,48163656.0,2026-10-21T01:32:00Z
 TAK,Healthcare,Drug Manufacturers - Specialty & Generic,64147009536.0,2026-10-21T01:27:23Z
 TAL,Consumer Defensive,Education & Training Services,6423440384.0,2026-10-21T01:37:13Z
@@ -5136,7 +5138,7 @@ TARS,Healthcare,Biotechnology,3323613440.0,2026-10-21T01:32:00Z
 TASK,Technology,Information Technology Services,772004736.0,2026-10-21T01:27:23Z
 TATT,Industrials,Aerospace & Defense,426078912.0,2026-10-21T01:58:34Z
 TAVI,Financial Services,Shell Companies,94757808.0,2026-10-21T01:40:07Z
-TAVIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TAVIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TAYD,Industrials,Specialty Industrial Machinery,177642576.0,2026-10-21T01:43:09Z
 TBB,,,,2026-10-21T00:19:30Z
 TBBB,Consumer Defensive,Discount Stores,6916686336.0,2026-10-21T01:23:01Z
@@ -5160,7 +5162,7 @@ TCRX,Healthcare,Biotechnology,15182554.0,2026-10-21T02:16:54Z
 TCX,Technology,Software - Infrastructure,102148592.0,2026-10-21T02:01:38Z
 TD,Financial Services,Banks - Diversified,199440318464.0,2026-10-21T01:27:23Z
 TDAC,Financial Services,Shell Companies,209114352.0,2026-10-21T01:40:07Z
-TDACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TDACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TDAY,Communication Services,Publishing,1029193792.0,2026-10-21T01:32:00Z
 TDC,Technology,Software - Infrastructure,3017850112.0,2026-10-21T01:27:23Z
 TDF,Financial Services,Asset Management,236714368.0,2026-10-21T01:51:56Z
@@ -5171,7 +5173,7 @@ TDS,Communication Services,Telecom Services,3922002176.0,2026-10-21T01:51:56Z
 TDTH,Technology,Information Technology Services,90596696.0,2026-10-21T02:16:54Z
 TDUP,Consumer Cyclical,Internet Retail,300754048.0,2026-10-21T02:10:51Z
 TDW,Energy,Oil & Gas Equipment & Services,4010352128.0,2026-10-21T01:27:23Z
-TDWDU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TDWDU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TDY,Technology,Scientific & Technical Instruments,29306519552.0,2026-10-21T01:40:07Z
 TE,Industrials,Electrical Equipment & Parts,739762240.0,2026-10-21T02:10:51Z
 TEAD,Communication Services,Internet Content & Information,39235868.0,2026-10-21T02:07:27Z
@@ -5242,7 +5244,7 @@ TLIH,Industrials,Industrial Distribution,15863733.0,2026-10-21T01:27:23Z
 TLK,Communication Services,Telecom Services,11474822144.0,2026-10-21T02:01:38Z
 TLN,Utilities,Utilities - Independent Power Producers,16528038912.0,2026-10-21T01:45:49Z
 TLNC,Financial Services,Shell Companies,347095488.0,2026-10-21T01:43:09Z
-TLNCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TLNCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TLPH,Healthcare,Drug Manufacturers - Specialty & Generic,55539204.0,2026-10-21T01:40:07Z
 TLRY,Healthcare,Drug Manufacturers - Specialty & Generic,447796192.0,2026-10-21T02:07:27Z
 TLS,Technology,Software - Infrastructure,329589248.0,2026-10-21T01:51:56Z
@@ -5371,9 +5373,9 @@ TUSK,Industrials,Conglomerates,129463200.0,2026-10-21T01:37:13Z
 TUYA,Technology,Software - Infrastructure,1042343552.0,2026-10-21T01:55:48Z
 TV,Communication Services,Telecom Services,1254402816.0,2026-10-21T01:55:48Z
 TVA,Financial Services,Shell Companies,319050016.0,2026-10-21T01:43:09Z
-TVACU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TVACU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TVAI,Financial Services,Shell Companies,283924480.0,2026-10-21T01:40:07Z
-TVAIU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+TVAIU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 TVC,,,,2026-10-21T00:19:30Z
 TVE,,,,2026-10-21T00:19:30Z
 TVGN,Healthcare,Biotechnology,44408704.0,2026-10-21T01:49:07Z
@@ -5446,7 +5448,7 @@ ULS,Industrials,Specialty Business Services,14811250688.0,2026-10-21T01:51:56Z
 ULTA,Consumer Cyclical,Specialty Retail,25778481152.0,2026-10-21T01:32:00Z
 UMAC,Technology,Computer Hardware,818287488.0,2026-10-21T01:43:09Z
 UMBF,Financial Services,Banks - Regional,10108189696.0,2026-10-21T01:37:13Z
-UMBFO,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+UMBFO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 UMC,Technology,Semiconductors,49330561024.0,2026-10-21T01:23:01Z
 UMH,Real Estate,REIT - Residential,1309856000.0,2026-10-21T01:40:07Z
 UNB,Financial Services,Banks - Regional,114397920.0,2026-10-21T01:45:49Z
@@ -5504,7 +5506,7 @@ UVV,Consumer Defensive,Tobacco,987006464.0,2026-10-21T01:58:34Z
 UWMC,Financial Services,Mortgage Finance,1767657728.0,2026-10-21T02:10:51Z
 UXIN,Consumer Cyclical,Auto & Truck Dealerships,206605456.0,2026-10-21T02:10:51Z
 UYSC,Financial Services,Shell Companies,83552576.0,2026-10-21T01:40:07Z
-UYSCU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+UYSCU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 UZD,,,,2026-10-21T00:19:30Z
 UZE,,,,2026-10-21T00:19:30Z
 UZF,,,,2026-10-21T00:19:30Z
@@ -5579,14 +5581,14 @@ VLGEA,Consumer Defensive,Grocery Stores,638300800.0,2026-10-21T01:32:00Z
 VLN,Technology,Semiconductors,172165296.0,2026-10-21T01:49:07Z
 VLO,Energy,Oil & Gas Refining & Marketing,124793520128.0,2026-10-21T01:23:01Z
 VLOS,Financial Services,Shell Companies,253479712.0,2026-10-21T01:43:09Z
-VLOSU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+VLOSU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 VLRS,Industrials,Airlines,650624704.0,2026-10-21T02:01:38Z
 VLT,Financial Services,Asset Management,57884952.0,2026-10-31T01:33:33Z
 VLTO,Industrials,Pollution & Treatment Controls,24710893568.0,2026-10-21T01:37:13Z
 VLY,Financial Services,Banks - Regional,7123081728.0,2026-10-21T01:37:13Z
-VLYPN,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-VLYPO,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
-VLYPP,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+VLYPN,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+VLYPO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
+VLYPP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 VMAR,Consumer Cyclical,Recreational Vehicles,4440713.0,2026-10-21T02:10:51Z
 VMC,Basic Materials,Building Materials,33939263488.0,2026-10-21T01:49:07Z
 VMD,Healthcare,Medical Devices,373264640.0,2026-10-21T01:32:00Z
@@ -5597,7 +5599,7 @@ VNCE,Consumer Cyclical,Apparel Manufacturing,151065216.0,2026-10-21T01:23:01Z
 VNDA,Healthcare,Biotechnology,252129408.0,2026-10-21T02:01:38Z
 VNET,Technology,Information Technology Services,1169456384.0,2026-10-21T02:07:27Z
 VNME,Financial Services,Shell Companies,257750016.0,2026-10-21T01:40:07Z
-VNMEU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+VNMEU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 VNO,Real Estate,REIT - Office,6557396992.0,2026-10-21T01:45:49Z
 VNOM,Energy,Oil & Gas Midstream,16469085184.0,2026-10-21T01:32:00Z
 VNRX,Healthcare,Medical Devices,5206507.0,2026-10-21T02:16:54Z
@@ -5659,7 +5661,7 @@ W,Consumer Cyclical,Internet Retail,15554093056.0,2026-10-21T01:27:23Z
 WAB,Industrials,Railroads,47874400256.0,2026-10-21T01:32:00Z
 WABC,Financial Services,Banks - Regional,1409780224.0,2026-10-21T01:32:00Z
 WAFD,Financial Services,Banks - Regional,2118209792.0,2026-10-21T01:51:56Z
-WAFDP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+WAFDP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 WAFU,Consumer Defensive,Education & Training Services,6659944.0,2026-10-21T01:51:56Z
 WAL,Financial Services,Banks - Regional,8215295488.0,2026-10-21T01:45:49Z
 WASH,Financial Services,Banks - Regional,726922368.0,2026-10-21T01:27:23Z
@@ -5683,14 +5685,14 @@ WDC,Technology,Computer Hardware,136373452800.0,2026-10-21T01:23:01Z
 WDFC,Basic Materials,Specialty Chemicals,2703142912.0,2026-10-21T01:49:07Z
 WDH,Financial Services,Insurance - Diversified,362894976.0,2026-10-21T02:01:38Z
 WDI,Financial Services,Asset Management,603737920.0,2026-10-21T01:49:07Z
-WDS,Energy,Oil & Gas E&P,,2026-11-12T02:53:53Z
+WDS,Energy,Oil & Gas E&P,,2026-11-14T02:13:12Z
 WEA,Financial Services,Asset Management,114740352.0,2026-10-29T01:44:18Z
 WEAV,Healthcare,Health Information Services,594528768.0,2026-10-21T01:27:23Z
 WEC,Utilities,Utilities - Regulated Electric,35436118016.0,2026-10-21T01:43:09Z
 WELL,Real Estate,REIT - Healthcare Facilities,171553783808.0,2026-10-21T01:32:00Z
 WEN,Consumer Cyclical,Restaurants,1243168000.0,2026-10-21T01:51:56Z
 WENN,Financial Services,Shell Companies,391132992.0,2026-10-21T01:40:07Z
-WENNU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+WENNU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 WERN,Industrials,Trucking,1787319168.0,2026-10-21T01:55:48Z
 WES,Energy,Oil & Gas Midstream,18398664704.0,2026-10-21T01:32:00Z
 WEST,Consumer Defensive,Packaged Foods,903053312.0,2026-10-21T01:23:01Z
@@ -5712,8 +5714,8 @@ WHF,Financial Services,Asset Management,163435952.0,2026-10-21T01:27:23Z
 WHFCL,,,,2026-10-21T00:19:30Z
 WHG,Financial Services,Asset Management,178838672.0,2026-10-21T01:37:13Z
 WHLR,Real Estate,REIT - Retail,542043.0,2026-10-21T02:19:35Z
-WHLRD,Real Estate,REIT - Retail,,2026-11-12T02:53:53Z
-WHLRP,Real Estate,REIT - Retail,,2026-11-12T02:53:53Z
+WHLRD,Real Estate,REIT - Retail,,2026-11-14T02:13:12Z
+WHLRP,Real Estate,REIT - Retail,,2026-11-14T02:13:12Z
 WHR,Consumer Cyclical,"Furnishings, Fixtures & Appliances",1828190592.0,2026-10-21T02:07:27Z
 WHWK,Healthcare,Biotechnology,181858736.0,2026-10-21T01:43:09Z
 WIA,Financial Services,Asset Management,177948816.0,2026-10-21T01:45:49Z
@@ -5760,7 +5762,7 @@ WRLD,Financial Services,Credit Services,776331584.0,2026-10-21T01:40:07Z
 WRN,Basic Materials,Other Industrial Metals & Mining,407115744.0,2026-10-21T02:01:38Z
 WS,Basic Materials,Steel,2064945152.0,2026-10-21T01:32:00Z
 WSBC,Financial Services,Banks - Regional,3608938752.0,2026-10-21T01:37:13Z
-WSBCO,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+WSBCO,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 WSBF,Financial Services,Banks - Regional,356664224.0,2026-10-21T01:32:00Z
 WSBK,Financial Services,Banks - Regional,115952008.0,2026-10-21T01:32:00Z
 WSC,Industrials,Rental & Leasing Services,2944353024.0,2026-10-21T02:01:38Z
@@ -5773,9 +5775,9 @@ WT,Financial Services,Asset Management,3274176768.0,2026-10-21T01:27:23Z
 WTBA,Financial Services,Banks - Regional,501426944.0,2026-10-21T01:27:23Z
 WTF,Financial Services,Capital Markets,113358056.0,2026-10-21T02:04:26Z
 WTFC,Financial Services,Banks - Regional,9867377664.0,2026-10-21T01:40:07Z
-WTFCN,Financial Services,Banks - Regional,,2026-11-12T02:53:53Z
+WTFCN,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 WTG,Financial Services,Shell Companies,78205760.0,2026-10-21T01:40:07Z
-WTGUU,Financial Services,Shell Companies,,2026-11-12T02:53:53Z
+WTGUU,Financial Services,Shell Companies,,2026-11-14T02:13:12Z
 WTI,Energy,Oil & Gas E&P,596224640.0,2026-10-21T01:23:01Z
 WTM,Financial Services,Insurance - Property & Casualty,5283269632.0,2026-10-21T01:37:13Z
 WTRG,Utilities,Utilities - Regulated Water,11623279616.0,2026-10-21T01:37:13Z
@@ -5786,7 +5788,7 @@ WU,Financial Services,Credit Services,1936768512.0,2026-10-21T01:58:34Z
 WULF,Financial Services,Capital Markets,5992613888.0,2026-10-21T02:01:38Z
 WVE,Healthcare,Biotechnology,673904768.0,2026-10-21T02:07:27Z
 WVVI,Consumer Defensive,Beverages - Wineries & Distilleries,9809672.0,2026-10-21T02:04:26Z
-WVVIP,Consumer Defensive,Beverages - Wineries & Distilleries,,2026-11-12T02:53:53Z
+WVVIP,Consumer Defensive,Beverages - Wineries & Distilleries,,2026-11-14T02:13:12Z
 WW,Healthcare,Medical Care Facilities,134283344.0,2026-10-21T01:51:56Z
 WWD,Industrials,Aerospace & Defense,19134980096.0,2026-10-21T01:45:49Z
 WWR,Basic Materials,Other Industrial Metals & Mining,52711580.0,2026-10-21T02:04:26Z
@@ -5913,7 +5915,7 @@ ZGN,Consumer Cyclical,Apparel Manufacturing,3433717504.0,2026-10-21T01:37:13Z
 ZH,Communication Services,Internet Content & Information,294248800.0,2026-10-21T01:43:09Z
 ZIM,Industrials,Marine Shipping,3511942912.0,2026-10-21T01:23:01Z
 ZION,Financial Services,Banks - Regional,9427127296.0,2026-10-21T01:37:13Z
-ZIONP,Financial Services,Banks - Regional,,2026-11-11T02:08:28Z
+ZIONP,Financial Services,Banks - Regional,,2026-11-14T02:13:12Z
 ZIP,Communication Services,Internet Content & Information,374129056.0,2026-10-21T01:27:23Z
 ZJK,Industrials,Tools & Accessories,108061376.0,2026-10-21T01:58:34Z
 ZJYL,Healthcare,Medical Instruments & Supplies,151566752.0,2026-10-21T01:58:34Z

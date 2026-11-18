@@ -15,13 +15,13 @@
   "page": "docs/index.html reads the CSV only. This JSON is the same rows plus the column contract.",
   "merge": "python scripts/fetch_otc_fin.py --merge FILE [--replace] [--overwrite-otc-fin]. Hermes files (tse_fin or source_otc_tse) fill mkt_fin and prices but do not replace marginMonitor otc_fin unless --overwrite-otc-fin. Aliases on non-Hermes files: fin, finRatio, taiex, tse_close, ewt.",
   "seed": "https://twm-z3sodp.github.io/marginMonitor/history.js",
-  "generated_note": "2026-11-17 21:21",
+  "generated_note": "2026-11-17 22:30",
   "asof": "2026-11-17",
   "otc_fin": 128.44,
   "mkt_asof": "2026-11-06",
   "mkt_fin": 149.98,
   "row_count": 4656,
-  "otc_fin_count": 67,
+  "otc_fin_count": 180,
   "mkt_fin_count": 4378,
   "rows": [
     {
@@ -31295,21 +31295,21 @@
     },
     {
       "date": "2026-02-24",
-      "otc_fin": null,
+      "otc_fin": 175.07,
       "mkt_fin": 189.86,
       "taiex_close": 34700.82,
       "ewt_close": 75.73
     },
     {
       "date": "2026-02-25",
-      "otc_fin": null,
+      "otc_fin": 174.68,
       "mkt_fin": 189.39,
       "taiex_close": 35413.07,
       "ewt_close": 77.06
     },
     {
       "date": "2026-02-26",
-      "otc_fin": null,
+      "otc_fin": 175.93,
       "mkt_fin": 190.33,
       "taiex_close": 35414.49,
       "ewt_close": 76.14
@@ -31323,168 +31323,168 @@
     },
     {
       "date": "2026-03-02",
-      "otc_fin": null,
+      "otc_fin": 176.03,
       "mkt_fin": 189.92,
       "taiex_close": 35095.09,
       "ewt_close": 75.07
     },
     {
       "date": "2026-03-03",
-      "otc_fin": null,
+      "otc_fin": 170.55,
       "mkt_fin": 183.11,
       "taiex_close": 34323.65,
       "ewt_close": 71.29
     },
     {
       "date": "2026-03-04",
-      "otc_fin": null,
+      "otc_fin": 160.69,
       "mkt_fin": 172.88,
       "taiex_close": 32828.88,
       "ewt_close": 71.62
     },
     {
       "date": "2026-03-05",
-      "otc_fin": null,
+      "otc_fin": 165.52,
       "mkt_fin": 178.75,
       "taiex_close": 33672.94,
       "ewt_close": 70.4
     },
     {
       "date": "2026-03-06",
-      "otc_fin": null,
+      "otc_fin": 165.92,
       "mkt_fin": 178.28,
       "taiex_close": 33599.54,
       "ewt_close": 69.52
     },
     {
       "date": "2026-03-09",
-      "otc_fin": null,
+      "otc_fin": 155.17,
       "mkt_fin": 169.01,
       "taiex_close": 32110.42,
       "ewt_close": 70.76
     },
     {
       "date": "2026-03-10",
-      "otc_fin": null,
+      "otc_fin": 160.48,
       "mkt_fin": 173.73,
       "taiex_close": 32771.87,
       "ewt_close": 70.44
     },
     {
       "date": "2026-03-11",
-      "otc_fin": null,
+      "otc_fin": 169.03,
       "mkt_fin": 182.44,
       "taiex_close": 34114.19,
       "ewt_close": 71.91
     },
     {
       "date": "2026-03-12",
-      "otc_fin": null,
+      "otc_fin": 167.92,
       "mkt_fin": 180.67,
       "taiex_close": 33581.86,
       "ewt_close": 69.76
     },
     {
       "date": "2026-03-13",
-      "otc_fin": null,
+      "otc_fin": 169.33,
       "mkt_fin": 181.66,
       "taiex_close": 33400.32,
       "ewt_close": 69.99
     },
     {
       "date": "2026-03-16",
-      "otc_fin": null,
+      "otc_fin": 172.15,
       "mkt_fin": 183.79,
       "taiex_close": 33342.51,
       "ewt_close": 72.03
     },
     {
       "date": "2026-03-17",
-      "otc_fin": null,
+      "otc_fin": 171.53,
       "mkt_fin": 185.79,
       "taiex_close": 33836.57,
       "ewt_close": 73.0
     },
     {
       "date": "2026-03-18",
-      "otc_fin": null,
+      "otc_fin": 175.57,
       "mkt_fin": 189.06,
       "taiex_close": 34348.58,
       "ewt_close": 71.34
     },
     {
       "date": "2026-03-19",
-      "otc_fin": null,
+      "otc_fin": 176.44,
       "mkt_fin": 188.13,
       "taiex_close": 33689.68,
       "ewt_close": 72.14
     },
     {
       "date": "2026-03-20",
-      "otc_fin": null,
+      "otc_fin": 173.2,
       "mkt_fin": 185.35,
       "taiex_close": 33543.88,
       "ewt_close": 69.74
     },
     {
       "date": "2026-03-23",
-      "otc_fin": null,
+      "otc_fin": 164.48,
       "mkt_fin": 177.56,
       "taiex_close": 32722.5,
       "ewt_close": 72.16
     },
     {
       "date": "2026-03-24",
-      "otc_fin": null,
+      "otc_fin": 161.63,
       "mkt_fin": 174.84,
       "taiex_close": 32612.24,
       "ewt_close": 70.74
     },
     {
       "date": "2026-03-25",
-      "otc_fin": null,
+      "otc_fin": 168.82,
       "mkt_fin": 181.08,
       "taiex_close": 33439.11,
       "ewt_close": 72.39
     },
     {
       "date": "2026-03-26",
-      "otc_fin": null,
+      "otc_fin": 166.55,
       "mkt_fin": 179.09,
       "taiex_close": 33337.62,
       "ewt_close": 70.1
     },
     {
       "date": "2026-03-27",
-      "otc_fin": null,
+      "otc_fin": 167.88,
       "mkt_fin": 179.75,
       "taiex_close": 33112.59,
       "ewt_close": 69.49
     },
     {
       "date": "2026-03-30",
-      "otc_fin": null,
+      "otc_fin": 165.54,
       "mkt_fin": 177.06,
       "taiex_close": 32518.16,
       "ewt_close": 68.96
     },
     {
       "date": "2026-03-31",
-      "otc_fin": null,
+      "otc_fin": 156.5,
       "mkt_fin": 169.35,
       "taiex_close": 31722.99,
       "ewt_close": 70.92
     },
     {
       "date": "2026-04-01",
-      "otc_fin": null,
+      "otc_fin": 164.41,
       "mkt_fin": 177.02,
       "taiex_close": 33174.82,
       "ewt_close": 71.72
     },
     {
       "date": "2026-04-02",
-      "otc_fin": null,
+      "otc_fin": 162.06,
       "mkt_fin": 174.02,
       "taiex_close": 32572.43,
       "ewt_close": 70.77
@@ -31498,126 +31498,126 @@
     },
     {
       "date": "2026-04-07",
-      "otc_fin": null,
+      "otc_fin": 166.81,
       "mkt_fin": 178.27,
       "taiex_close": 33229.82,
       "ewt_close": 71.82
     },
     {
       "date": "2026-04-08",
-      "otc_fin": null,
+      "otc_fin": 174.85,
       "mkt_fin": 186.97,
       "taiex_close": 34761.38,
       "ewt_close": 76.36
     },
     {
       "date": "2026-04-09",
-      "otc_fin": null,
+      "otc_fin": 174.27,
       "mkt_fin": 186.68,
       "taiex_close": 34861.16,
       "ewt_close": 76.41
     },
     {
       "date": "2026-04-10",
-      "otc_fin": null,
+      "otc_fin": 177.17,
       "mkt_fin": 189.53,
       "taiex_close": 35417.83,
       "ewt_close": 76.94
     },
     {
       "date": "2026-04-13",
-      "otc_fin": null,
+      "otc_fin": 178.28,
       "mkt_fin": 190.94,
       "taiex_close": 35457.29,
       "ewt_close": 78.26
     },
     {
       "date": "2026-04-14",
-      "otc_fin": null,
+      "otc_fin": 178.44,
       "mkt_fin": 192.11,
       "taiex_close": 36296.12,
       "ewt_close": 80.21
     },
     {
       "date": "2026-04-15",
-      "otc_fin": null,
+      "otc_fin": 177.55,
       "mkt_fin": 192.01,
       "taiex_close": 36722.14,
       "ewt_close": 80.74
     },
     {
       "date": "2026-04-16",
-      "otc_fin": null,
+      "otc_fin": 178.51,
       "mkt_fin": 194.02,
       "taiex_close": 37132.02,
       "ewt_close": 81.35
     },
     {
       "date": "2026-04-17",
-      "otc_fin": null,
+      "otc_fin": 182.74,
       "mkt_fin": 195.81,
       "taiex_close": 36804.34,
       "ewt_close": 83.22
     },
     {
       "date": "2026-04-20",
-      "otc_fin": null,
+      "otc_fin": 187.68,
       "mkt_fin": 198.97,
       "taiex_close": 36958.8,
       "ewt_close": 83.59
     },
     {
       "date": "2026-04-21",
-      "otc_fin": null,
+      "otc_fin": 189.0,
       "mkt_fin": 201.81,
       "taiex_close": 37605.11,
       "ewt_close": 83.53
     },
     {
       "date": "2026-04-22",
-      "otc_fin": null,
+      "otc_fin": 188.19,
       "mkt_fin": 202.64,
       "taiex_close": 37878.47,
       "ewt_close": 86.19
     },
     {
       "date": "2026-04-23",
-      "otc_fin": null,
+      "otc_fin": 178.41,
       "mkt_fin": 194.93,
       "taiex_close": 37714.15,
       "ewt_close": 84.24
     },
     {
       "date": "2026-04-24",
-      "otc_fin": null,
+      "otc_fin": 176.23,
       "mkt_fin": 195.61,
       "taiex_close": 38932.4,
       "ewt_close": 88.09
     },
     {
       "date": "2026-04-27",
-      "otc_fin": null,
+      "otc_fin": 171.81,
       "mkt_fin": 193.91,
       "taiex_close": 39616.63,
       "ewt_close": 87.35
     },
     {
       "date": "2026-04-28",
-      "otc_fin": null,
+      "otc_fin": 174.99,
       "mkt_fin": 196.32,
       "taiex_close": 39521.73,
       "ewt_close": 87.24
     },
     {
       "date": "2026-04-29",
-      "otc_fin": null,
+      "otc_fin": 174.83,
       "mkt_fin": 195.8,
       "taiex_close": 39303.5,
       "ewt_close": 87.19
     },
     {
       "date": "2026-04-30",
-      "otc_fin": null,
+      "otc_fin": 175.07,
       "mkt_fin": 195.72,
       "taiex_close": 38926.63,
       "ewt_close": 89.88
@@ -31631,336 +31631,336 @@
     },
     {
       "date": "2026-05-04",
-      "otc_fin": null,
+      "otc_fin": 179.93,
       "mkt_fin": 201.72,
       "taiex_close": 40705.14,
       "ewt_close": 90.41
     },
     {
       "date": "2026-05-05",
-      "otc_fin": null,
+      "otc_fin": 183.19,
       "mkt_fin": 203.96,
       "taiex_close": 40769.29,
       "ewt_close": 92.77
     },
     {
       "date": "2026-05-06",
-      "otc_fin": null,
+      "otc_fin": 180.56,
       "mkt_fin": 202.74,
       "taiex_close": 41138.85,
       "ewt_close": 94.85
     },
     {
       "date": "2026-05-07",
-      "otc_fin": null,
+      "otc_fin": 181.29,
       "mkt_fin": 204.32,
       "taiex_close": 41933.78,
       "ewt_close": 94.31
     },
     {
       "date": "2026-05-08",
-      "otc_fin": null,
+      "otc_fin": 176.8,
       "mkt_fin": 200.15,
       "taiex_close": 41603.94,
       "ewt_close": 96.11
     },
     {
       "date": "2026-05-11",
-      "otc_fin": null,
+      "otc_fin": 181.78,
       "mkt_fin": 206.05,
       "taiex_close": 41790.06,
       "ewt_close": 97.15
     },
     {
       "date": "2026-05-12",
-      "otc_fin": null,
+      "otc_fin": 181.77,
       "mkt_fin": 206.34,
       "taiex_close": 41898.32,
       "ewt_close": 93.77
     },
     {
       "date": "2026-05-13",
-      "otc_fin": null,
+      "otc_fin": 176.94,
       "mkt_fin": 201.69,
       "taiex_close": 41374.5,
       "ewt_close": 94.86
     },
     {
       "date": "2026-05-14",
-      "otc_fin": null,
+      "otc_fin": 177.76,
       "mkt_fin": 202.71,
       "taiex_close": 41751.75,
       "ewt_close": 95.48
     },
     {
       "date": "2026-05-15",
-      "otc_fin": null,
+      "otc_fin": 169.47,
       "mkt_fin": 196.43,
       "taiex_close": 41172.36,
       "ewt_close": 91.28
     },
     {
       "date": "2026-05-18",
-      "otc_fin": null,
+      "otc_fin": 169.79,
       "mkt_fin": 196.33,
       "taiex_close": 40891.82,
       "ewt_close": 91.76
     },
     {
       "date": "2026-05-19",
-      "otc_fin": null,
+      "otc_fin": 163.77,
       "mkt_fin": 190.91,
       "taiex_close": 40175.56,
       "ewt_close": 89.83
     },
     {
       "date": "2026-05-20",
-      "otc_fin": null,
+      "otc_fin": 162.76,
       "mkt_fin": 190.41,
       "taiex_close": 40020.82,
       "ewt_close": 91.92
     },
     {
       "date": "2026-05-21",
-      "otc_fin": null,
+      "otc_fin": 169.01,
       "mkt_fin": 198.27,
       "taiex_close": 41368.21,
       "ewt_close": 94.47
     },
     {
       "date": "2026-05-22",
-      "otc_fin": null,
+      "otc_fin": 174.96,
       "mkt_fin": 205.36,
       "taiex_close": 42267.97,
       "ewt_close": 96.84
     },
     {
       "date": "2026-05-25",
-      "otc_fin": null,
+      "otc_fin": 179.62,
       "mkt_fin": 211.32,
       "taiex_close": 43644.4,
       "ewt_close": null
     },
     {
       "date": "2026-05-26",
-      "otc_fin": null,
+      "otc_fin": 180.8,
       "mkt_fin": 211.18,
       "taiex_close": 43525.37,
       "ewt_close": 102.14
     },
     {
       "date": "2026-05-27",
-      "otc_fin": null,
+      "otc_fin": 177.41,
       "mkt_fin": 209.56,
       "taiex_close": 44256.8,
       "ewt_close": 102.97
     },
     {
       "date": "2026-05-28",
-      "otc_fin": null,
+      "otc_fin": 172.9,
       "mkt_fin": 203.81,
       "taiex_close": 43636.44,
       "ewt_close": 102.34
     },
     {
       "date": "2026-05-29",
-      "otc_fin": null,
+      "otc_fin": 176.92,
       "mkt_fin": 207.85,
       "taiex_close": 44732.94,
       "ewt_close": 102.78
     },
     {
       "date": "2026-06-01",
-      "otc_fin": null,
+      "otc_fin": 178.4,
       "mkt_fin": 211.05,
       "taiex_close": 45337.91,
       "ewt_close": 106.42
     },
     {
       "date": "2026-06-02",
-      "otc_fin": null,
+      "otc_fin": 174.7,
       "mkt_fin": 208.53,
       "taiex_close": 45557.31,
       "ewt_close": 107.11
     },
     {
       "date": "2026-06-03",
-      "otc_fin": null,
+      "otc_fin": 175.41,
       "mkt_fin": 209.09,
       "taiex_close": 46459.16,
       "ewt_close": 106.9
     },
     {
       "date": "2026-06-04",
-      "otc_fin": null,
+      "otc_fin": 170.16,
       "mkt_fin": 202.99,
       "taiex_close": 45677.46,
       "ewt_close": 105.75
     },
     {
       "date": "2026-06-05",
-      "otc_fin": null,
+      "otc_fin": 166.7,
       "mkt_fin": 198.99,
       "taiex_close": 45070.94,
       "ewt_close": 98.08
     },
     {
       "date": "2026-06-08",
-      "otc_fin": null,
+      "otc_fin": 158.06,
       "mkt_fin": 190.77,
       "taiex_close": 43502.78,
       "ewt_close": 100.43
     },
     {
       "date": "2026-06-09",
-      "otc_fin": null,
+      "otc_fin": 163.4,
       "mkt_fin": 197.65,
       "taiex_close": 44704.44,
       "ewt_close": 100.8
     },
     {
       "date": "2026-06-10",
-      "otc_fin": null,
+      "otc_fin": 154.23,
       "mkt_fin": 186.83,
       "taiex_close": 43225.54,
       "ewt_close": 98.0
     },
     {
       "date": "2026-06-11",
-      "otc_fin": null,
+      "otc_fin": 153.97,
       "mkt_fin": 187.86,
       "taiex_close": 43149.46,
       "ewt_close": 102.45
     },
     {
       "date": "2026-06-12",
-      "otc_fin": null,
+      "otc_fin": 158.98,
       "mkt_fin": 192.46,
       "taiex_close": 44169.04,
       "ewt_close": 102.62
     },
     {
       "date": "2026-06-15",
-      "otc_fin": null,
+      "otc_fin": 163.45,
       "mkt_fin": 198.22,
       "taiex_close": 45396.99,
       "ewt_close": 106.37
     },
     {
       "date": "2026-06-16",
-      "otc_fin": null,
+      "otc_fin": 163.15,
       "mkt_fin": 198.16,
       "taiex_close": 45809.19,
       "ewt_close": 103.79
     },
     {
       "date": "2026-06-17",
-      "otc_fin": null,
+      "otc_fin": 164.22,
       "mkt_fin": 199.76,
       "taiex_close": 45877.39,
       "ewt_close": 105.11
     },
     {
       "date": "2026-06-18",
-      "otc_fin": null,
+      "otc_fin": 170.05,
       "mkt_fin": 204.4,
       "taiex_close": 46465.2,
       "ewt_close": 109.99
     },
     {
       "date": "2026-06-22",
-      "otc_fin": null,
+      "otc_fin": 172.11,
       "mkt_fin": 207.31,
       "taiex_close": 47741.51,
       "ewt_close": 111.53
     },
     {
       "date": "2026-06-23",
-      "otc_fin": null,
+      "otc_fin": 165.49,
       "mkt_fin": 200.17,
       "taiex_close": 47100.65,
       "ewt_close": 105.24
     },
     {
       "date": "2026-06-24",
-      "otc_fin": null,
+      "otc_fin": 164.83,
       "mkt_fin": 198.85,
       "taiex_close": 46043.6,
       "ewt_close": 104.72
     },
     {
       "date": "2026-06-25",
-      "otc_fin": null,
+      "otc_fin": 163.5,
       "mkt_fin": 199.2,
       "taiex_close": 46255.26,
       "ewt_close": 104.91
     },
     {
       "date": "2026-06-26",
-      "otc_fin": null,
+      "otc_fin": 153.72,
       "mkt_fin": 188.73,
       "taiex_close": 44571.76,
       "ewt_close": 102.81
     },
     {
       "date": "2026-06-29",
-      "otc_fin": null,
+      "otc_fin": 152.97,
       "mkt_fin": 189.28,
       "taiex_close": 44999.9,
       "ewt_close": 105.79
     },
     {
       "date": "2026-06-30",
-      "otc_fin": null,
+      "otc_fin": 159.07,
       "mkt_fin": 196.2,
       "taiex_close": 46125.91,
       "ewt_close": 108.61
     },
     {
       "date": "2026-07-01",
-      "otc_fin": null,
+      "otc_fin": 159.23,
       "mkt_fin": 195.62,
       "taiex_close": 47018.99,
       "ewt_close": 105.69
     },
     {
       "date": "2026-07-02",
-      "otc_fin": null,
+      "otc_fin": 160.87,
       "mkt_fin": 195.55,
       "taiex_close": 46744.16,
       "ewt_close": 104.86
     },
     {
       "date": "2026-07-03",
-      "otc_fin": null,
+      "otc_fin": 163.72,
       "mkt_fin": 196.54,
       "taiex_close": 46780.62,
       "ewt_close": null
     },
     {
       "date": "2026-07-06",
-      "otc_fin": null,
+      "otc_fin": 162.1,
       "mkt_fin": 193.47,
       "taiex_close": 46556.39,
       "ewt_close": 107.27
     },
     {
       "date": "2026-07-07",
-      "otc_fin": null,
+      "otc_fin": 154.06,
       "mkt_fin": 184.83,
       "taiex_close": 45479.11,
       "ewt_close": 101.88
     },
     {
       "date": "2026-07-08",
-      "otc_fin": null,
+      "otc_fin": 156.22,
       "mkt_fin": 186.03,
       "taiex_close": 45734.41,
       "ewt_close": 103.9
     },
     {
       "date": "2026-07-09",
-      "otc_fin": null,
+      "otc_fin": 157.39,
       "mkt_fin": 186.3,
       "taiex_close": 45354.61,
       "ewt_close": 105.05
@@ -31974,140 +31974,140 @@
     },
     {
       "date": "2026-07-13",
-      "otc_fin": null,
+      "otc_fin": 155.16,
       "mkt_fin": 183.64,
       "taiex_close": 45380.52,
       "ewt_close": 101.88
     },
     {
       "date": "2026-07-14",
-      "otc_fin": null,
+      "otc_fin": 150.12,
       "mkt_fin": 179.85,
       "taiex_close": 44737.95,
       "ewt_close": 101.88
     },
     {
       "date": "2026-07-15",
-      "otc_fin": null,
+      "otc_fin": 153.21,
       "mkt_fin": 184.89,
       "taiex_close": 45631.59,
       "ewt_close": 102.49
     },
     {
       "date": "2026-07-16",
-      "otc_fin": null,
+      "otc_fin": 148.59,
       "mkt_fin": 180.98,
       "taiex_close": 45624.98,
       "ewt_close": 100.16
     },
     {
       "date": "2026-07-17",
-      "otc_fin": null,
+      "otc_fin": 137.37,
       "mkt_fin": 168.76,
       "taiex_close": 42671.27,
       "ewt_close": 97.33
     },
     {
       "date": "2026-07-20",
-      "otc_fin": null,
+      "otc_fin": 133.71,
       "mkt_fin": 165.75,
       "taiex_close": 42449.7,
       "ewt_close": 95.94
     },
     {
       "date": "2026-07-21",
-      "otc_fin": null,
+      "otc_fin": 139.86,
       "mkt_fin": 173.48,
       "taiex_close": 44232.87,
       "ewt_close": 100.58
     },
     {
       "date": "2026-07-22",
-      "otc_fin": null,
+      "otc_fin": 145.6,
       "mkt_fin": 179.31,
       "taiex_close": 44825.78,
       "ewt_close": 101.68
     },
     {
       "date": "2026-07-23",
-      "otc_fin": null,
+      "otc_fin": 145.12,
       "mkt_fin": 177.94,
       "taiex_close": 44850.81,
       "ewt_close": 99.84
     },
     {
       "date": "2026-07-24",
-      "otc_fin": null,
+      "otc_fin": 139.79,
       "mkt_fin": 171.18,
       "taiex_close": 43654.84,
       "ewt_close": 98.01
     },
     {
       "date": "2026-07-27",
-      "otc_fin": null,
+      "otc_fin": 140.86,
       "mkt_fin": 171.66,
       "taiex_close": 43634.19,
       "ewt_close": 97.81
     },
     {
       "date": "2026-07-28",
-      "otc_fin": null,
+      "otc_fin": 130.6,
       "mkt_fin": 161.13,
       "taiex_close": 41603.36,
       "ewt_close": 93.95
     },
     {
       "date": "2026-07-29",
-      "otc_fin": null,
+      "otc_fin": 123.99,
       "mkt_fin": 156.0,
       "taiex_close": 40039.18,
       "ewt_close": 89.41
     },
     {
       "date": "2026-07-30",
-      "otc_fin": null,
+      "otc_fin": 120.14,
       "mkt_fin": 154.04,
       "taiex_close": 39933.3,
       "ewt_close": 94.0
     },
     {
       "date": "2026-07-31",
-      "otc_fin": null,
+      "otc_fin": 130.53,
       "mkt_fin": 166.74,
       "taiex_close": 43119.75,
       "ewt_close": 96.55
     },
     {
       "date": "2026-08-03",
-      "otc_fin": null,
+      "otc_fin": 138.03,
       "mkt_fin": 173.79,
       "taiex_close": 43386.41,
       "ewt_close": 97.98
     },
     {
       "date": "2026-08-04",
-      "otc_fin": null,
+      "otc_fin": 145.45,
       "mkt_fin": 179.71,
       "taiex_close": 43360.66,
       "ewt_close": 102.21
     },
     {
       "date": "2026-08-05",
-      "otc_fin": null,
+      "otc_fin": 150.93,
       "mkt_fin": 184.82,
       "taiex_close": 44611.6,
       "ewt_close": 101.7
     },
     {
       "date": "2026-08-06",
-      "otc_fin": null,
+      "otc_fin": 155.57,
       "mkt_fin": 186.98,
       "taiex_close": 44396.7,
       "ewt_close": 101.98
     },
     {
       "date": "2026-08-07",
-      "otc_fin": null,
+      "otc_fin": 151.93,
       "mkt_fin": 183.16,
       "taiex_close": 44225.91,
       "ewt_close": 103.09
@@ -32614,7 +32614,7 @@
       "otc_fin": 128.44,
       "mkt_fin": null,
       "taiex_close": 40092.11,
-      "ewt_close": null
+      "ewt_close": 88.69
     }
   ]
 }

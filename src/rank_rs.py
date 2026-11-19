@@ -38,6 +38,13 @@ import yfinance as yf
 HKT = ZoneInfo("Asia/Hong_Kong")
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "output" / "rs_stocks.csv"
+DEFAULT_FUNDAMENTALS = ROOT / "output" / "fundamentals_latest.csv"
+
+# Overlap vs Fred gates on Percentile>=90. Warn only; this does not change
+# who is ranked or which rows the daily job asks to fill.
+RS90_WARN_PCT = 90.0
+# Treat a fill rate under 1% as ~0 (the 2026-11-19 outage was 0/566).
+RS90_MCAP_FILL_WARN_BELOW = 0.01
 
 NASDAQ_LISTED = "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt"
 OTHER_LISTED = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
@@ -297,29 +304,231 @@ def fetch_info_batch(tickers: Iterable[str]) -> dict[str, dict]:
     return out
 
 
-def fill_info_for_high_pct(df: pd.DataFrame, pct_min: float) -> pd.DataFrame:
-    """Fill Sector/Industry/MarketCap via yfinance for rows with Percentile >= pct_min.
+def _positive_mcap(value) -> float | None:
+    """Positive MarketCap, or None when blank / non-numeric / not positive.
 
-    Full-universe .info is too slow; post-rank top-percentile fill keeps Actions under
-    timeout while enabling RS≥90 & MarketCap>3B overlap vs Fred.
+    Zero and negative values are not usable caps and are not written.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        return None
+    if isinstance(value, str):
+        text = value.replace(",", "").strip()
+        if text == "" or text.lower() in {"nan", "none"}:
+            return None
+        value = text
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number <= 0:
+        return None
+    return number
+
+
+def _blank_text(value) -> bool:
+    if value is None:
+        return True
+    try:
+        if pd.isna(value):
+            return True
+    except (TypeError, ValueError):
+        return False
+    text = str(value).strip()
+    return text == "" or text.lower() in {"nan", "none"}
+
+
+def _cache_text(value) -> str:
+    if _blank_text(value):
+        return ""
+    return str(value).strip()
+
+
+def _load_fundamentals_lookup(path: Path) -> dict[str, dict] | None:
+    """Ticker → Sector/Industry/MarketCap. None if the file cannot be read.
+
+    A later duplicate fills a field only when it has a real value, so a blank
+    duplicate does not wipe an earlier cap.
+    """
+    try:
+        raw = pd.read_csv(path)
+    except Exception as exc:
+        print(f"WARNING: could not read fundamentals cache {path}: {exc}", file=sys.stderr, flush=True)
+        return None
+    if "Ticker" not in raw.columns:
+        print(f"WARNING: fundamentals cache {path} has no Ticker column", file=sys.stderr, flush=True)
+        return {}
+    lookup: dict[str, dict] = {}
+    for rec in raw.to_dict("records"):
+        ticker = str(rec.get("Ticker") or "").strip().upper()
+        if not ticker or ticker == "NAN":
+            continue
+        sector = _cache_text(rec.get("Sector"))
+        industry = _cache_text(rec.get("Industry"))
+        mcap = _positive_mcap(rec.get("MarketCap"))
+        prev = lookup.get(ticker)
+        if prev is None:
+            lookup[ticker] = {"Sector": sector, "Industry": industry, "MarketCap": mcap}
+            continue
+        if sector:
+            prev["Sector"] = sector
+        if industry:
+            prev["Industry"] = industry
+        if mcap is not None:
+            prev["MarketCap"] = mcap
+    return lookup
+
+
+def backfill_blanks_from_fundamentals(
+    df: pd.DataFrame,
+    mask: pd.Series,
+    path: Path,
+) -> dict[str, int | bool]:
+    """Fill blank Sector/Industry/MarketCap on `mask` from the fundamentals cache.
+
+    Live-filled cells are left alone. Rows outside `mask` are left alone.
+    Missing file → zero fills and present=False.
+    """
+    stats: dict[str, int | bool] = {
+        "mcap": 0,
+        "sector": 0,
+        "industry": 0,
+        "present": path.exists(),
+        "readable": False,
+    }
+    if not path.exists():
+        return stats
+    lookup = _load_fundamentals_lookup(path)
+    if lookup is None:
+        return stats
+    stats["readable"] = True
+    for i in df.index[mask]:
+        ticker = str(df.at[i, "Ticker"]).strip().upper()
+        meta = lookup.get(ticker)
+        if not meta:
+            continue
+        if _blank_text(df.at[i, "Sector"]) and meta["Sector"]:
+            df.at[i, "Sector"] = meta["Sector"]
+            stats["sector"] = int(stats["sector"]) + 1
+        if _blank_text(df.at[i, "Industry"]) and meta["Industry"]:
+            df.at[i, "Industry"] = meta["Industry"]
+            stats["industry"] = int(stats["industry"]) + 1
+        if _positive_mcap(df.at[i, "MarketCap"]) is None and meta["MarketCap"] is not None:
+            df.at[i, "MarketCap"] = meta["MarketCap"]
+            stats["mcap"] = int(stats["mcap"]) + 1
+    return stats
+
+
+def _warn_rs90_mcap_fill(df: pd.DataFrame, cache_path: Path, pct_min: float) -> None:
+    """Loud warning when the overlap slice still has ~0 MarketCap after both sources."""
+    if "Percentile" not in df.columns or df.empty:
+        return
+    # Only judge rows this run was asked to fill that also sit in the RS≥90 gate.
+    floor = max(float(pct_min), RS90_WARN_PCT)
+    pct = pd.to_numeric(df["Percentile"], errors="coerce")
+    mask = pct >= floor
+    n = int(mask.sum())
+    if n == 0:
+        return
+    filled = sum(1 for i in df.index[mask] if _positive_mcap(df.at[i, "MarketCap"]) is not None)
+    rate = filled / n
+    if filled != 0 and rate >= RS90_MCAP_FILL_WARN_BELOW:
+        return
+    label = "RS≥90" if floor <= RS90_WARN_PCT else f"Percentile>={floor:g}"
+    msg = (
+        f"WARNING: {label} MarketCap fill rate is {filled}/{n} ({rate:.1%}) "
+        f"after live yfinance .info and fundamentals cache ({cache_path}). "
+        f"Overlap vs Fred uses Percentile>=90 and MarketCap>3B and will collapse "
+        f"toward Jaccard 0. Ranks are unchanged, and Daily ###RS≥90 stays on Fred's CSV."
+    )
+    print(msg, flush=True)
+    print(msg, file=sys.stderr, flush=True)
+    # Actions surfaces this on the job summary without failing the rank step.
+    print(f"::warning::{msg}", flush=True)
+
+
+def fill_info_for_high_pct(
+    df: pd.DataFrame,
+    pct_min: float,
+    *,
+    fundamentals_path: Path | None = None,
+    info_fetcher=None,
+) -> pd.DataFrame:
+    """Fill Sector/Industry/MarketCap for rows with Percentile >= pct_min.
+
+    Live yfinance `.info` runs first. Remaining blanks on that slice are filled
+    from output/fundamentals_latest.csv when the file exists. A live value is
+    never replaced by the cache. Rows below pct_min stay blank (the daily job
+    only requests info for the overlap slice).
+
+    Full-universe .info is too slow; post-rank top-percentile fill keeps Actions
+    under timeout while enabling RS≥90 & MarketCap>3B overlap vs Fred.
     """
     if pct_min <= 0 or df.empty:
         return df
-    mask = df["Percentile"].astype(float) >= pct_min
+    mask = pd.to_numeric(df["Percentile"], errors="coerce") >= pct_min
     tickers = df.loc[mask, "Ticker"].tolist()
     if not tickers:
         return df
+    cache_path = Path(fundamentals_path) if fundamentals_path is not None else DEFAULT_FUNDAMENTALS
+    fetcher = info_fetcher or fetch_info_batch
     print(f"fetching info for {len(tickers)} tickers with Percentile>={pct_min:g} …", flush=True)
-    info = fetch_info_batch(tickers)
+
+    info = fetcher(tickers)
     out = df.copy()
+    # A CSV of all-blank Sector/Industry is read as float NaN. Force text columns
+    # so a cache string can be written, including when this frame was reloaded.
+    for col in ("Sector", "Industry"):
+        if col in out.columns:
+            out[col] = [
+                "" if _blank_text(value) else str(value).strip()
+                for value in out[col].tolist()
+            ]
+    if "MarketCap" in out.columns:
+        # Keep object dtype so missing caps stay None instead of NaN. NaN would
+        # count as already filled under an `is None` check.
+        out["MarketCap"] = pd.Series(
+            [_positive_mcap(value) for value in out["MarketCap"].tolist()],
+            index=out.index,
+            dtype=object,
+        )
+    blank_before = {
+        i for i in out.index[mask] if _positive_mcap(out.at[i, "MarketCap"]) is None
+    }
     for i, row in out.loc[mask].iterrows():
-        meta = info.get(row["Ticker"], {})
+        meta = info.get(row["Ticker"], {}) or {}
         if meta.get("Sector"):
             out.at[i, "Sector"] = meta["Sector"]
         if meta.get("Industry"):
             out.at[i, "Industry"] = meta["Industry"]
-        if meta.get("MarketCap") is not None:
-            out.at[i, "MarketCap"] = meta["MarketCap"]
+        mcap = _positive_mcap(meta.get("MarketCap"))
+        if mcap is not None:
+            out.at[i, "MarketCap"] = mcap
+
+    live_filled = sum(1 for i in blank_before if _positive_mcap(out.at[i, "MarketCap"]) is not None)
+    cache_stats = backfill_blanks_from_fundamentals(out, mask, cache_path)
+    still_blank = sum(1 for i in out.index[mask] if _positive_mcap(out.at[i, "MarketCap"]) is None)
+    if not cache_stats["present"]:
+        cache_note = f" cache=missing:{cache_path}"
+    elif not cache_stats["readable"]:
+        cache_note = f" cache=unreadable:{cache_path}"
+    else:
+        cache_note = ""
+    already = int(mask.sum()) - len(blank_before)
+    already_note = f" already-filled={already}" if already else ""
+    print(
+        f"info fill Percentile>={pct_min:g}: attempted={len(tickers)} "
+        f"live-filled={live_filled} cache-backfilled={cache_stats['mcap']} "
+        f"still-blank={still_blank} "
+        f"sector-cache={cache_stats['sector']} industry-cache={cache_stats['industry']}"
+        f"{already_note}{cache_note}",
+        flush=True,
+    )
+    _warn_rs90_mcap_fill(out, cache_path, pct_min)
     return out
 
 

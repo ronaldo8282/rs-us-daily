@@ -37,8 +37,7 @@ Default source: **Nasdaq Trader Symbol Directory** (free public text files)
 - https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt
 
 Keeps NASDAQ, NYSE, and NYSE American common stocks; drops ETF / test issues (except the 11 XL sector SPDRs force-included for sector tracking).
-Prices and (optional) fundamentals via **yfinance** (Yahoo Finance). MarketCap /
-Sector / Industry are best-effort — blank is allowed; ranking still runs on RS.
+Prices via **yfinance** (Yahoo Finance). For the `--fetch-info-pct` slice (daily job: Percentile ≥ 90), Sector / Industry / MarketCap come from yfinance `.info`, then any field that is still blank is filled from `output/fundamentals_latest.csv` when that file exists. A live value is kept over the cache. Rows below the cutoff stay blank. Ranking still runs if both sources miss.
 
 ## Output columns
 
@@ -48,12 +47,12 @@ Aligned for `filter_rs90.py` consumption:
 | --- | --- |
 | Rank | 1 = highest Percentile / RS |
 | Ticker | |
-| Sector / Industry | blank unless `--fetch-info` |
+| Sector / Industry | filled for `--fetch-info` or the `--fetch-info-pct` slice (live `.info`, then blanks only from `output/fundamentals_latest.csv`) |
 | Exchange | NASDAQ / NYSE / NYSE American / NYSE ARCA |
 | Relative Strength | Final×100 |
 | Percentile | 1–99 |
 | Price | last adjusted close |
-| MarketCap | USD, blank if unknown |
+| MarketCap | USD. Same fill as Sector / Industry. Blank if both sources miss; never invented |
 | asof_date | last close date (ISO) |
 
 Files:

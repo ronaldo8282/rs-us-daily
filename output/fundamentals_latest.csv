@@ -366,6 +366,7 @@ APTV,Consumer Cyclical,Auto Parts,9355958272.0,2026-10-21T00:19:30Z
 APUS,Healthcare,Drug Manufacturers - Specialty & Generic,5146092.0,2026-10-21T00:19:30Z
 APVO,Healthcare,Biotechnology,2923497.0,2026-10-21T00:19:30Z
 APWC,Industrials,Electrical Equipment & Parts,51952896.0,2026-10-21T00:19:30Z
+APXT,,,,
 APXTU,Financial Services,Shell Companies,,2026-11-18T03:34:51Z
 APYX,Healthcare,Medical Devices,102782624.0,2026-10-21T00:19:30Z
 AQB,Consumer Defensive,Farm Products,5919284.0,2026-10-21T00:19:30Z
@@ -940,6 +941,7 @@ CAAP,Industrials,Airports & Air Services,4110425088.0,2026-10-21T00:19:30Z
 CAAS,Consumer Cyclical,Auto Parts,135768160.0,2026-10-21T00:19:30Z
 CABA,Healthcare,Biotechnology,272968160.0,2026-10-21T00:19:30Z
 CABO,Communication Services,Telecom Services,35235076.0,2026-10-21T00:19:30Z
+CABR,,,,
 CAC,Financial Services,Banks - Regional,960935104.0,2026-10-21T00:19:30Z
 CACC,Financial Services,Credit Services,5586412544.0,2026-10-21T00:19:30Z
 CACI,Technology,Information Technology Services,13431029760.0,2026-10-21T00:19:30Z
@@ -1954,6 +1956,7 @@ FCNCA,Financial Services,Banks - Regional,23945818112.0,2026-10-21T01:37:13Z
 FCNCO,Financial Services,Banks - Regional,,2026-11-18T03:34:51Z
 FCNCP,Financial Services,Banks - Regional,,2026-11-18T03:34:51Z
 FCPT,Real Estate,REIT - Retail,2399275264.0,2026-10-21T01:51:56Z
+FCRS,,,,
 FCUV,Technology,Scientific & Technical Instruments,3343750.0,2026-10-21T02:01:38Z
 FCX,Basic Materials,Copper,98898534400.0,2026-10-21T01:27:23Z
 FDBC,Financial Services,Banks - Regional,341627392.0,2026-10-21T01:27:23Z
@@ -2410,6 +2413,7 @@ GTN,Communication Services,Broadcasting,476817696.0,2026-10-21T01:37:13Z
 GTN-A,Communication Services,Broadcasting,659100096.0,2026-10-21T01:58:34Z
 GTX,Consumer Cyclical,Auto Parts,4414299136.0,2026-10-21T01:32:00Z
 GTY,Real Estate,REIT - Retail,1736593024.0,2026-10-21T01:49:07Z
+GUER,,,,
 GUG,Financial Services,Asset Management,453805952.0,2026-10-21T01:49:07Z
 GURE,Basic Materials,Chemicals,6039058.0,2026-10-21T01:58:34Z
 GUT,Financial Services,Asset Management,496955360.0,2026-10-21T01:45:49Z
@@ -2623,6 +2627,7 @@ HYMC,Basic Materials,Gold,1579429504.0,2026-10-21T01:49:07Z
 HYPD,Healthcare,Biotechnology,45227012.0,2026-10-21T01:51:56Z
 HYPR,Healthcare,Medical Devices,82081672.0,2026-10-21T02:01:38Z
 HYT,Financial Services,Asset Management,1502650112.0,2026-10-21T01:49:07Z
+HZN,,,,
 HZO,Consumer Cyclical,Specialty Retail,1156461568.0,2026-10-21T01:23:01Z
 IA,Industrials,Aerospace & Defense,349928800.0,2026-10-21T01:32:00Z
 IAF,Financial Services,Asset Management,119875488.0,2026-10-21T01:40:07Z

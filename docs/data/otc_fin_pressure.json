@@ -15,13 +15,13 @@
   "page": "docs/index.html reads the CSV only. This JSON is the same rows plus the column contract.",
   "merge": "python scripts/fetch_otc_fin.py --merge FILE [--replace] [--overwrite-otc-fin]. Hermes files (tse_fin or source_otc_tse) fill mkt_fin and prices but do not replace marginMonitor otc_fin unless --overwrite-otc-fin. Aliases on non-Hermes files: fin, finRatio, taiex, tse_close, ewt.",
   "seed": "https://twm-z3sodp.github.io/marginMonitor/history.js",
-  "generated_note": "2026-11-19 21:01",
-  "asof": "2026-11-19",
-  "otc_fin": 119.44,
+  "generated_note": "2026-11-20 21:41",
+  "asof": "2026-11-20",
+  "otc_fin": 110.15,
   "mkt_asof": "2026-11-06",
   "mkt_fin": 149.98,
-  "row_count": 4658,
-  "otc_fin_count": 182,
+  "row_count": 4659,
+  "otc_fin_count": 183,
   "mkt_fin_count": 4378,
   "rows": [
     {
@@ -32629,6 +32629,13 @@
       "mkt_fin": null,
       "taiex_close": 38426.89,
       "ewt_close": 83.96
+    },
+    {
+      "date": "2026-11-20",
+      "otc_fin": 110.15,
+      "mkt_fin": null,
+      "taiex_close": 36033.29,
+      "ewt_close": null
     }
   ]
 }
